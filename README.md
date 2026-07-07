@@ -30,14 +30,20 @@ pip install -e .
 
 Dependencies such as `numpy`, `torch`, `snntorch`, `matplotlib`, and `scipy` will be automatically installed.
 
-## Reproducing Experiments
+## Reproducing Experiments (Publication Claims)
 
-The `experiments/` directory contains numbered Jupyter notebooks corresponding to different parts of the study:
-- `01_trace_and_credit_window.ipynb`
-- `02_closed_loop_rl.ipynb`
-- `03_deep_local_learning.ipynb`
-- `04_temporal_selectivity.ipynb`
-- `05_biological_grounding.ipynb`
-- `06_extensions.ipynb`
+The `experiments/` directory contains numbered Jupyter notebooks corresponding to the primary claims of the study:
+- `01_trace_and_credit_window.ipynb`: Demonstrates the device transient characterization and the resulting asymmetric credit assignment window.
+- `02_closed_loop_rl.ipynb`: Validates system-level closed-loop RL performance (bandit, maze, probabilistic selection tasks).
+- `03_deep_local_learning.ipynb`: Extends the rule to deep local learning in multi-layer perceptrons.
+- `04_temporal_selectivity.ipynb`: Shows temporal selectivity and tuning to inter-cue delays.
+- `05_biological_grounding.ipynb`: Connects the hardware trace to biological observations (e.g., dopamine).
+- `06_extensions.ipynb`: Covers multi-timescale memory, short-term consolidation, and device-TD extensions.
 
-A `REPRODUCE_ALL.ipynb` notebook is also provided to run all experiments end-to-end.
+### Replay Mode vs. Full-Sweep Mode
+
+By default, the notebooks run in **replay mode** using pre-computed outputs and cached grids stored in `data/results/`. These cached grids constitute the publication-scale evidence. Replaying them executes cleanly in seconds (the expected runtime for `REPRODUCE_ALL.ipynb` in replay mode is under 1 minute). 
+
+Running the full publication-scale sweeps from scratch (e.g., repeating all hardware simulations across many random seeds) is **not** performed by default due to significant compute requirements and the need for external data sets.
+
+For sanity checks and reproduction paths, you can run reduced-seed, smaller-scale versions of the tasks. A `REPRODUCE_ALL.ipynb` notebook is also provided to automatically run all topic notebooks end-to-end.
