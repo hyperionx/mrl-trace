@@ -1,8 +1,8 @@
 """Distal-cue single-deposit task -- retention as the credit-assignment asset.
 
 This module replaces the two temporally-weak experiments on the package's temporal
-axis (the shallow T-maze of :func:`siox_eligibility.maze.train_sequential` and the deep
-T-maze of :func:`siox_eligibility.deep_sequential.train_deep_sequential`) with a task
+axis (the shallow T-maze of :func:`mrl_trace.maze.train_sequential` and the deep
+T-maze of :func:`mrl_trace.deep_sequential.train_deep_sequential`) with a task
 that is *designed to stress the eligibility trace* so that long device retention is a
 measurable asset rather than a decoration.
 
@@ -43,13 +43,13 @@ Two variants share the design:
   trained ``context x action`` device-synapse layer; cue deposited once, trajectory/delay,
   then a single gated reward.
 - :func:`train_distal_deep` -- the DEEP strengthening of
-  :func:`siox_eligibility.deep_sequential.train_deep_sequential`: it reuses that module's
+  :func:`mrl_trace.deep_sequential.train_deep_sequential`: it reuses that module's
   hidden-layer + DFA + homeostasis machinery but makes the XOR cue a SINGLE early deposit
   (the cue lines are silent after the deposit window) so the gap genuinely stresses the
   trace.
 
 Conventions follow the package: pure NumPy, ``B`` seeds as a vectorised batch (leading
-axis ``B``), device gate via :class:`siox_eligibility.bandit.GateBankBatched` (``tau_leak``
+axis ``B``), device gate via :class:`mrl_trace.bandit.GateBankBatched` (``tau_leak``
 the retention), signed leak-dominant coincidence, three-factor update
 ``dw = eta (R - b) e``, ``dt = 5e-3`` s, coarsened undriven relaxation for the gap.
 """
@@ -76,7 +76,7 @@ def _relax(bank, reward_lag, S, A):
     With zero drive the cascade / leaky dynamics are smooth, so the bulk is integrated
     with a coarsened step (``stride*dt``) for tractability on long gaps and the
     remainder with single ``dt`` steps (the same scheme as
-    :func:`siox_eligibility.maze._relax`). ``bank`` may be a :class:`GateBankBatched`
+    :func:`mrl_trace.maze._relax`). ``bank`` may be a :class:`GateBankBatched`
     or an :class:`AbstractTrace`; both expose ``step`` and ``dt``. Restores ``dt``.
     """
     if reward_lag <= 0:
@@ -221,7 +221,7 @@ def train_distal_deep(*, mode="dfa", B=20, H=16, L=4, A=2, tau_leak=20.0, T_gap=
     """Deep distal-cue single-deposit XOR task; ``B`` seeds; returns rewards ``(B, trials)``.
 
     This reuses the hidden-layer + DFA + homeostasis machinery of
-    :func:`siox_eligibility.deep_sequential.train_deep_sequential` (``F = 4 + L`` input
+    :func:`mrl_trace.deep_sequential.train_deep_sequential` (``F = 4 + L`` input
     lines -> ``H`` hidden LIF (DFA + homeostasis) -> ``A`` action LIF; device gates
     ``g1, g_out``; junction-only output coincidence) but fixes the temporal weakness:
     the XOR CUE IS A SINGLE EARLY DEPOSIT.
@@ -611,7 +611,7 @@ def _distal_figure(grid):
 def main(argv=None):
     """Full-scale reproduction CLI for the distal-cue temporal grid.
 
-    ``python -m siox_eligibility.distal_cue [--variant deep|shallow] [--gaps 1,4,10]``
+    ``python -m mrl_trace.distal_cue [--variant deep|shallow] [--gaps 1,4,10]``
     ``[-p 0] [--seeds N] [--trials N] [--workers N] [--quick|--full]``
 
     Fans the (gap x arm x seed x p) grid over a fork Pool (``__main__``-only), bootstraps

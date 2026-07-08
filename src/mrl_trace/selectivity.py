@@ -1,10 +1,10 @@
 r"""Timing/selectivity constructions on the device eligibility cascade.
 
 Two experiments that treat the SiO\ :sub:`x` trap-cascade (see
-:mod:`siox_eligibility.device`) as a *temporal* primitive rather than as a scalar
+:mod:`mrl_trace.device`) as a *temporal* primitive rather than as a scalar
 credit-assignment window.  Both compose the existing gates (the trace kernel of
-:mod:`siox_eligibility.distal_reward` and the vectorised
-:class:`siox_eligibility.bandit.GateBankBatched`) with the LIF decision layer, but
+:mod:`mrl_trace.distal_reward` and the vectorised
+:class:`mrl_trace.bandit.GateBankBatched`) with the LIF decision layer, but
 neither wraps a single existing training primitive -- they build new timing tasks on
 top of the shared physics, so they live in their own module.
 
@@ -28,7 +28,7 @@ top of the shared physics, so they live in their own module.
   the device model.  Pre-registered criteria H1--H4 and kill K1.  (Physical-
   observability caveat: the individual stage occupancies are not exposed by a
   two-terminal cell, so the vector result *motivates* a staged-readout device rather
-  than being a capability of the present one -- thesis Ch7 exploratory.)
+  than being a capability of the present one -- exploratory extension.)
 
 Each ``run_*`` is serial and import-light (a notebook calls it in-kernel at a small
 seed/trial count); ``main()`` runs the published-scale grids, parallelising the
@@ -482,7 +482,7 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None):
 def main(argv=None):
     """Full-scale reproduction CLI for the timing/selectivity grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.selectivity [--exp10] [--exp20] [--full|--quick]``
+    ``python -m mrl_trace.selectivity [--exp10] [--exp20] [--full|--quick]``
     With no experiment flag, runs both.  ``--full`` = 20 seeds (published); ``--quick``
     = a fast few-seed smoke run.  The vector-timer sweep parallelises its coarse axes
     with a process pool (only here, in the real ``__main__``); the ``run_*`` cores stay

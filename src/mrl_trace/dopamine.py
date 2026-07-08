@@ -16,7 +16,7 @@ Pipeline, mirroring :mod:`biosignal` exactly so the learning code is unchanged:
      reward vs omission; its OUT-OF-FOLD per-trial predictions are the reward gate (R-b).
 
 Honesty: this supplies the THIRD FACTOR (a real, noisy dopaminergic reward-prediction
-error). It is offline replay of a recorded animal's dopamine -- the right KIND of signal
+error). It uses an offline recorded animal dopamine signal -- the right kind of signal
 (the actual neuromodulator), cross-species, not a live brain in the loop. It is a
 biorealism/robustness test, not a new device capability. Whatever the single-trial decode
 accuracy is, it is reported as-is.
@@ -235,7 +235,7 @@ def run_dopamine_shallow(pools, shuf, *, seeds=20, trials=600, S=2, A=2,
     """G-shallow (Experiment 11): single-layer contextual bandit under the measured
     dopamine reward.
 
-    Trains the 2x2 bandit (:func:`siox_eligibility.bandit.train`) with three reward
+    Trains the 2x2 bandit (:func:`mrl_trace.bandit.train`) with three reward
     sources -- ``synthetic`` (clean {0,1}), ``dopamine`` (the decoded ``pools`` gating the
     three-factor update), and ``shuffled`` (``shuf``, the valence-scrambled control) -- at
     the frozen operating point (nothing retuned for the dopamine reward). The reported
@@ -361,7 +361,7 @@ def _replot_from_cache():
 def main(argv=None):
     """Full-scale reproduction CLI for the Arm-G dopamine capstone (writes ``data/results``).
 
-    ``python -m siox_eligibility.dopamine [--exp11] [--figonly] [--full|--quick]``
+    ``python -m mrl_trace.dopamine [--exp11] [--figonly] [--full|--quick]``
 
     Decodes the real dopamine reward pools from the DANDI 000351 cache
     (:func:`build_reward_pools`), runs the frozen-operating-point shallow bandit and deep
@@ -400,10 +400,10 @@ def main(argv=None):
     pools, meta = build_reward_pools()
     if meta["n_subj"] == 0 or pools[1].size == 0 or pools[0].size == 0:
         # Graceful skip: the DANDI cache is empty/absent here (the multi-GB raw photometry
-        # has not been streamed via extract_dopamine_cache.py). Report and exit cleanly --
+        # has not been streamed via the guarded DANDI extraction workflow). Report and exit cleanly --
         # do NOT write a degenerate grid over any existing published one.
         print(f"  [skip] no usable dopamine sessions under DA_CACHE={DA_CACHE!r} "
-              f"(n_subj={meta['n_subj']}); run extract_dopamine_cache first. "
+              f"(n_subj={meta['n_subj']}); run the guarded DANDI extraction workflow first. "
               f"Nothing written.")
         return
     print(f"  {meta['n_subj']} mice | single-trial decoder bal-acc {meta['mean_bal_acc']:.3f}"

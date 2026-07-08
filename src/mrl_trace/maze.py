@@ -1,6 +1,6 @@
 """Sequential distal-reward navigation -- a multi-step MDP credit-assignment task.
 
-The contextual bandit of :mod:`siox_eligibility.bandit` is *one step*: a single
+The contextual bandit of :mod:`mrl_trace.bandit` is *one step*: a single
 state, a single action, an immediate (delayed) reward. That isolates the
 credit-assignment mechanism but invites the criticism that it is an
 association lookup rather than reinforcement learning of a *policy over a
@@ -253,7 +253,7 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     device-fault prior at READ time (once per episode, since weights change only per
     episode): the array reads a faulted conductance while learning still targets the
     clean weight -- a fixed physical realisation, not a learnable parameter, exactly as
-    in :func:`siox_eligibility.deep.train_deep`. The maze weights are NON-NEGATIVE
+    in :func:`mrl_trace.deep.train_deep`. The maze weights are NON-NEGATIVE
     (``[0, W_MAX]``) single conductances, so the signed-pair SiO_x stack cannot be used
     verbatim; pass a fault built for the non-negative weight space (see
     ``device_faults.maze_fault_stack``). ``step_dur`` is the wall-clock time the agent
@@ -464,8 +464,8 @@ def policy_correct(env, w):
 # plotting, no stdout.  Notebooks call these at a small (quick) seed/episode
 # count and render the figures inline; ``main()`` (below) calls them at the
 # published scale, parallelising the coarse axis over a process pool, and writes
-# each grid under ``data/results/`` via ``paths.save_result`` for the notebooks
-# to replay.  The original driver scripts each computed one grid:
+# each grid under ``data/results/`` via ``paths.save_result`` for full-cache mode.
+# The original driver scripts each computed one grid:
 #   * exp6_sequential.npy            -- sequential T-maze + R-STDP/e-prop/no-trace
 #                                       benchmark and the retention x delay grid;
 #   * exp8_dmax_law.npy              -- densely-sampled D_max(tau_leak) scaling law;
@@ -851,7 +851,7 @@ def run_long_horizon_faults(*, L_grid=(3, 5, 8, 12), p_grid=(0, 0.1, 0.2, 0.5),
 def main(argv=None):
     """Full-scale reproduction CLI for the sequential-maze grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.maze [--exp6] [--exp8] [--exp15] [--exp15-faults] [--full|--quick]``
+    ``python -m mrl_trace.maze [--exp6] [--exp8] [--exp15] [--exp15-faults] [--full|--quick]``
 
     With no experiment flag, runs all four. ``--full`` = the published scale (exp6/exp8:
     20 seeds; exp15/exp15-faults: 12 seeds); ``--quick`` = a fast few-seed smoke run.

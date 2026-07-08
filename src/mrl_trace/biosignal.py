@@ -13,7 +13,7 @@ struct (which carries only numeric trigger codes).
 
 Honesty: this supplies the THIRD FACTOR (a real, noisy reward-prediction-error signal)
 to the device-trace bandit; it is a robustness/biorealism test, not a new device
-capability, and it is offline replay, not a live brain in the loop.
+capability, and it is an offline recorded-signal study, not a live brain in the loop.
 """
 from __future__ import annotations
 
@@ -142,7 +142,7 @@ def decode_reward(features, valence, *, n_splits=5, seed=0, C=0.1):
 # plotting, no stdout.  Notebooks call these at a small (quick) seed/trial count
 # and render the figures inline; ``main()`` (below) calls them at the published
 # 20-seed scale and writes the grid under ``data/results/`` for the notebooks to
-# replay.
+# render.
 #
 # The raw OpenNeuro ds003474 EEG is NOT bundled: it is a several-GB external
 # download (Cavanagh; CC0), so these cores DEGRADE GRACEFULLY -- when the EEG is
@@ -344,7 +344,7 @@ def _summarize_capstone(res, meta, *, seeds, trials, chance, crit, homeo):
 def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.75):
     """Experiment 9 (Arm E) -- capstone: EEG reward x deep all-local RL + homeostasis.
 
-    Composes the three biorealistic ingredients of Chapter 7 into ONE experiment:
+    Composes the three biorealistic ingredients into one experiment:
       - temporal credit : the physical device eligibility trace (on both layers);
       - spatial credit  : a deep two-layer policy trained fully locally by direct
                           feedback alignment (no backprop, no weight transport);
@@ -384,7 +384,7 @@ def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.7
 def main(argv=None):
     """Full-scale reproduction CLI for the biosignal-reward RL grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.biosignal [--biosignal] [--capstone] [--full|--quick]
+    ``python -m mrl_trace.biosignal [--biosignal] [--capstone] [--full|--quick]
     [--data DIR]``
 
     With no experiment flag, runs both.  ``--full`` = 20 seeds (published); ``--quick`` =

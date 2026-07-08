@@ -1,49 +1,60 @@
 # mrl-trace
 
-A Memristive Device Transient as a Hardware Eligibility Trace for Three-Factor Reinforcement Learning.
+A memristive device transient as a hardware eligibility trace for three-factor reinforcement learning.
 
-This repository contains the reference implementation for the manuscript *"A Memristive Device Transient as a Hardware Eligibility Trace for Three-Factor Reinforcement Learning"*. 
-
-The package models the SiOₓ device transient to serve as a hardware eligibility trace for spiking neural networks and reinforcement learning tasks. It utilizes `torch`, `snntorch`, and standard scientific libraries.
+This repository contains the reference implementation for the manuscript's device-trace reinforcement-learning studies. The package models the SiOx transient as a hardware eligibility trace for spiking and local-learning tasks.
 
 ## Project Structure
 
-- `src/mrl_trace/`: Core Python package containing models for devices, neurons, learning rules, and various simulated tasks.
-- `experiments/`: Jupyter notebooks containing the reproducible experiments presented in the manuscript.
-
-## Core Modules
-
-- **device**: The fitted SiOₓ transient and the `TransientGate` eligibility-trace generator.
-- **neurons**: Leaky Integrate-and-Fire (LIF) neuron implementations.
-- **learning**: Signed coincidence kernel and three-factor reward-modulated updates.
-- **bandit / maze / probselect**: Simulated environments to test closed-loop RL performance.
-- **selectivity**: Tasks that read out the transient's tuning to inter-cue delays.
-- **extensions**: Multi-timescale memory, short-term consolidation, and device-TD extensions.
+- `src/mrl_trace/`: core package for device dynamics, learning rules, simulated tasks, biological reward interfaces, and extension studies.
+- `experiments/`: live-first notebooks that recompute reduced-budget evidence for the publication-facing claims.
+- `data/device_model/`: bundled measured-device fixtures used as live inputs.
+- `data/results/`: optional publication-scale result grids used only when explicitly requested.
 
 ## Installation
 
-Ensure you have Python 3.10+ installed. You can install this package in editable mode via pip:
+Use the same environment as the companion `mnn-torch` checks:
+
+```bash
+conda run -n mnn_torch python -c "import mrl_trace; print(mrl_trace.__file__)"
+```
+
+Editable install is still supported:
 
 ```bash
 pip install -e .
 ```
 
-Dependencies such as `numpy`, `torch`, `snntorch`, `matplotlib`, and `scipy` will be automatically installed.
+## Reproducing Experiments
 
-## Reproducing Experiments (Publication Claims)
+The notebooks default to:
 
-The `experiments/` directory contains numbered Jupyter notebooks corresponding to the primary claims of the study:
-- `01_trace_and_credit_window.ipynb`: Demonstrates the device transient characterization and the resulting asymmetric credit assignment window.
-- `02_closed_loop_rl.ipynb`: Validates system-level closed-loop RL performance (bandit, maze, probabilistic selection tasks).
-- `03_deep_local_learning.ipynb`: Extends the rule to deep local learning in multi-layer perceptrons.
-- `04_temporal_selectivity.ipynb`: Shows temporal selectivity and tuning to inter-cue delays.
-- `05_biological_grounding.ipynb`: Connects the hardware trace to biological observations (e.g., dopamine).
-- `06_extensions.ipynb`: Covers multi-timescale memory, short-term consolidation, and device-TD extensions.
+```python
+RESULT_MODE = "live"
+```
 
-### Replay Mode vs. Full-Sweep Mode
+Live mode recomputes reduced-budget result panels directly from the package code. It is intended to support the mechanism, direction, and qualitative structure of the claims without requiring the full publication sweep.
 
-By default, the notebooks run in **replay mode** using pre-computed outputs and cached grids stored in `data/results/`. These cached grids constitute the publication-scale evidence. Replaying them executes cleanly in seconds (the expected runtime for `REPRODUCE_ALL.ipynb` in replay mode is under 1 minute). 
+Set:
 
-Running the full publication-scale sweeps from scratch (e.g., repeating all hardware simulations across many random seeds) is **not** performed by default due to significant compute requirements and the need for external data sets.
+```python
+RESULT_MODE = "full_sweep_cache"
+```
 
-For sanity checks and reproduction paths, you can run reduced-seed, smaller-scale versions of the tasks. A `REPRODUCE_ALL.ipynb` notebook is also provided to automatically run all topic notebooks end-to-end.
+only to render committed publication-scale grids from `data/results/`. Cache-mode cells print provenance before loading.
+
+The local dopamine live path uses extracted DANDI-derived session caches when present. On this machine the expected cache is `C:\tmp\da_cache` (also visible to the code as `/tmp/da_cache`). EEG/OpenNeuro data are external and are labelled as such in the biological notebook when absent.
+
+## Notebooks
+
+- `00_device_model.ipynb`: measured device transient, KWW fit, retention distribution, and habituation.
+- `01_trace_and_credit_window.ipynb`: eligibility trace and delayed-credit window.
+- `02_closed_loop_rl.ipynb`: closed-loop bandit, scaling, remedies, and sequential maze.
+- `03_deep_local_learning.ipynb`: deep local learning, distractor task, fault diagnostic, and hybrid orientation.
+- `04_temporal_selectivity.ipynb`: DMS, interval selectivity, and vector-timer orientation.
+- `05_biological_grounding.ipynb`: Frank PST live-oriented run, real dopamine-cache path, and EEG external-data gate.
+- `06_extensions.ipynb`: reversal, multi-timescale, WM/STC, device-TD, and beta sensitivity.
+- `schematics.ipynb`: live-generated explanatory diagrams.
+- `REPRODUCE_ALL.ipynb`: executes all notebooks in live mode.
+
+The temporary workspace has been consumed. Useful dopamine extraction logic now lives as a guarded, disabled-by-default cell in `05_biological_grounding.ipynb`; one-off audit, patch, download, and exploration files are not part of the reproducibility surface.

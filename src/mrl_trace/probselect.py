@@ -1,6 +1,6 @@
 """Frank probabilistic-selection task (PST) -- a canonical RL paradigm for the device trace.
 
-The XOR bandit of :mod:`siox_eligibility.deep` is the minimal test of depth, but a toy.
+The XOR bandit of :mod:`mrl_trace.deep` is the minimal test of depth, but a toy.
 This module replaces it with the probabilistic-selection task of Frank, Seeberger &
 O'Reilly (2004) -- the SAME task the ds003474 EEG subjects performed -- so the device-trace
 agent learns a real, canonical reinforcement-learning paradigm whose behaviour can be
@@ -24,7 +24,7 @@ better-slot action is a comparison of learned stimulus values, made non-linear b
 low-dimensional codes, so a single trained layer cannot in general solve every pair (a
 ``shallow`` control checks this empirically). The network, device eligibility, signed
 coincidence, DFA feedback, and homeostatic stabiliser are exactly those of
-:mod:`siox_eligibility.deep`; only the task wrapper differs.
+:mod:`mrl_trace.deep`; only the task wrapper differs.
 """
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ def train_pst(*, mode="dfa_homeo", B=20, H=16, n_bits=4, tau_leak=10.0, D=5.0,
               homeo=0.1, homeo_target=0.35, homeo_tau=200.0, reward_pools=None,
               seed0=0, return_test=False):
     """Train the PST policy. ``mode`` in {shallow, dfa, dfa_homeo, no_trace}; semantics as
-    in :func:`siox_eligibility.deep.train_deep`. Device eligibility on every plastic layer.
+    in :func:`mrl_trace.deep.train_deep`. Device eligibility on every plastic layer.
 
     Returns per-trial TRAIN correctness ``(B, trials)`` (chose the higher-probability
     stimulus). With ``return_test`` also returns ``(choose_A, avoid_B)`` arrays of shape
@@ -259,8 +259,8 @@ def reward_rate(rewards, window=200):
 # no plotting, no stdout -- so a notebook can call it in-kernel at a small (quick)
 # trial count.  ``main()`` (below) runs the published 20-seed grid across a process
 # Pool over conditions, computes bootstrap CIs + the pre-registered F1--F5 criteria,
-# and writes ``exp10_probselect.npy`` under ``data/results/`` for the notebook to
-# replay.  Provenance: experiments/05_biological_grounding/probabilistic_selection.py
+# and writes ``exp10_probselect.npy`` under ``data/results/`` for full-cache mode.
+# Provenance: experiments/05_biological_grounding/probabilistic_selection.py
 # (Arm F), pre-registered criteria F1--F5 in PREREGISTRATION_probselect.md.
 # =============================================================================
 
@@ -386,7 +386,7 @@ def main(argv=None):
     Arm F): the Frank PST -- the SAME task the ds003474 EEG subjects performed --
     learned by the deep all-local device-trace agent, lifting the RL result off the XOR toy.
 
-    ``python -m siox_eligibility.probselect [--probselect] [--full|--quick]``
+    ``python -m mrl_trace.probselect [--probselect] [--full|--quick]``
     ``--full`` = 20 seeds x 5000 trials (published); ``--quick`` = 6 seeds x 1000 trials.
     Each condition (mode/reward source) is an independent cell run across a process Pool.
     The synthetic conditions always run; the two real-EEG conditions run only when the

@@ -4,7 +4,7 @@ The learning rule everywhere in this work is the canonical three-factor update
 
     Delta w_ij = eta * (R - b) * e_ij(t_R)
 
-where ``e_ij`` is the *device* eligibility trace (see :mod:`siox_eligibility.device`),
+where ``e_ij`` is the *device* eligibility trace (see :mod:`mrl_trace.device`),
 ``R`` is the (delayed, global) reward, ``b`` is a slowly-tracked reward baseline, and
 ``eta`` is the learning rate.  Only two ingredients are local to a synapse -- its
 eligibility state and the broadcast scalar ``(R - b)`` -- so the rule is

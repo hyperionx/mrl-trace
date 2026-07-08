@@ -4,9 +4,9 @@ device-native reinforcement-learning story stretches.
 
 Four experiments live here, all built on the validated ``GateBankBatched`` cascade
 gate (Section 5.3.2 physics) and the sequential ``LinearTrack``/``TMaze`` MDPs -- none
-re-derives a primitive, each COMPOSES the ones already in :mod:`siox_eligibility.bandit`,
-:mod:`siox_eligibility.maze`, :mod:`siox_eligibility.neurons` and
-:mod:`siox_eligibility.learning`:
+re-derives a primitive, each COMPOSES the ones already in :mod:`mrl_trace.bandit`,
+:mod:`mrl_trace.maze`, :mod:`mrl_trace.neurons` and
+:mod:`mrl_trace.learning`:
 
 - **Experiment 19 -- multi-timescale credit from the MEASURED retention spread**
   (:func:`run_multitimescale`).  A real ITO array does not have one ``tau_leak``, it has
@@ -27,7 +27,7 @@ re-derives a primitive, each COMPOSES the ones already in :mod:`siox_eligibility
   exp19 multi-timescale coupling -- at the measured ``beta_leak`` and checks they survive,
   closing the "measured 0.85 but simulated 1.0" gap.
 
-- **Experiment 22 -- WM and STC on ONE device: a NULL on the two-site hypothesis**
+- **Experiment 22 -- WM and STC on one device: a null on the two-site hypothesis**
   (:func:`run_wm_stc`, :func:`wm_isolated`).  Working memory (inference-time cue hold) and
   STC/eligibility (learning-time credit) occupy different brain sites.  Does a device
   circuit therefore NEED two co-fabricated traces, or can one serve both?  A DMS task with
@@ -47,9 +47,9 @@ Every ``run_*`` core is SERIAL, import-light and returns plain arrays/dicts with
 I/O -- notebooks call them in-kernel at a small seed/trial count.  The module-level
 :func:`main` is the full-scale driver: it may parallelise the coarse axis with a
 ``multiprocessing.Pool`` (it runs as ``python -m``), computes the bootstrap CIs and the
-pre-registered criteria, and writes each grid via :func:`siox_eligibility.paths.save_result`.
+pre-registered criteria, and writes each grid via :func:`mrl_trace.paths.save_result`.
 NOTE: reversal learning (Experiment 18) is a ``train`` variant and lives in
-:mod:`siox_eligibility.bandit`, not here.
+:mod:`mrl_trace.bandit`, not here.
 """
 from __future__ import annotations
 
@@ -120,7 +120,7 @@ def load_measured_tau():
     """The n=53 measured ITO trap-discharge time constants (s), from the device population.
 
     Reads ``data/device_model/ito_decay_data.npz`` (the measured trap-discharge fits;
-    resolved through :func:`siox_eligibility.paths.device_model_dir` so it works from any
+    resolved through :func:`mrl_trace.paths.device_model_dir` so it works from any
     working directory). Falls back to the documented summary (median 1.34 s, range
     0.56--7.72 s) -- logged, never silent -- only if the npz is absent.
     """
@@ -359,7 +359,7 @@ def _mt_grid_best_single(tau_pool, trials, pool=None):
 
 
 # =============================================================================
-# Experiment 22 -- WM and STC on ONE device: a NULL on the two-site hypothesis
+# Experiment 22 -- WM and STC on one device: a null on the two-site hypothesis
 # =============================================================================
 
 
@@ -772,10 +772,10 @@ def run_beta_sensitivity(*, betas=BETAS, seeds=12, episodes=2000, trials=3000, p
 def main(argv=None):
     """Full-scale reproduction CLI for the Chapter-8 extension grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.extensions [--exp19] [--exp21] [--exp22] [--exp23] [--quick|--full]``
+    ``python -m mrl_trace.extensions [--exp19] [--exp21] [--exp22] [--exp23] [--quick|--full]``
     With no experiment flag, runs all four. ``--full`` = published seed count; ``--quick`` =
     a fast few-seed smoke run. Each writes its published grid filename via
-    :func:`siox_eligibility.paths.save_result`:
+    :func:`mrl_trace.paths.save_result`:
       exp19 -> exp19_multitimescale.npy   exp21 -> exp21_beta_sensitivity.npy
       exp22 -> exp22_wm_stc.npy           exp23 -> exp23_device_td.npy
     """

@@ -9,12 +9,12 @@ device does perception.
 
 Two complementary studies live here, sharing the same perception front-end:
 
-  * **exp5** (:func:`run_hybrid_decision`, manuscript Fig. 9): a conv-SNN perception
+  * **exp5** (:func:`run_hybrid_decision`): a conv-SNN perception
     stage (snntorch ``Leaky`` + surrogate gradient, rate-coded input) classifies noisy
     oriented gratings and is frozen; a contextual spiking bandit then reads either its
     ``C``-dim frozen readout (*hybrid*), the ``P`` raw pixels (*raw*, no front-end), or
     the hybrid wiring with the eligibility zeroed (*no_trace*). Plastic device synapses
-    carry the :class:`~siox_eligibility.bandit.GateBankBatched` eligibility and are
+    carry the :class:`~mrl_trace.bandit.GateBankBatched` eligibility and are
     updated by the signed three-factor rule at EQUAL RL budget. Pre-registered: C1
     front-end acc >= 0.85; C2 hybrid >= criterion and no-trace at chance; C3 hybrid -
     raw >= 0.15. Reference (MPS): acc 0.87, hybrid 0.62, raw 0.27, no-trace 0.27 -- the
@@ -24,7 +24,7 @@ Two complementary studies live here, sharing the same perception front-end:
     FAULT-TOLERANCE robustness study. STAGE 1 (perception, once, offline, optional GPU)
     trains the SAME conv-SNN and caches its low-dimensional readouts to ``readouts.npz``
     (:func:`prep_readouts`). STAGE 2 (decision, pure NumPy) feeds those cached readouts
-    as the STATE of the DEEP all-local agent (:func:`~siox_eligibility.deep.train_deep`:
+    as the STATE of the DEEP all-local agent (:func:`~mrl_trace.deep.train_deep`:
     trace + DFA + homeostasis) via its ``state_sampler`` hook, and sweeps hidden width
     ``H`` x SiO_x stuck-fault fraction ``p`` under the measured device-fault prior. If
     ``readouts.npz`` is ABSENT the sweep falls back to an HONEST proxy front-end (clearly
@@ -218,7 +218,7 @@ def _decision(state_pool, S, A, B=4, trials=1500, dt=5e-3, cue_dur=1.0, D=2.0,
               tau_leak=10.0, no_trace=False, seed0=0):
     """Contextual bandit over ``C`` classes; ``state_pool`` is a dict ``class -> (n, S)``
     activations (``S=C`` for the hybrid readout, ``S=P`` for raw pixels). Uses the
-    package's :class:`~siox_eligibility.bandit.GateBankBatched` for the device eligibility
+    package's :class:`~mrl_trace.bandit.GateBankBatched` for the device eligibility
     and returns rewards ``(B, trials)``. Pure NumPy; no torch. This is the exp5 decision
     layer -- its inline current-impulse LIF matches ``neurons.lif_step_batched`` exactly
     (v_reset=0), kept inline here to preserve the RNG call ordering bit-for-bit."""
@@ -322,7 +322,7 @@ def prep_readouts(per_class=800, steps=600, seed=0, out_name="readouts.npz"):
     classes. This is the offline perception step that upgrades the exp16 sweep from
     "proxy statistics" to the real frozen-front-end result; it is NOT part of the pure-NumPy
     Stage-2 batch job. Needs the ``hybrid`` extra (torch + snntorch); returns the written
-    path. Writes through :mod:`siox_eligibility.paths` (never to ``experiments/``).
+    path. Writes through :mod:`mrl_trace.paths` (never to ``experiments/``).
     """
     from . import paths
     net, acc = run_frontend(steps=steps, seed=seed)
@@ -527,7 +527,7 @@ def _boot_ci(vals, seed=0):
 def main(argv=None):
     r"""Full-scale reproduction CLI for the hybrid grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.hybrid [--exp5] [--exp16] [--prep-readouts]
+    ``python -m mrl_trace.hybrid [--exp5] [--exp16] [--prep-readouts]
     [--readouts PATH] [--full|--quick]``
 
     With no experiment flag, runs exp5 + exp16. ``--full`` = published scale (exp5 20 seeds,

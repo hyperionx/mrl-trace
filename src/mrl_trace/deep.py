@@ -1,7 +1,7 @@
 """Deep (two-layer) all-local spiking RL with a physical eligibility trace -- Arm D.
 
-The bandit (:mod:`siox_eligibility.bandit`) and the sequential T-maze
-(:mod:`siox_eligibility.maze`) both train a SINGLE layer of device synapses with a
+The bandit (:mod:`mrl_trace.bandit`) and the sequential T-maze
+(:mod:`mrl_trace.maze`) both train a SINGLE layer of device synapses with a
 single global reward scalar ``(R - b)``. That is enough when the policy is linearly
 separable in the state lines, but it has two known limits:
 
@@ -9,7 +9,7 @@ separable in the state lines, but it has two known limits:
 2. A single global scalar gives a *hidden* layer no per-neuron credit -- every hidden
    synapse sees the same third factor, so reward-modulated Hebbian learning at depth
    cannot resolve which hidden unit helped (the structural-credit problem; the depth
-   analogue of the Chapter 7 scaling wall).
+   analogue of the earlier scaling wall).
 
 This module asks whether a device-supplied physical eligibility trace can serve as the
 TEMPORAL factor of a DEEP spiking policy that is trained FULLY LOCALLY -- no
@@ -874,7 +874,7 @@ def run_array_scale(*, H_grid=(8, 32, 128, 512), p_grid=(0.0, 0.05, 0.20, 0.50),
 def main(argv=None):
     """Full-scale reproduction CLI for the deep all-local + DMS grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.deep [--exp7] [--exp12] [--exp13] [--exp14]
+    ``python -m mrl_trace.deep [--exp7] [--exp12] [--exp13] [--exp14]
     [--exp14-sweep] [--full|--quick]``
 
     With no experiment flag, runs all of exp7/exp12/exp13/exp14 (the sweep variant is

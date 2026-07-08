@@ -370,7 +370,7 @@ def main(argv=None):
     r"""Full-scale device-model driver: refit the KWW laws and rerun the habituation
     demonstration, writing the Chapter 5 fixtures under ``data/device_model/``.
 
-    ``python -m siox_eligibility.device [--kww] [--habituation] [--quick|--full]``
+    ``python -m mrl_trace.device [--kww] [--habituation] [--quick|--full]``
     With no experiment flag, runs both.  ``--kww`` writes ``kww_final.json`` (the
     fitted field-acceleration coefficients + ``beta<->k`` bridge); ``--habituation``
     writes ``habit_data.npz`` (the Fig 5.15 traces).  ``--quick`` uses a coarser ODE

@@ -1,10 +1,10 @@
-"""Filesystem paths for the bundled result grids and device-model fixtures.
+"""Filesystem paths for optional result grids and device-model fixtures.
 
 The experiments in this package are reproduced by notebooks under ``experiments/``
 that hold no code themselves: they call the ``run_*`` cores in the library and read
 or write result grids under a single top-level ``data/`` directory. This module is
 the one place that resolves ``data/`` so that both the notebooks and the module
-``main()`` entry points (``python -m siox_eligibility.<module> --full``) agree on
+``main()`` entry points (``python -m mrl_trace.<module> --full``) agree on
 where results live, regardless of the current working directory.
 
 Because the package is installed editable, ``__file__`` resolves inside the real
@@ -40,21 +40,21 @@ def data_dir() -> Path:
     if env:
         d = Path(env).expanduser().resolve()
     else:
-        # paths.py -> siox_eligibility -> src -> <repo-root>
+        # paths.py -> mrl_trace -> src -> <repo-root>
         d = Path(__file__).resolve().parents[2] / "data"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def results_dir() -> Path:
-    """``data/results`` -- the ``.npy``/``.npz`` result grids the notebooks replay."""
+    """``data/results`` -- optional full-sweep caches used only when requested."""
     p = data_dir() / "results"
     p.mkdir(parents=True, exist_ok=True)
     return p
 
 
 def device_model_dir() -> Path:
-    """``data/device_model`` -- the Chapter 5 device-model fixtures.
+    """``data/device_model`` -- measured device-model fixtures.
 
     Holds ``kww_final.json``, ``habit_data.npz``, ``ito_decay_data.npz`` and the
     ``gold_export/`` measured device traces.

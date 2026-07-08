@@ -4,20 +4,20 @@ Reference implementation for the manuscript *"A Memristive Device Transient as a
 Hardware Eligibility Trace for Three-Factor Reinforcement Learning"* (APL Machine
 Learning).  The package exposes, as small composable pieces:
 
-- :mod:`siox_eligibility.device`   -- the fitted SiO\ :sub:`x` transient and the
+- :mod:`mrl_trace.device`   -- the fitted SiO\ :sub:`x` transient and the
   ``TransientGate`` eligibility-trace generator (Chapter 5, Section 5.3.2 physics);
-- :mod:`siox_eligibility.neurons`  -- LIF neuron updates (scalar and batched);
-- :mod:`siox_eligibility.learning` -- the signed coincidence kernel and the
+- :mod:`mrl_trace.neurons`  -- LIF neuron updates (scalar and batched);
+- :mod:`mrl_trace.learning` -- the signed coincidence kernel and the
   three-factor reward-modulated update ``dw = eta (R - b) e``;
-- :mod:`siox_eligibility.bandit`   -- the contextual spiking bandit (the closed-loop
+- :mod:`mrl_trace.bandit`   -- the contextual spiking bandit (the closed-loop
   RL task) with the device gate, an abstract-trace control, and a no-trace control;
-- :mod:`siox_eligibility.selectivity` -- the interval-selectivity and vector-timer
+- :mod:`mrl_trace.selectivity` -- the interval-selectivity and vector-timer
   tasks that read out the transient's tuning to inter-cue delay;
-- :mod:`siox_eligibility.extensions`  -- multi-timescale, working-memory + short-term
+- :mod:`mrl_trace.extensions`  -- multi-timescale, working-memory + short-term
   consolidation, device-TD and beta-sensitivity extension studies;
-- :mod:`siox_eligibility.hybrid`   -- the hybrid vision front-end feeding the spiking
+- :mod:`mrl_trace.hybrid`   -- the hybrid vision front-end feeding the spiking
   RL readout (raw-pixel orientation task);
-- :mod:`siox_eligibility.paths`    -- resolves the bundled ``data/`` result grids and
+- :mod:`mrl_trace.paths`    -- resolves the bundled ``data/`` result grids and
   device-model fixtures (one source of truth for notebooks and ``python -m`` runs).
 
 The ``experiments/`` directory reproduces every quantitative figure in the paper as

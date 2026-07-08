@@ -2,11 +2,11 @@
 
 This module is the composition of the two working reductions in the package:
 
-- :func:`siox_eligibility.deep.train_deep` -- a DEEP (hidden-layer) all-local policy
+- :func:`mrl_trace.deep.train_deep` -- a DEEP (hidden-layer) all-local policy
   trained by Direct Feedback Alignment (DFA) with optional local homeostasis, on a
   non-linearly-separable XOR contextual bandit a single trained layer cannot solve.
   It supplies the depth + DFA + homeostasis machinery and the correct update signs.
-- :func:`siox_eligibility.maze.train_sequential` (the T-maze) -- a SHALLOW policy that
+- :func:`mrl_trace.maze.train_sequential` (the T-maze) -- a SHALLOW policy that
   bridges a cue->reward gap across a multi-step trajectory, with the device eligibility
   integrating CONTINUOUSLY across the steps and a single delayed goal reward gating the
   surviving trace into every used synapse.
@@ -24,7 +24,7 @@ separable (XOR of two cue bits). It therefore demands all three at once:
 
 Task ("deep T-maze"). At episode start a two-bit cue ``(b0, b1)`` is drawn; the correct
 arm at the junction is ``XOR(b0, b1)``. The agent then AUTO-ADVANCES through ``L`` stem
-states (a one-way corridor, as in :class:`siox_eligibility.maze.TMaze`, so the only
+states (a one-way corridor, as in :class:`mrl_trace.maze.TMaze`, so the only
 learned decision is the arm choice -- this keeps the reward distal and removes the
 stem-advance reinforcement artefact). Input lines carry the cue on dedicated cue lines
 AND the current stem position on dedicated one-hot position lines, so each step presents
@@ -55,7 +55,7 @@ __all__ = ["train_deep_sequential", "reward_rate"]
 def _relax_gate(bank, n_relax, stride, rem):
     """Advance an undriven :class:`GateBankBatched` for ``n_relax*stride + rem`` ticks,
     using a coarsened step (``stride*dt``) for the bulk and single ``dt`` steps for the
-    remainder. Identical to :func:`siox_eligibility.deep._relax_gate`: with zero drive
+    remainder. Identical to :func:`mrl_trace.deep._relax_gate`: with zero drive
     the dynamics are smooth, so the coarse step is accurate while ``stride*dt/tau << 1``.
     Restores the gate's ``dt``."""
     B, S, A = bank.B, bank.S, bank.A
@@ -110,7 +110,7 @@ def train_deep_sequential(*, mode="dfa", B=20, H=16, L=4, A=2, tau_leak=20.0, D=
       between steps.
 
     Trajectory. The agent auto-advances through ``L`` stem states (a one-way corridor:
-    the action does not move it, exactly as :class:`siox_eligibility.maze.TMaze`), so the
+    the action does not move it, exactly as :class:`mrl_trace.maze.TMaze`), so the
     only learned decision is the arm chosen at the junction (the last state). Reward
     ``R in {0,1}``, contingent on the junction action matching ``XOR(b0, b1)``, is
     delivered after the action->reward delay ``D``. The surviving eligibility then gates

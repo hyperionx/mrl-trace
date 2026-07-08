@@ -38,7 +38,7 @@ W_INIT, W_MAX = 0.5, 1.5
 class GateBankBatched:
     """Device eligibility gates for ``B`` parallel ``(S, A)`` synapse grids.
 
-    Vectorised form of :class:`siox_eligibility.device.TransientGate` (Section 5.3.2
+    Vectorised form of :class:`mrl_trace.device.TransientGate` (Section 5.3.2
     physics): ``k`` cascade trap nodes plus one space-charge node per synapse, signed
     leak-dominant drive, trace bounded in ``[-Vnmax, Vnmax]`` (the LTD wing).
     """
@@ -238,7 +238,7 @@ def trials_to_criterion(rew_1d, crit, window=100):
 # plotting, no stdout.  Notebooks call these at a small (quick) seed/trial count
 # and render the figures inline; ``main()`` (below) calls them at the published
 # 20-seed scale and writes the grid under ``data/results/`` for the notebooks to
-# replay.  Reversal (Experiment 18) is a ``train`` variant, so it lives here.
+# render.  Reversal (Experiment 18) is a ``train`` variant, so it lives here.
 # =============================================================================
 
 
@@ -468,7 +468,7 @@ def _summarize_reversal(raw, conds, trials, crit, chance):
 def main(argv=None):
     """Full-scale reproduction CLI for the bandit-family grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.bandit [--exp18] [--bandit] [--full|--quick]``
+    ``python -m mrl_trace.bandit [--exp18] [--bandit] [--full|--quick]``
     With no experiment flag, runs all. ``--full`` = 20 seeds (published); ``--quick``
     = a fast few-seed smoke run.
     """

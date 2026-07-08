@@ -1,7 +1,7 @@
 """Distal-reward credit-assignment tasks (manuscript Figs 4 and 5).
 
 These are the open-loop credit-assignment demonstrations that precede the
-closed-loop bandit of :mod:`siox_eligibility.bandit`: a cue synapse undergoes a
+closed-loop bandit of :mod:`mrl_trace.bandit`: a cue synapse undergoes a
 coincidence, a reward arrives after an action--reward delay ``D``, and
 reward-uncorrelated distractor synapses are active throughout. A correct learner
 raises the cue weight and leaves the distractors near baseline despite the delay.
@@ -176,7 +176,7 @@ def cue_saturation(w):
 # plotting, no stdout.  Notebooks call these at a small (quick) seed count and
 # render the figures inline; ``main()`` (below) calls them at the published
 # 20-seed scale and writes the grid under ``data/results/`` for the notebooks to
-# replay.  This mirrors the pattern in :mod:`siox_eligibility.bandit`.
+# render.  This mirrors the pattern in :mod:`mrl_trace.bandit`.
 # =============================================================================
 
 # Fig 4 (tier1) sweep axes: action->reward delay grid, the three device
@@ -288,7 +288,7 @@ def run_trace_window_parallel(*, seeds=20, delays=TIER1_DELAYS,
 def main(argv=None):
     """Full-scale reproduction CLI for the distal-reward grids (writes ``data/results``).
 
-    ``python -m siox_eligibility.distal_reward [--tier1] [--full|--quick]``
+    ``python -m mrl_trace.distal_reward [--tier1] [--full|--quick]``
     With no experiment flag, runs all. ``--full`` = 20 seeds (published); ``--quick``
     = a fast few-seed smoke run. The trace-level cells are independent, so the
     full-scale run parallelises over the (variant x delay) grid with a Pool.
