@@ -127,10 +127,16 @@ def load_measured_tau():
     from . import paths
     try:
         d = np.load(paths.device_model_dir() / "ito_decay_data.npz")
-        tau = np.asarray(d["tau"], float)
-        tau = tau[np.isfinite(tau) & (tau > 0)]
+        raw = np.asarray(d["tau"], float)
+        # The curated fit archive also retains failed/unconstrained optimisations.
+        # Keep only the documented measured discharge population used by the study;
+        # otherwise two runaway fits (10^3--10^15 s) dominate the assignment/grid.
+        valid = np.isfinite(raw) & (raw >= 0.56) & (raw <= 7.72)
+        tau = raw[valid]
         if tau.size >= 10:
-            return tau, "measured (ito_decay_data.npz, n=%d)" % tau.size
+            rejected = int(raw.size - tau.size)
+            return tau, ("measured (ito_decay_data.npz, valid n=%d, rejected fits=%d)"
+                         % (tau.size, rejected))
     except Exception as exc:                                  # noqa: BLE001
         print(f"  [tau] measured npz unavailable ({type(exc).__name__}); using summary")
     # documented summary fallback (logged, never silent)
@@ -655,13 +661,17 @@ def _td_worker(spec):
 def _dmax_one(job):
     """One (tau, beta) cell: D_max = largest delay whose reward rate >= criterion.
     Top-level so it pickles for the Pool."""
-    tau, beta, seeds, episodes, delays = job
+    if len(job) == 5:
+        tau, beta, seeds, episodes, delays = job
+        dt = 5e-3
+    else:
+        tau, beta, seeds, episodes, delays, dt = job
     crit = 0.75
     dmax = 0.0
     for D in delays:
         env = TMaze(L=3, A_goal=2)
         r = train_sequential(env, B=seeds, tau_leak=tau, D=D, episodes=episodes,
-                             beta_leak=beta, seed0=0)
+                             beta_leak=beta, seed0=0, dt=dt)
         if reward_rate(r, window=100).mean() >= crit:
             dmax = D
         else:
@@ -700,14 +710,19 @@ def _exp19_at_beta(job):
     ``beta_leak`` straight through :func:`run_multitimescale` (both live in this module now,
     so the old importlib/monkeypatch construction is unnecessary). Top-level so it pickles
     for the Pool. Returns ``(beta, {label: (mean, (lo, hi))})``."""
-    beta, seeds, trials, tau_pool, best_tau = job
+    if len(job) == 5:
+        beta, seeds, trials, tau_pool, best_tau = job
+        dt = 5e-3
+    else:
+        beta, seeds, trials, tau_pool, best_tau, dt = job
     res = {}
     for label, kind, norm in [("hetero_raw", "hetero_measured", "none"),
                               ("hetero_homeo", "hetero_measured", "homeo"),
                               ("best_single", "best_single", "none")]:
         arg = best_tau if kind == "best_single" else None
         rw, *_ = run_multitimescale(kind, B=seeds, trials=trials, tau_arg=arg,
-                                    tau_pool=tau_pool, elig_norm=norm, beta_leak=beta)
+                                    tau_pool=tau_pool, elig_norm=norm, beta_leak=beta,
+                                    dt=dt)
         f = rw[:, -400:].mean(1)
         res[label] = (float(f.mean()), bootstrap_ci(f))
     return beta, res

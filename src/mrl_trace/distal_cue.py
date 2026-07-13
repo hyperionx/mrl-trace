@@ -474,13 +474,13 @@ def _distal_make_fault(p, variant, seed):
 def _distal_one_run(job):
     """Single (gap, p, arm, seed) run; returns ``(gap, p, arm, seed, final_reward)``.
 
-    A module-level function (not a closure) so it is picklable for the fork Pool in
-    ``main()``. Reads ``_DISTAL_CFG`` for the variant/trials/window the driver set.
+    A module-level function (not a closure) so it is picklable under both spawn and
+    fork. The job carries variant/trials/window explicitly.
     """
-    gap, p, arm, seed = job
-    variant = _DISTAL_CFG["variant"]
-    trials = _DISTAL_CFG["trials"]
-    window = _DISTAL_CFG["window"]
+    # Carry the execution configuration in the job instead of relying on mutable
+    # module globals.  This preserves the original numerical worker while making
+    # it correct under Windows' spawn start method as well as POSIX fork.
+    gap, p, arm, seed, variant, trials, window = job
     tau = _DISTAL_TAU_LONG if arm in ("long", "abstract") else _DISTAL_TAU_SHORT
     abstract = (arm == "abstract")
     no_trace = (arm == "no_trace")
@@ -499,6 +499,31 @@ def _distal_one_run(job):
     return (gap, p, arm, seed, _distal_final(r, window))
 
 
+def _distal_batch_run(job):
+    """Spawn-safe reduced-run worker that vectorises independent seeds in one batch.
+
+    The published driver keeps one process job per seed.  For an examiner-facing
+    reduced notebook, the same trainers can evolve the seed axis together (their
+    native ``B`` dimension), which avoids repeating the Python time-step loop.
+    """
+    gap, p, arm, seeds, variant, trials, window = job
+    tau = _DISTAL_TAU_LONG if arm in ("long", "abstract") else _DISTAL_TAU_SHORT
+    abstract = arm == "abstract"
+    no_trace = arm == "no_trace"
+    fault = _distal_make_fault(p, variant, seed=int(100 * p) + int(10 * gap))
+    if variant == "shallow":
+        r = train_distal_shallow(B=seeds, tau_leak=tau, T_gap=gap, trials=trials,
+                                 seed0=0, abstract=abstract, no_trace=no_trace,
+                                 weight_fault=fault)
+    else:
+        mode = "no_trace" if no_trace else "dfa"
+        r = train_distal_deep(mode=mode, B=seeds, H=16, tau_leak=tau, T_gap=gap,
+                              trials=trials, seed0=0, homeo=1.0,
+                              weight_fault=fault)
+    vals = np.asarray(reward_rate(r, window=window), float).reshape(-1)
+    return gap, p, arm, vals
+
+
 def _distal_boot_ci(vals, seed=0):
     """Percentile bootstrap 95% CI for the mean of ``vals`` (matches the driver's own
     resample count so reproduced numbers are bit-identical)."""
@@ -509,11 +534,14 @@ def _distal_boot_ci(vals, seed=0):
 
 
 def run_distal_cue(*, variant="deep", gaps=(1.0, 4.0, 10.0), p_grid=(0.0,), seeds=12,
-                   trials=2000, window=150, workers=1):
+                   trials=2000, window=150, workers=1, pool=None,
+                   batch_seeds=False):
     """Distal-cue retention-as-asset grid; returns the result dict (no file I/O, no plots).
 
-    SERIAL by default (``workers=1``) so a notebook can call it in-kernel at a small
-    ``seeds``/``trials``; ``main()`` sets ``workers=os.cpu_count()`` for the published run.
+    Serial by default (``workers=1``). Pass an existing spawn-safe ``pool`` to distribute
+    conditions without nesting pools. ``batch_seeds=True`` evolves the native seed batch
+    together inside each condition, reducing Python-loop overhead for notebook runs;
+    the publication driver retains its one-job-per-seed path.
 
     Sweeps ``gaps x arms x p_grid x seeds`` where the arms are device-LONG
     (``tau=20 s``), device-SHORT (``tau=1.5 s``) and ``no_trace`` always, plus an
@@ -532,23 +560,35 @@ def run_distal_cue(*, variant="deep", gaps=(1.0, 4.0, 10.0), p_grid=(0.0,), seed
     # arms: device-long, device-short, no_trace always; abstract-long only for the
     # shallow variant (the deep variant has no abstract eligibility gate).
     arms = ["long", "short", "no_trace"] + (["abstract"] if variant == "shallow" else [])
-    jobs = [(g, p, arm, s) for g in gaps for p in p_grid for arm in arms
-            for s in range(seeds)]
+    if batch_seeds:
+        jobs = [(g, p, arm, seeds, variant, trials, window)
+                for g in gaps for p in p_grid for arm in arms]
+        worker = _distal_batch_run
+    else:
+        jobs = [(g, p, arm, s, variant, trials, window)
+                for g in gaps for p in p_grid for arm in arms for s in range(seeds)]
+        worker = _distal_one_run
 
-    if workers and workers > 1:
+    if pool is not None:
+        results = pool.map(worker, jobs, chunksize=1)
+    elif workers and workers > 1:
         import multiprocessing as mp
         try:
             ctx = mp.get_context("fork")
         except ValueError:                                   # pragma: no cover
             ctx = mp.get_context()
         with ctx.Pool(workers) as pool:
-            results = pool.map(_distal_one_run, jobs, chunksize=1)
+            results = pool.map(worker, jobs, chunksize=1)
     else:
-        results = [_distal_one_run(job) for job in jobs]
+        results = [worker(job) for job in jobs]
 
     acc = {}
-    for g, p, arm, s, val in results:
-        acc.setdefault((g, p, arm), []).append(val)
+    if batch_seeds:
+        for g, p, arm, vals in results:
+            acc.setdefault((g, p, arm), []).extend(np.asarray(vals, float).tolist())
+    else:
+        for g, p, arm, s, val in results:
+            acc.setdefault((g, p, arm), []).append(val)
 
     summary = {}
     for g in gaps:

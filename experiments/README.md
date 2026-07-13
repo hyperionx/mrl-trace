@@ -1,42 +1,47 @@
-# Experiments
+# Publication reproduction notebooks
 
-These notebooks are live-first reproducibility artifacts for `mrl-trace`.
+These notebooks form the lightweight, examiner-facing reproduction path for the
+MRL manuscript. They display every figure inline and do not write image files by
+default.
 
-By default each notebook sets `RESULT_MODE = "live"` and recomputes reduced-budget evidence directly from the package. Set `RESULT_MODE = "full_sweep_cache"` only to render committed publication-scale grids under `data/results/`; cache-mode cells print their source before loading.
+- `00_device_physics_and_trace.ipynb`: measured transients, device physics, trace
+  shapes, ITO summaries, and timescales.
+- `01_distal_credit_ladder.ipynb`: four authored schematic generators
+  plus live trace-level, full-spiking, and closed-loop credit experiments.
+- `02_sequential_and_scaling.ipynb`: retention-delay scaling, sequential credit,
+  array-size/remedy sweeps, and hybrid orientation.
+- `03_deep_local_and_faults.ipynb`: distal-cue, deep-local, delayed-match,
+  homeostasis, crossbar, array scaling, and fault panels.
+- `04_biological_grounding.ipynb`: a live Frank-task reproduction plus genuine reduced
+  DANDI dopamine and OpenNeuro EEG workflows.
+- `05_extensions.ipynb`: interval, beta-sensitivity, long-horizon, reversal,
+  multi-timescale, vector-timer, consolidation, and device-TD results.
+- `REPRODUCE.ipynb`: validates the 41-figure manifest, fans lightweight notebooks
+  into isolated children, and gives grid-heavy notebooks a spawn-safe worker pool.
 
-Run with the shared environment:
+All notebooks expose the same controls: `RUN_PROFILE`, `DEVICE`, `WORKERS`,
+`SAVE_FIGURES`, `OUTPUT_DIR`, `OVERWRITE`, `RUN_EXTERNAL_DATA`, and
+`ALLOW_DATA_DOWNLOADS`. Environment variables use the same names with an `MRL_`
+prefix. The default reduced profile is offline. Core reference simulations remain
+NumPy/CPU workloads; the Torch hybrid front end selects CUDA when available.
 
-```bash
-conda run -n mnn_torch python -c "import mrl_trace"
-```
+Published numerical summaries in `data/publication/aggregates.json` are audit
+records, not fabricated seed arrays and not substitutes for the default live runs.
+Exact visual targets are read-only QA references. External recordings are never
+downloaded unless both external execution and downloads are enabled. For notebook 04,
+install `.[repro,external]`, then set `MRL_RUN_EXTERNAL_DATA=1` and
+`MRL_ALLOW_DATA_DOWNLOADS=1`. Its preparation cell range-streams the ten exact DANDI
+000351 photometry/event sessions used by the recorded panel (skipping their large videos)
+and downloads the ~96 MB OpenNeuro ds003474 participant `sub-001`. It then creates small
+analysis caches and runs the reduced figures inline. Later executions reuse and verify
+the local files; the full 98.5 GB/17.9 GB source datasets are not needed for this reduced
+validation snapshot.
 
-## Claim Alignment
+Numerical notebooks support `MRL_USE_ARCHIVED_RESULTS=1` where a matching archive
+exists. The default remains live, and `publication` restores the larger authored
+settings.
 
-- `00_device_model.ipynb`: live-backed measured transient, KWW fit, retention distribution, and habituation.
-- `01_trace_and_credit_window.ipynb`: live-backed eligibility trace and delayed-credit window; live-oriented coarse `D_max` scaling.
-- `02_closed_loop_rl.ipynb`: live-backed closed-loop learning and sequential maze; live-oriented scaling and remedy diagnostics.
-- `03_deep_local_learning.ipynb`: live-backed deep local-learning and distractor panels; live-oriented array-scale and hybrid diagnostics.
-- `04_temporal_selectivity.ipynb`: live-backed DMS and interval selectivity; live-oriented vector-timer trace response.
-- `05_biological_grounding.ipynb`: live-oriented Frank PST and live-backed real local dopamine-cache panels; EEG claims are external-data gated when OpenNeuro data are absent.
-- `06_extensions.ipynb`: live-backed reversal and WM/STC diagnostics; live-oriented multi-timescale, device-TD, and beta-sensitivity panels.
-
-## External Data
-
-The dopamine panel uses extracted DANDI-derived caches if available at `C:\tmp\da_cache` or `/tmp/da_cache`. The optional DANDI extraction helper is included in `05_biological_grounding.ipynb` behind `RUN_DANDI_EXTRACT = False`.
-
-OpenNeuro EEG data are not bundled. Without an EEG reward-pool cache, the notebook renders an explicitly labelled external-data orientation panel rather than silently omitting the claim.
-
-## Full-Sweep Regeneration
-
-The notebooks include commented command patterns such as:
-
-```bash
-python -m mrl_trace.bandit --bandit --full
-python -m mrl_trace.maze --exp6 --full
-python -m mrl_trace.deep --exp7 --exp13 --exp14 --full
-python -m mrl_trace.selectivity --exp10 --exp20 --full
-python -m mrl_trace.dopamine --exp11 --full
-python -m mrl_trace.extensions --exp19 --exp21 --exp22 --exp23 --full
-```
-
-Use these only when publication-scale seed counts and confidence intervals are required.
+To save claimable figures, set `MRL_SAVE_FIGURES=1` and choose
+`MRL_OUTPUT_DIR`. Existing files are protected unless `MRL_OVERWRITE=1`.
+Read-only QA references, placeholders, and gated external panels are never written
+as regenerated publication figures.

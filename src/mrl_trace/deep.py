@@ -641,10 +641,23 @@ def _summarize_dms(raw, conds, *, trials, chance, crit, tau_leak=1.5, G=5.0,
             "criteria": {"H1": h1, "H2": h2, "H3": h3, "K1": k1}}
 
 
-def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace")):
-    """Experiment 12 core: DMS-with-distractor over all conditions (SERIAL, returns
-    the packaged grid dict; no file I/O). Notebooks call this in quick mode."""
-    raw = {c: run_dms(c, B=seeds, trials=trials) for c in conds}
+def _dms_one_job(job):
+    """Spawn-safe coarse worker for one shallow-DMS condition."""
+    cond, seeds, trials = job
+    return cond, run_dms(cond, B=seeds, trials=trials)
+
+
+def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace"),
+                pool=None):
+    """Experiment 12 core: DMS-with-distractor over all conditions.
+
+    Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
+    condition axis. Returns the packaged grid dict and performs no file I/O.
+    """
+    jobs = [(c, seeds, trials) for c in conds]
+    pairs = (pool.map(_dms_one_job, jobs, chunksize=1) if pool is not None
+             else map(_dms_one_job, jobs))
+    raw = dict(pairs)
     return _summarize_dms(raw, conds, trials=trials, chance=0.5, crit=0.75)
 
 
@@ -703,14 +716,24 @@ def _summarize_deep_local(res, *, seeds, trials, hp, homeo, chance, crit,
             "criteria": {"C1": c1, "C2": c2, "C3": c3, "C4": c4, "C6": c6, "K4": k4}}
 
 
+def _deep_local_job(job):
+    """Spawn-safe coarse worker for one deep-local condition."""
+    mode, seeds, trials, hp, homeo = job
+    return _deep_local_one(mode, seeds=seeds, trials=trials, hp=hp, homeo=homeo)
+
+
 def run_deep_local(*, seeds=20, trials=3000, hp=None, homeo=DEEP_LOCAL_HOMEO,
-                   modes=None, chance=0.5, crit=0.75):
-    """Experiment 7 core: deep all-local XOR over all conditions (SERIAL, returns the
-    packaged grid dict; no file I/O). Notebooks call this in quick mode."""
+                   modes=None, chance=0.5, crit=0.75, pool=None):
+    """Experiment 7 core: deep all-local XOR over all conditions.
+
+    Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
+    condition axis. Returns the packaged grid dict and performs no file I/O.
+    """
     hp = DEEP_LOCAL_HP if hp is None else hp
     modes = list(modes) if modes is not None else DEEP_LOCAL_MODES
-    res = [_deep_local_one(m, seeds=seeds, trials=trials, hp=hp, homeo=homeo)
-           for m in modes]
+    jobs = [(m, seeds, trials, hp, homeo) for m in modes]
+    res = (pool.map(_deep_local_job, jobs, chunksize=1) if pool is not None
+           else list(map(_deep_local_job, jobs)))
     return _summarize_deep_local(res, seeds=seeds, trials=trials, hp=hp, homeo=homeo,
                                  chance=chance, crit=crit, modes=modes)
 
@@ -767,16 +790,28 @@ def _summarize_deep_dms(raw, conds, *, seeds, trials, hp, homeo, t_distract,
             "criteria": {"H1": h1, "H2": h2, "H3": h3, "K1": k1}}
 
 
+def _deep_dms_job(job):
+    """Spawn-safe coarse worker for one deep temporal-distractor condition."""
+    spec, seeds, trials, hp, t_distract, distract_dur = job
+    return _deep_dms_one(spec, seeds=seeds, trials=trials, hp=hp,
+                         t_distract=t_distract, distract_dur=distract_dur)
+
+
 def run_deep_dms(*, seeds=20, trials=3000, hp=None, homeo=DEEP_DMS_HOMEO,
                  conds=None, t_distract=DEEP_DMS_T_DISTRACT,
-                 distract_dur=DEEP_DMS_DISTRACT_DUR, chance=0.5, crit=0.75):
-    """Experiment 13 core: deep XOR + temporal distractor over all conditions (SERIAL,
-    returns the packaged grid dict; no file I/O). Notebooks call this in quick mode."""
+                 distract_dur=DEEP_DMS_DISTRACT_DUR, chance=0.5, crit=0.75,
+                 pool=None):
+    """Experiment 13 core: deep XOR plus temporal distractor over all conditions.
+
+    Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
+    condition axis. Returns the packaged grid dict and performs no file I/O.
+    """
     hp = DEEP_DMS_HP if hp is None else hp
     conds = DEEP_DMS_CONDS if conds is None else conds
-    raw = dict(_deep_dms_one(spec, seeds=seeds, trials=trials, hp=hp,
-                             t_distract=t_distract, distract_dur=distract_dur)
-               for spec in conds)
+    jobs = [(spec, seeds, trials, hp, t_distract, distract_dur) for spec in conds]
+    pairs = (pool.map(_deep_dms_job, jobs, chunksize=1) if pool is not None
+             else map(_deep_dms_job, jobs))
+    raw = dict(pairs)
     return _summarize_deep_dms(raw, conds, seeds=seeds, trials=trials, hp=hp,
                                homeo=homeo, t_distract=t_distract,
                                chance=chance, crit=crit)
@@ -833,8 +868,9 @@ def _array_scale_reduce(results, H_grid, p_grid, *, seeds, sigma_g, sigma_g_on,
         for j, p in enumerate(p_grid):
             d = np.array(dev[(H, p)]); c = np.array(ctl[(H, p)])
             lo, hi = bootstrap_ci(d, seed=i * 10 + j)
-            grid[i, j] = (d.mean(), lo, hi); cgrid[i, j] = c.mean()
-            passes[(H, p)] = bool(lo > c.mean() and d.mean() > 0.75)
+            cmean = float(c.mean()) if c.size else np.nan
+            grid[i, j] = (d.mean(), lo, hi); cgrid[i, j] = cmean
+            passes[(H, p)] = bool(lo > cmean and d.mean() > 0.75) if c.size else None
     if pf_on:
         faults = "stuck-off + D2D(0.5) + PF-nonlinearity"
     else:
@@ -846,7 +882,7 @@ def _array_scale_reduce(results, H_grid, p_grid, *, seeds, sigma_g, sigma_g_on,
 
 def run_array_scale(*, H_grid=(8, 32, 128, 512), p_grid=(0.0, 0.05, 0.20, 0.50),
                     seeds=12, trials=2000, sigma_g=0.5, sigma_g_on=None,
-                    pf_on=True, pool=None):
+                    pf_on=True, pool=None, include_control=True):
     """Experiment 14 core: array-scale fault-tolerance feasibility (SERIAL by default,
     returns the packaged grid dict; no file I/O). Unifies ``array_scale_faults`` (the
     ``pf_on=True`` full-PF grid, ``exp14_array_scale.npy``) and ``entry_array_scale``
@@ -855,14 +891,17 @@ def run_array_scale(*, H_grid=(8, 32, 128, 512), p_grid=(0.0, 0.05, 0.20, 0.50),
 
     Every (H, p, seed) x {device, control} cell is an independent :func:`train_deep`
     call. In-notebook this runs serially; ``main()`` passes a ``multiprocessing.Pool``
-    via ``pool`` to fan the jobs out across the coarse (cell x seed) axis.
+    via ``pool`` to fan the jobs out across the coarse (cell x seed) axis. Set
+    ``include_control=False`` when reproducing the Appendix heatmap, which plots only
+    the device arm; the returned ``ctrl`` grid is then NaN and ``passes`` is unset.
     """
     H_grid = list(H_grid); p_grid = list(p_grid)
     fkw = dict(sigma_g=sigma_g, sigma_g_on=sigma_g_on, pf_on=pf_on,
                t_distract=3.0, trials=trials)
+    traces = (True, False) if include_control else (True,)
     jobs = [(H, p, s, trace, fkw)
             for H in H_grid for p in p_grid for s in range(seeds)
-            for trace in (True, False)]
+            for trace in traces]
     if pool is None:
         results = [_array_scale_run(j) for j in jobs]
     else:

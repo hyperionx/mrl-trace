@@ -1,20 +1,92 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mrl-trace"
 version = "0.1.0"
-description = "A Memristive Device Transient as a Hardware Eligibility Trace for Three-Factor Reinforcement Learning"
+description = "Memristive device transients as hardware eligibility traces for local reinforcement learning"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-    "numpy",
-    "matplotlib",
-    "scipy",
-    "torch",
-    "snntorch",
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10,<3.13"
+authors = [
+    { name = "Viet Cuong Vu", email = "viet.vu.14@ucl.ac.uk" },
+    { name = "Anak Agung Ngurah Arymurti Santosa" },
+    { name = "Wing H. Ng" },
+    { name = "Adnan Mehonic" },
+    { name = "Anthony J. Kenyon" },
 ]
+keywords = [
+    "eligibility-trace",
+    "memristor",
+    "neuromorphic-computing",
+    "reinforcement-learning",
+    "spiking-neural-networks",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+repro = [
+    "ipykernel>=6.29",
+    "jupyterlab>=4.2",
+    "matplotlib>=3.9",
+    "nbclient>=0.10",
+    "nbformat>=5.10",
+    "scikit-learn>=1.5",
+    "snntorch>=0.9",
+    "torch>=2.3",
+    "xlrd>=2.0.1",
+]
+external = [
+    "fsspec[http]>=2024.6",
+    "h5py>=3.11",
+    "requests>=2.32",
+    "scikit-learn>=1.5",
+]
+test = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+release = [
+    "build>=1.2",
+    "twine>=5.1",
+]
+dev = [
+    "black>=24.4",
+    "flake8>=7.0",
+    "isort>=5.13",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/hyperionx/mrl-trace"
+Repository = "https://github.com/hyperionx/mrl-trace"
+"Bug Tracker" = "https://github.com/hyperionx/mrl-trace/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "external: requires explicitly enabled external data",
+    "gpu: requires a supported accelerator",
+    "integration: exercises notebook or package integration",
+    "slow: runs a non-smoke scientific workload",
+]

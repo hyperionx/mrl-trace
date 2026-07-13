@@ -501,7 +501,8 @@ def running_rate(r1d, window=50):
 
 
 def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
-                   taus=(2.0, 5.0, 20.0), delays=(2, 4, 8, 16, 32, 64), seed0=0):
+                   taus=(2.0, 5.0, 20.0), delays=(2, 4, 8, 16, 32, 64), seed0=0,
+                   workers=1):
     """Experiment 6: sequential T-maze learning curves + retention x delay grid.
 
     Runs the four conditions (device / rstdp / eprop / no_trace) as learning curves
@@ -511,73 +512,33 @@ def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
 
     Every cell is an independent, seed-deterministic ``train_sequential`` call
     (``B=seeds``, ``seed0=0``), so the result is identical whether the cells are run
-    serially (here) or dispatched across a process pool (``main``).  Returns the result
+    serially or dispatched across a spawn-safe process pool with ``workers > 1``.
+    Returns the result
     dict (per-condition per-seed finals + running curves, policy correctness, the
     retention x delay grid with bootstrap CIs, ``D_max`` per tau, and the pre-registered
     criteria); no file I/O.
     """
-    from .stats import bootstrap_ci
+    from functools import partial
     taus = list(taus); delays = list(delays)
-    env = TMaze(L=3, A_goal=2)
-    A = env.A_goal
-    chance = 1.0 / A
-    crit = 0.5 * (1 + chance)                 # manuscript convention -> 0.75 for A=2
     conds = {"device": dict(), "rstdp": dict(abstract=True),
              "eprop": dict(eprop=True, eta=EPROP_ETA),
              "no_trace": dict(no_trace=True)}
-
-    # ---------- (1) learning curves ----------
-    curves, finals, finals_ci = {}, {}, {}
+    specs = []
     for name, kw in conds.items():
-        r = train_sequential(env, B=seeds, tau_leak=TAU0, D=D0, episodes=episodes,
-                             V=V, seed0=seed0, **kw)
-        finals[name] = reward_rate(r, window=100)
-        curves[name] = running_rate(r.mean(0), window=50)
-        finals_ci[name] = bootstrap_ci(finals[name])
-
-    # ---------- (2) policy correctness from ACTUAL learned weights ----------
-    _, w_dev = train_sequential(env, B=seeds, tau_leak=TAU0, D=D0, episodes=episodes,
-                                V=V, seed0=seed0, return_weights=True)
-    pol = np.array([policy_correct(env, w_dev[b]) for b in range(seeds)])
-
-    # ---------- (3) retention x delay grid (device) ----------
-    grid = np.zeros((len(taus), len(delays)))
-    grid_ci = np.zeros((len(taus), len(delays), 2))
-    for i, tau in enumerate(taus):
-        for j, D in enumerate(delays):
-            f = reward_rate(train_sequential(env, B=seeds, tau_leak=tau, D=D,
-                                             episodes=episodes, V=V, seed0=seed0), 100)
-            grid[i, j] = f.mean()
-            grid_ci[i, j] = bootstrap_ci(f)
-
-    # D_max(tau) = largest delay reaching criterion (the prediction-arm datapoints)
-    dmax = {}
-    for i, tau in enumerate(taus):
-        ok = [D for j, D in enumerate(delays) if grid[i, j] >= crit]
-        dmax[tau] = max(ok) if ok else 0
-
-    # ---------- pre-registered criteria ----------
-    c1 = bool(finals["no_trace"].mean() <= chance + 0.10)
-    c2 = bool(finals["device"].mean() >= crit)
-    c3 = bool(pol.mean() >= crit)
-    c4 = bool((dmax[20.0] >= dmax[5.0] >= dmax[2.0]) and (dmax[20.0] > dmax[2.0])) \
-        if set((2.0, 5.0, 20.0)).issubset(dmax) else None
-    dev_beats_nt = bool(any(grid[i, j] > finals["no_trace"].mean() + 0.1
-                            for i in range(len(taus)) for j in range(len(delays))))
-    criteria = {"C1_notrace_at_chance": c1, "C2_device_criterion": c2,
-                "C3_device_policy": c3, "C4_dmax_grows_with_tau": c4,
-                "K1_device_exceeds_notrace": dev_beats_nt}
-
-    return {
-        "finals": {k: v for k, v in finals.items()},
-        "finals_ci": finals_ci,
-        "curves": curves, "policy": pol,
-        "policy_ci": bootstrap_ci(pol),
-        "taus": taus, "delays": delays, "grid": grid, "grid_ci": grid_ci,
-        "dmax": dmax, "chance": chance, "crit": crit,
-        "D0": D0, "TAU0": TAU0, "V": V, "seeds": seeds, "episodes": episodes,
-        "criteria": criteria,
-    }
+        specs.append((("curve", name), TAU0, D0, kw, False))
+    specs.append((("weights", "device"), TAU0, D0, dict(), True))
+    for tau in taus:
+        for D in delays:
+            specs.append((("grid", tau, D), tau, D, dict(), False))
+    worker = partial(_exp6_worker_seeded, seeds=seeds, episodes=episodes, V=V,
+                     seed0=seed0)
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
+            res = dict(pool.map(worker, specs, chunksize=1))
+    else:
+        res = dict(map(worker, specs))
+    return _exp6_assemble(res, conds, taus, delays, seeds, episodes, V, D0, TAU0)
 
 
 # -----------------------------------------------------------------------------
@@ -677,7 +638,8 @@ def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
             "V_op": V}
 
 
-def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=0.75):
+def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=0.75,
+                 workers=1):
     """Experiment 8: dense D_max(tau_leak) scaling law (device condition only).
 
     Runs every ``(tau, D)`` device cell serially and reads off the interpolated
@@ -687,11 +649,71 @@ def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=
     Each cell is deterministic (``seed0=0``); serial here, pooled in ``main``. Returns
     the result dict; no file I/O.
     """
+    from functools import partial
     taus = DMAX_TAUS if taus is None else list(taus)
     delays = DMAX_DELAYS if delays is None else list(delays)
     specs = [(tau, D) for tau in taus for D in delays]
-    results = [_dmax_cell(s, episodes, V, seeds) for s in specs]
+    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds)
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
+            results = pool.map(worker, specs, chunksize=1)
+    else:
+        results = list(map(worker, specs))
     return _dmax_assemble(results, taus, delays, crit, seeds, episodes, V)
+
+
+def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
+                      delay_ratios=(4, 8, 12, 16, 20), crit=0.75, workers=1):
+    """Reduced live validation of the dense retention--delay law.
+
+    The publication sweep uses one 18-value absolute-delay grid for every retention.
+    A lightweight notebook need not spend most of its time far from the falling edge:
+    this runner evaluates the same device task at fixed ``D / tau_leak`` ratios, then
+    interpolates the criterion crossing independently for each retention.  No model
+    outputs or fitted values are substituted; every displayed point is obtained from
+    a live ``train_sequential`` cell.  The published-scale :func:`run_dmax_law` remains
+    the exact-grid route.
+    """
+    from functools import partial
+    taus = DMAX_TAUS if taus is None else [float(t) for t in taus]
+    sampled_delays = {
+        tau: sorted(set(float(np.clip(round(tau * r, 3), 1.0, 700.0))
+                        for r in delay_ratios))
+        for tau in taus
+    }
+    specs = [(tau, D) for tau in taus for D in sampled_delays[tau]]
+    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds)
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
+            results = pool.map(worker, specs, chunksize=1)
+    else:
+        results = list(map(worker, specs))
+
+    sampled = {tau: {} for tau in taus}
+    for tau, D, mean, lo, hi in results:
+        sampled[tau][D] = (mean, lo, hi)
+    dmax = {}
+    censored = []
+    for tau in taus:
+        ds = sampled_delays[tau]
+        rates = [sampled[tau][D][0] for D in ds]
+        dmax[tau] = interp_dmax(ds, rates, crit)
+        censored.append(bool(rates[-1] >= crit))
+    taus_a = np.asarray(taus, float)
+    dvals = np.asarray([dmax[t] for t in taus], float)
+    censored_a = np.asarray(censored, bool)
+    fitmask = (~censored_a) & (dvals > 0)
+    k, r2 = _dmax_origin_fit(taus_a, dvals, fitmask)
+    plateau_tau = DMAX_PLATEAU_TAU
+    k_plateau, r2_plateau = _dmax_origin_fit(
+        taus_a, dvals, fitmask & (taus_a >= plateau_tau))
+    return {"taus": list(taus), "sampled_delays": sampled_delays, "sampled": sampled,
+            "dmax": dmax, "k": k, "r2": r2, "k_plateau": k_plateau,
+            "r2_plateau": r2_plateau, "plateau_tau": plateau_tau, "crit": crit,
+            "censored": censored, "seeds": seeds, "episodes": episodes, "V_op": V,
+            "mode": "adaptive-live"}
 
 
 # -----------------------------------------------------------------------------
@@ -723,9 +745,13 @@ def _lh_final_rate(r):
 def _lh_run(job):
     """One (L, A, cond, seed) long-horizon cell -> (L, A, cond, seed, final rate).
     Top-level for multiprocessing; ``B=1`` and ``seed0=seed`` so seeds are independent."""
-    L, A, cond, seed, episodes, D, tau_leak = job
+    if len(job) == 7:
+        L, A, cond, seed, episodes, D, tau_leak = job
+        dt = 5e-3
+    else:
+        L, A, cond, seed, episodes, D, tau_leak, dt = job
     env = TMaze(L=L, A_goal=A)
-    r = train_sequential(env, B=1, tau_leak=tau_leak, D=D, episodes=episodes,
+    r = train_sequential(env, B=1, tau_leak=tau_leak, D=D, episodes=episodes, dt=dt,
                          seed0=seed, **LONG_HORIZON_CONDS[cond])
     return (L, A, cond, seed, _lh_final_rate(r))
 
@@ -757,7 +783,7 @@ def _lh_summarize(results, L_grid, A_grid, episodes, D, tau_leak, seeds):
 
 
 def run_long_horizon(*, L_grid=(3, 5, 8, 12), A_grid=(2, 3), seeds=12,
-                     episodes=2500, D=2.0, tau_leak=10.0):
+                     episodes=2500, D=2.0, tau_leak=10.0, dt=5e-3):
     """Experiment 15: longer-horizon temporal-credit feasibility, serial.
 
     Sweeps trajectory length ``L`` x arm count ``A_goal`` x condition x seed and reports
@@ -767,7 +793,7 @@ def run_long_horizon(*, L_grid=(3, 5, 8, 12), A_grid=(2, 3), seeds=12,
     Returns the result dict; no file I/O.
     """
     L_grid = list(L_grid); A_grid = list(A_grid)
-    jobs = [(L, A, cond, s, episodes, D, tau_leak)
+    jobs = [(L, A, cond, s, episodes, D, tau_leak, dt)
             for L in L_grid for A in A_grid
             for cond in LONG_HORIZON_CONDS for s in range(seeds)]
     results = [_lh_run(j) for j in jobs]
@@ -969,6 +995,15 @@ def _exp6_worker(spec, seeds, episodes, V):
     env = TMaze(L=3, A_goal=2)
     out = train_sequential(env, B=seeds, tau_leak=tau_leak, D=D, episodes=episodes,
                            V=V, seed0=0, return_weights=want_w, **kw)
+    return (key, out)
+
+
+def _exp6_worker_seeded(spec, seeds, episodes, V, seed0=0):
+    """Spawn-safe exp6 worker that retains the public runner's ``seed0`` control."""
+    key, tau_leak, D, kw, want_w = spec
+    env = TMaze(L=3, A_goal=2)
+    out = train_sequential(env, B=seeds, tau_leak=tau_leak, D=D, episodes=episodes,
+                           V=V, seed0=seed0, return_weights=want_w, **kw)
     return (key, out)
 
 

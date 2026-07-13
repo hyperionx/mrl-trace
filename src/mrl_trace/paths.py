@@ -1,16 +1,17 @@
 """Filesystem paths for optional result grids and device-model fixtures.
 
-The experiments in this package are reproduced by notebooks under ``experiments/``
-that hold no code themselves: they call the ``run_*`` cores in the library and read
-or write result grids under a single top-level ``data/`` directory. This module is
-the one place that resolves ``data/`` so that both the notebooks and the module
+The experiments in this package are reproduced by self-contained notebooks under
+``experiments/``. They keep figure construction beside the narrative while calling
+shared ``run_*`` scientific cores and reading or writing result grids under a single
+top-level ``data/`` directory. This module is the one place that resolves ``data/``
+so that both the notebooks and the module
 ``main()`` entry points (``python -m mrl_trace.<module> --full``) agree on
 where results live, regardless of the current working directory.
 
 Because the package is installed editable, ``__file__`` resolves inside the real
 repository ``src/`` tree, so the repository root -- and its sibling ``data/`` -- is
-discoverable from the module location. Set ``SIOX_DATA_DIR`` to override (e.g. for a
-wheel install or CI where ``data/`` lives elsewhere).
+discoverable from the module location. Set ``MRL_TRACE_DATA_DIR`` to override (the
+legacy ``SIOX_DATA_DIR`` spelling remains accepted for compatibility).
 """
 from __future__ import annotations
 
@@ -31,37 +32,33 @@ __all__ = [
 
 
 def data_dir() -> Path:
-    """Absolute path to the package ``data/`` directory (created if absent).
+    """Absolute path to the package ``data/`` directory.
 
-    Honours the ``SIOX_DATA_DIR`` environment variable; otherwise resolves to
+    Honours ``MRL_TRACE_DATA_DIR`` (or legacy ``SIOX_DATA_DIR``); otherwise resolves to
     ``<repo-root>/data`` from this module's location (editable install).
     """
-    env = os.environ.get("SIOX_DATA_DIR")
+    env = os.environ.get("MRL_TRACE_DATA_DIR") or os.environ.get("SIOX_DATA_DIR")
     if env:
         d = Path(env).expanduser().resolve()
     else:
         # paths.py -> mrl_trace -> src -> <repo-root>
         d = Path(__file__).resolve().parents[2] / "data"
-    d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def results_dir() -> Path:
-    """``data/results`` -- optional full-sweep caches used only when requested."""
-    p = data_dir() / "results"
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+    """``data/results`` -- curated publication and reduced-run archives."""
+    return data_dir() / "results"
 
 
 def device_model_dir() -> Path:
     """``data/device_model`` -- measured device-model fixtures.
 
-    Holds ``kww_final.json``, ``habit_data.npz``, ``ito_decay_data.npz`` and the
+    Holds ``kww_final.json``, ``habit_data.npz``, ``ito_decay_data.npz``, the
+    lossless ``ito_relaxation_measurements.npz`` transcription, and the
     ``gold_export/`` measured device traces.
     """
-    p = data_dir() / "device_model"
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+    return data_dir() / "device_model"
 
 
 def gold_export_dir() -> Path:
@@ -77,6 +74,7 @@ def preregistration_dir() -> Path:
 def save_result(name: str, obj) -> Path:
     """Pickle-save ``obj`` to ``data/results/<name>`` (``.npy``), returning the path."""
     path = results_dir() / name
+    path.parent.mkdir(parents=True, exist_ok=True)
     np.save(path, obj, allow_pickle=True)
     return path
 

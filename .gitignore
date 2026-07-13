@@ -170,5 +170,32 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-data/
+# External/raw datasets and ad-hoc simulation caches are local by default.
+data/*
+!data/SiO_x-multistate-data.mat
+!data/publication/
+!data/publication/**
+!data/device_model/
+data/device_model/*
+!data/device_model/README.md
+!data/device_model/gold_export/
+!data/device_model/gold_export/*.csv
+data/device_model/gold_export/*.mat
+!data/device_model/habit_data.npz
+!data/device_model/ito_decay_data.npz
+!data/device_model/ito_relaxation_measurements.npz
+!data/device_model/kww_final.json
+
+# Curated publication archives above are intentionally tracked. Large external
+# recordings and mutable result caches remain ignored.
+data/results/
+data/raw/
+data/dandi/
+data/openneuro/
+data/eeg/
+data/nmnist/
 scratch/
+
+# Notebook execution products and optional figure exports.
+experiments/.executed/
+experiments/generated_figures/

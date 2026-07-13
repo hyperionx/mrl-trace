@@ -1,11 +1,11 @@
-r"""siox-eligibility-trace: the SiO\ :sub:`x` device transient as a hardware eligibility trace.
+r"""mrl-trace: a SiO\ :sub:`x` device transient as a hardware eligibility trace.
 
 Reference implementation for the manuscript *"A Memristive Device Transient as a
 Hardware Eligibility Trace for Three-Factor Reinforcement Learning"* (APL Machine
 Learning).  The package exposes, as small composable pieces:
 
 - :mod:`mrl_trace.device`   -- the fitted SiO\ :sub:`x` transient and the
-  ``TransientGate`` eligibility-trace generator (Chapter 5, Section 5.3.2 physics);
+  ``TransientGate`` eligibility-trace generator (fitted device physics);
 - :mod:`mrl_trace.neurons`  -- LIF neuron updates (scalar and batched);
 - :mod:`mrl_trace.learning` -- the signed coincidence kernel and the
   three-factor reward-modulated update ``dw = eta (R - b) e``;
@@ -26,7 +26,7 @@ notebooks that call this package's ``run_*`` cores; the result grids live in ``d
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("siox-eligibility-trace")
+    __version__ = version("mrl-trace")
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 finally:
@@ -65,6 +65,7 @@ from .distal_reward import (
     train_spiking,
     cue_saturation,
     run_trace_window,
+    run_spiking_saturation,
     trace_ratio,
 )
 from .maze import (
@@ -188,6 +189,7 @@ __all__ = [
     "train_spiking",
     "cue_saturation",
     "run_trace_window",
+    "run_spiking_saturation",
     "trace_ratio",
     # sequential-maze / distal-credit tasks (D_max retention law, long horizon)
     "run_sequential",

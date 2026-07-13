@@ -400,22 +400,23 @@ def aliasing_pair(*, k=3, tau_leak=10.0, dt=5e-3, cue_dur=0.5, in_rate=200.0,
     return tA, tB, tstar
 
 
-def _worker_main(readout, B, trials, tA, tB):
-    return readout, run_interval(readout, B=B, trials=trials, tA=tA, tB=tB)
+def _worker_main(readout, B, trials, tA, tB, dt=5e-3):
+    return readout, run_interval(readout, B=B, trials=trials, tA=tA, tB=tB, dt=dt)
 
 
-def _worker_sweep(job, B, trials):
+def _worker_sweep(job, B, trials, dt=5e-3):
     sep, k = job
     centre = 9.0
     tA, tB = centre - sep / 2, centre + sep / 2
     accs = {}
     for readout in ("scalar", "vector"):
-        rw = run_interval(readout, B=B, k=k, trials=trials, tA=tA, tB=tB)
+        rw = run_interval(readout, B=B, k=k, trials=trials, tA=tA, tB=tB, dt=dt)
         accs[readout] = float(_final(rw).mean())
     return (sep, k), accs
 
 
-def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None):
+def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None,
+                     dt=5e-3, alias_reps=4000):
     """Experiment 20 core: the cascade occupancy VECTOR as a clockless elapsed-time code.
 
     Serial by default (a notebook calls it in-kernel); returns the result grid as a
@@ -438,13 +439,15 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None):
     # hard-set tA=3,tB=15, but both sit on the last-stage rising flank (peak ~18.5s), so the
     # scalar was never aliased and H2 could not pass. The pair is now computed from the device
     # model so it tracks tau_leak/k.
-    tA, tB, tstar = aliasing_pair(k=3, tau_leak=10.0)
+    tA, tB, tstar = aliasing_pair(k=3, tau_leak=10.0, dt=dt, reps=alias_reps)
     conds = ("vector", "scalar", "no_trace")
     if pool is not None:
-        res = dict(pool.map(partial(_worker_main, B=seeds, trials=trials, tA=tA, tB=tB),
+        res = dict(pool.map(partial(_worker_main, B=seeds, trials=trials, tA=tA, tB=tB,
+                                    dt=dt),
                             conds))
     else:
-        res = {c: run_interval(c, B=seeds, trials=trials, tA=tA, tB=tB) for c in conds}
+        res = {c: run_interval(c, B=seeds, trials=trials, tA=tA, tB=tB, dt=dt)
+               for c in conds}
     finals = {c: _final(res[c]) for c in conds}
     ci = {c: bootstrap_ci(finals[c]) for c in conds}
 
@@ -460,9 +463,9 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None):
     ks = [3, 5, 8] if not quick else [3, 8]
     jobs = [(sep, k) for sep in seps for k in ks]
     if pool is not None:
-        sweep_res = dict(pool.map(partial(_worker_sweep, B=seeds, trials=trials), jobs))
+        sweep_res = dict(pool.map(partial(_worker_sweep, B=seeds, trials=trials, dt=dt), jobs))
     else:
-        sweep_res = dict(_worker_sweep(job, seeds, trials) for job in jobs)
+        sweep_res = dict(_worker_sweep(job, seeds, trials, dt=dt) for job in jobs)
     sweep = {}
     for sep in seps:
         for k in ks:
@@ -472,7 +475,8 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None):
         "finals": {c: finals[c] for c in conds}, "ci": ci,
         "sweep": {f"{s}_{k}": v for (s, k), v in sweep.items()},
         "seps": seps, "ks": ks, "tau_leak": 10.0, "tA": tA, "tB": tB, "tstar": tstar,
-        "seeds": seeds, "trials": trials, "chance": CHANCE, "crit": CRIT,
+        "seeds": seeds, "trials": trials, "dt": dt, "alias_reps": alias_reps,
+        "chance": CHANCE, "crit": CRIT,
         "criteria": {"H1": bool(h1), "H2": bool(h2), "H3": bool(h3), "K1": bool(k1)},
         # extra diagnostics preserved from the original stdout report (H2' weak claim)
         "h2_weak": bool(h2_weak),

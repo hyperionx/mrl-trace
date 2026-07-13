@@ -104,8 +104,8 @@ def _torch():
             "The hybrid perception front-end needs torch + snntorch. Install the "
             'optional extra:\n    pip install -e ".[hybrid]"'
         ) from exc
-    dev = torch.device("mps" if torch.backends.mps.is_available()
-                       else "cuda" if torch.cuda.is_available() else "cpu")
+    dev = torch.device("cuda" if torch.cuda.is_available()
+                       else "mps" if torch.backends.mps.is_available() else "cpu")
     return torch, nn, F, snn, surrogate, dev
 
 
@@ -173,6 +173,10 @@ def run_frontend(steps=600, bs=128, lr=2e-3, seed=0):
     """
     torch, nn, F, snn, surrogate, dev = _torch()
     torch.manual_seed(seed)
+    if getattr(dev, "type", str(dev)) == "cuda":
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
     rng = np.random.default_rng(seed)
     net = _build_convsnn().to(dev)
     opt = torch.optim.Adam(net.parameters(), lr=lr)
@@ -269,8 +273,16 @@ def final_rate(rw, window=100):
     return rw[:, -window:].mean(1)
 
 
+def _hybrid_decision_cell(job):
+    """One spawn-safe decision condition after the frozen front end is extracted."""
+    name, pool, S, A, seeds, trials, D, no_trace = job
+    vals = final_rate(_decision(pool, S=S, A=A, B=seeds, trials=trials, D=D,
+                                no_trace=no_trace))
+    return name, vals
+
+
 def run_hybrid_decision(*, seeds=_N_SEEDS, front_steps=600, front_seed=0,
-                        per_class=500, trials=1500, D=2.0):
+                        per_class=500, trials=1500, D=2.0, workers=1):
     """exp5 (Fig 9): train the perception front-end, then run the decision-layer RL at
     ``seeds`` seeds in three conditions -- *hybrid* (reads the C-dim readout), *raw*
     (reads P pixels, no front-end) and *no_trace* (hybrid wiring, eligibility zeroed) --
@@ -290,12 +302,17 @@ def run_hybrid_decision(*, seeds=_N_SEEDS, front_steps=600, front_seed=0,
     net, acc = run_frontend(steps=front_steps, seed=front_seed)
     feats, raws = run_readout_pool(net, per_class=per_class, seed=front_seed + 1)
 
-    per_seed = {
-        "hybrid": final_rate(_decision(feats, S=C, A=A, B=seeds, trials=trials, D=D)),
-        "raw": final_rate(_decision(raws, S=IMG * IMG, A=A, B=seeds, trials=trials, D=D)),
-        "no_trace": final_rate(_decision(feats, S=C, A=A, B=seeds, trials=trials, D=D,
-                                         no_trace=True)),
-    }
+    jobs = [
+        ("hybrid", feats, C, A, seeds, trials, D, False),
+        ("raw", raws, IMG * IMG, A, seeds, trials, D, False),
+        ("no_trace", feats, C, A, seeds, trials, D, True),
+    ]
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(jobs))) as pool:
+            per_seed = dict(pool.map(_hybrid_decision_cell, jobs, chunksize=1))
+    else:
+        per_seed = dict(map(_hybrid_decision_cell, jobs))
     res = {}
     for k, v in per_seed.items():
         lo, hi = bootstrap_ci(v)

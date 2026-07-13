@@ -374,62 +374,84 @@ def run_learning_and_window(*, seeds=20, delays=(1, 2, 5, 10, 20),
     }
 
 
+def _scaling_cell(job):
+    """One spawn-safe array-size cell for :func:`run_scaling`."""
+    from .stats import bootstrap_ci
+    S, A, seeds, D, trials = job
+    chance = 1.0 / A
+    crit = 0.5 * (1 + chance)
+    dev = train(S, A, B=seeds, D=D, trials=trials)
+    nt = train(S, A, B=seeds, D=D, trials=trials, no_trace=True)
+    dev_fr, nt_fr = reward_rate(dev), reward_rate(nt)
+    ttc = [trials_to_criterion(dev[b], crit) for b in range(seeds)]
+    ok = [t for t in ttc if t is not None]
+
+    def ci(arr):
+        a = np.asarray(arr, float)
+        lo, hi = bootstrap_ci(a)
+        return (float(a.mean()), float(a.std()), lo, hi)
+
+    return (S, A), dict(
+        chance=chance, crit=crit, device=ci(dev_fr), no_trace=ci(nt_fr),
+        trials_to_crit=int(np.median(ok)) if ok else None,
+        n_converged=len(ok), passed=bool(dev_fr.mean() >= crit), n_seeds=seeds,
+        trials=trials)
+
+
 def run_scaling(*, seeds=20, grid=((2, 2), (4, 2), (4, 4), (8, 4), (8, 8), (12, 8)),
-                D=2.0):
+                D=2.0, trials=1500, workers=1):
     """Fig 8a grid (tier4): does the policy still converge as ``S x A`` grows?
 
     Criterion (pre-registered, no goalpost moving): reward rate >= 0.5*(1 + 1/A).
     Returns a dict keyed by ``(S, A)`` with device/no-trace means + bootstrap CIs,
     trials-to-criterion, and pass/fail; no file I/O.
     """
+    jobs = [(S, A, seeds, D, trials) for S, A in grid]
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(jobs))) as pool:
+            rows = pool.map(_scaling_cell, jobs, chunksize=1)
+    else:
+        rows = map(_scaling_cell, jobs)
+    return dict(rows)
+
+
+def _remedy_cell(job):
+    """One spawn-safe 8x8 remedy cell for :func:`run_remedies`."""
     from .stats import bootstrap_ci
-
-    def _ci(arr):
-        a = np.asarray(arr, float)
-        lo, hi = bootstrap_ci(a)
-        return (float(a.mean()), float(a.std()), lo, hi)
-
-    results = {}
-    for S, A in grid:
-        chance = 1.0 / A
-        crit = 0.5 * (1 + chance)
-        dev = train(S, A, B=seeds, D=D)
-        nt = train(S, A, B=seeds, D=D, no_trace=True)
-        dev_fr, nt_fr = reward_rate(dev), reward_rate(nt)
-        ttc = [trials_to_criterion(dev[b], crit) for b in range(seeds)]
-        ok = [t for t in ttc if t is not None]
-        results[(S, A)] = dict(
-            chance=chance, crit=crit, device=_ci(dev_fr), no_trace=_ci(nt_fr),
-            trials_to_crit=int(np.median(ok)) if ok else None,
-            n_converged=len(ok), passed=bool(dev_fr.mean() >= crit), n_seeds=seeds)
-    return results
+    name, kw, seeds, crit = job
+    fr = reward_rate(train(8, 8, B=seeds, D=2.0, **kw))
+    a = np.asarray(fr, float); lo, hi = bootstrap_ci(a)
+    return name, dict(final=(float(a.mean()), float(a.std()), lo, hi),
+                      passed=bool(a.mean() >= crit), n_seeds=seeds,
+                      trials=kw["trials"])
 
 
-def run_remedies(*, seeds=20):
+def run_remedies(*, seeds=20, trials=1500, budget_multiplier=4, workers=1):
     """Fig 8b (tier5): five remedies on the failing 8x8 case.
 
     Returns a dict keyed by remedy label with final reward-rate mean + bootstrap CI
     and pass/fail against the 8x8 criterion; no file I/O.
     """
-    from .stats import bootstrap_ci
-    S, A = 8, 8
+    A = 8
     crit = 0.5 * (1 + 1.0 / A)
+    long_trials = int(trials * budget_multiplier)
     rows = [
-        ("R0 baseline (device, undirected, 1500)", dict(trials=1500)),
-        ("R1 more budget (device, undirected, 6000)", dict(trials=6000)),
-        ("R2 directed expl (device, sigma 0.45->0.05, 1500)",
-         dict(trials=1500, sigma0=0.45, sigma1=0.05)),
-        ("R3 abstract trace (NOT device, undirected, 1500)", dict(trials=1500, abstract=True)),
-        ("R4 directed+budget (device, sigma anneal, 6000)",
-         dict(trials=6000, sigma0=0.45, sigma1=0.05)),
+        (f"R0 baseline (device, undirected, {trials})", dict(trials=trials)),
+        (f"R1 more budget (device, undirected, {long_trials})", dict(trials=long_trials)),
+        (f"R2 directed expl (device, sigma 0.45->0.05, {trials})",
+         dict(trials=trials, sigma0=0.45, sigma1=0.05)),
+        (f"R3 abstract trace (NOT device, undirected, {trials})",
+         dict(trials=trials, abstract=True)),
+        (f"R4 directed+budget (device, sigma anneal, {long_trials})",
+         dict(trials=long_trials, sigma0=0.45, sigma1=0.05)),
     ]
-    out = {}
-    for name, kw in rows:
-        fr = reward_rate(train(S, A, B=seeds, D=2.0, **kw))
-        a = np.asarray(fr, float); lo, hi = bootstrap_ci(a)
-        out[name] = dict(final=(float(a.mean()), float(a.std()), lo, hi),
-                         passed=bool(a.mean() >= crit), n_seeds=seeds)
-    return out
+    jobs = [(name, kw, seeds, crit) for name, kw in rows]
+    if int(workers) > 1:
+        from multiprocessing import get_context
+        with get_context("spawn").Pool(min(int(workers), len(jobs))) as pool:
+            return dict(pool.map(_remedy_cell, jobs, chunksize=1))
+    return dict(map(_remedy_cell, jobs))
 
 
 def _summarize_reversal(raw, conds, trials, crit, chance):

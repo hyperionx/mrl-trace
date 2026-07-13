@@ -30,7 +30,7 @@ from .learning import LTD_BIAS
 __all__ = [
     "trace_kernel", "abstract_kernel", "train_trace_level",
     "SpikingGateBank", "train_spiking", "cue_saturation", "W_INIT", "W_MAX",
-    "trace_ratio", "run_trace_window",
+    "trace_ratio", "run_trace_window", "run_spiking_saturation",
 ]
 
 W_INIT, W_MAX = 0.5, 1.0
@@ -167,6 +167,68 @@ def train_spiking(tau_leak, D, *, N=8, trials=400, dt=1e-3, seed=0, eta=0.2):
 def cue_saturation(w):
     """Saturation of the cue synapse toward its bound: (w0 - W_INIT)/(W_MAX - W_INIT)."""
     return (w[0] - W_INIT) / (W_MAX - W_INIT)
+
+
+def _spiking_saturation_cell(args):
+    """Spawn-safe worker for one retention/delay cell of the Fig. 5 sweep."""
+    name, tau_leak, delay, seeds, trials, dt, eta = args
+    values = np.asarray([
+        cue_saturation(train_spiking(
+            tau_leak, delay, trials=trials, dt=dt, seed=seed, eta=eta
+        ))
+        for seed in range(seeds)
+    ], dtype=float)
+    return name, delay, values
+
+
+def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
+                           variants=(("gate_tl10", 10.0),
+                                     ("gate_tl2", 2.0),
+                                     ("gate_tl0.5", 0.5)),
+                           trials=400, dt=1e-3, eta=0.2, workers=1):
+    """Fig. 5 grid: live full-spiking credit saturation.
+
+    This is the missing thin sweep driver around the preserved per-seed
+    :func:`train_spiking` implementation.  It changes no model equations or
+    random-number behaviour: independent ``(retention, delay)`` cells may merely
+    be dispatched to spawn-safe CPU processes.  Per-seed values are retained so
+    the appendix figure can calculate honest uncertainty bands.
+    """
+    jobs = [
+        (name, tau_leak, delay, int(seeds), int(trials), float(dt), float(eta))
+        for name, tau_leak in variants for delay in delays
+    ]
+    if workers in (None, "auto"):
+        import os
+        workers = min(6, max(1, (os.cpu_count() or 2) // 2))
+    workers = int(workers)
+    if workers > 1:
+        import multiprocessing as mp
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(
+            max_workers=workers, mp_context=mp.get_context("spawn")
+        ) as pool:
+            cells = list(pool.map(_spiking_saturation_cell, jobs))
+    else:
+        cells = [_spiking_saturation_cell(job) for job in jobs]
+
+    by_cell = {(name, delay): values for name, delay, values in cells}
+    sat_seeds = {
+        name: {delay: by_cell[(name, delay)] for delay in delays}
+        for name, _tau_leak in variants
+    }
+    saturation = {
+        name: [float(np.mean(sat_seeds[name][delay])) for delay in delays]
+        for name, _tau_leak in variants
+    }
+    return {
+        "delays": list(delays),
+        "saturation": saturation,
+        "sat_seeds": sat_seeds,
+        "n_seeds": int(seeds),
+        "trials": int(trials),
+        "dt": float(dt),
+    }
 
 
 # =============================================================================

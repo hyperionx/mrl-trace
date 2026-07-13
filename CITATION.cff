@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the accompanying manuscript."
+title: "mrl-trace: Memristive device eligibility traces for local reinforcement learning"
+type: software
+version: 0.1.0
+date-released: 2026-07-10
+license: MIT
+repository-code: "https://github.com/hyperionx/mrl-trace"
+authors:
+  - family-names: Vu
+    given-names: Viet Cuong
+    email: viet.vu.14@ucl.ac.uk
+  - family-names: Santosa
+    given-names: Anak Agung Ngurah Arymurti
+  - family-names: Ng
+    given-names: Wing H.
+  - family-names: Mehonic
+    given-names: Adnan
+  - family-names: Kenyon
+    given-names: Anthony J.
+preferred-citation:
+  type: article
+  title: "Memristive transients as eligibility traces for all-local reinforcement learning"
+  year: 2026
+  authors:
+    - family-names: Vu
+      given-names: Viet Cuong
+    - family-names: Santosa
+      given-names: Anak Agung Ngurah Arymurti
+    - family-names: Ng
+      given-names: Wing H.
+    - family-names: Mehonic
+      given-names: Adnan
+    - family-names: Kenyon
+      given-names: Anthony J.
