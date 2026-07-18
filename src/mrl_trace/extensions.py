@@ -47,7 +47,7 @@ Every ``run_*`` core is SERIAL, import-light and returns plain arrays/dicts with
 I/O -- notebooks call them in-kernel at a small seed/trial count.  The module-level
 :func:`main` is the full-scale driver: it may parallelise the coarse axis with a
 ``multiprocessing.Pool`` (it runs as ``python -m``), computes the bootstrap CIs and the
-pre-registered criteria, and writes each grid via :func:`mrl_trace.paths.save_result`.
+retrospectively recorded criteria, and writes each grid via :func:`mrl_trace.paths.save_result`.
 NOTE: reversal learning (Experiment 18) is a ``train`` variant and lives in
 :mod:`mrl_trace.bandit`, not here.
 """
@@ -116,13 +116,14 @@ ETA_V = 0.1                    # critic learning rate (value TD update)
 # =============================================================================
 
 
-def load_measured_tau():
+def load_measured_tau(*, allow_proxy=False):
     """The n=53 measured ITO trap-discharge time constants (s), from the device population.
 
     Reads ``data/device_model/ito_decay_data.npz`` (the measured trap-discharge fits;
     resolved through :func:`mrl_trace.paths.device_model_dir` so it works from any
-    working directory). Falls back to the documented summary (median 1.34 s, range
-    0.56--7.72 s) -- logged, never silent -- only if the npz is absent.
+    working directory). Missing or invalid measured data are fatal by default.  The
+    explicit ``allow_proxy`` escape hatch exists only for exploratory development and
+    is forbidden by publication-scale notebook execution.
     """
     from . import paths
     try:
@@ -138,8 +139,14 @@ def load_measured_tau():
             return tau, ("measured (ito_decay_data.npz, valid n=%d, rejected fits=%d)"
                          % (tau.size, rejected))
     except Exception as exc:                                  # noqa: BLE001
-        print(f"  [tau] measured npz unavailable ({type(exc).__name__}); using summary")
-    # documented summary fallback (logged, never silent)
+        if not allow_proxy:
+            raise FileNotFoundError(
+                "measured ITO retention archive unavailable; run "
+                "`experiments/06_nmi_predictive_linkage.ipynb` with measured ITO data"
+            ) from exc
+    if not allow_proxy:
+        raise ValueError("measured ITO retention archive contains fewer than 10 valid fits")
+    # Explicit development-only proxy; publication mode never calls this branch.
     rng = np.random.default_rng(0)
     tau = np.clip(np.exp(rng.normal(np.log(1.34), 0.6, 53)), 0.56, 7.72)
     return tau, "summary-proxy (median 1.34, range 0.56-7.72)"
@@ -731,10 +738,10 @@ def _exp19_at_beta(job):
 def run_beta_sensitivity(*, betas=BETAS, seeds=12, episodes=2000, trials=3000, pool=None):
     """The full beta_leak sensitivity study (Experiment 21): (A) the D_max law and (B) the
     exp19 multi-timescale coupling, each re-run at every ``beta`` in ``betas``, plus the
-    pre-registered S1/S2 criteria evaluated at the field-free operating beta=0.85. SERIAL by
+    retrospective S1/S2 criteria evaluated at the field-free operating beta=0.85. SERIAL by
     default; pass a ``multiprocessing.Pool`` to parallelise the coarse cells (main() does).
 
-    PRE-REGISTRATION (fixed before running; reported as-is):
+    RECORDED ANALYSIS CRITERIA (retrospective; reported as-is):
       S1  D_max law SURVIVES at beta=0.85: still monotone D_max(tau), origin-fit R^2 >= 0.90,
           and the slope k within ~30% of the beta=1 value (the law is not a single-rate artefact).
       S2  exp19 coupling SURVIVES at beta=0.85: hetero+homeo still >= 0.75 AND still
@@ -831,7 +838,7 @@ def main(argv=None):
         print(f"  tau source = {src}; median={np.median(tau_pool):.2f}s mean={mean_tau:.2f}s "
               f"range=[{tau_pool.min():.2f},{tau_pool.max():.2f}]s")
         print(f"  mixed-delay bandit: S={S} (half D_short={D_short}s, half D_long={D_long}s), A={A}")
-        print(f"  {B} seeds, {trials} trials; chance={CHANCE} crit={CRIT}; pre-registered H1-H5/K1\n")
+        print(f"  {B} seeds, {trials} trials; chance={CHANCE} crit={CRIT}; retrospective H1-H5/K1\n")
         # (label, kind, elig_norm). Headline: hetero_raw (naive spread, fails) vs hetero_homeo
         # (spread + eligibility-magnitude homeostasis, recovers) vs hetero_oracle (tau-aware
         # upper bound). best_single is the strongest single-horizon device; no_trace the control.
@@ -877,7 +884,7 @@ def main(argv=None):
         # H5: trace necessary.
         h5 = nt_m <= CHANCE + 0.10
         k1c = hom_m <= raw_m                                 # kill: homeostasis fails to help
-        print("\n  === pre-registered criteria ===")
+        print("\n  === retrospective criteria ===")
         print(f"  H1 naive measured spread fails the two-horizon task (< {CRIT}): "
               f"{'PASS' if h1 else 'FAIL'} ({raw_m:.3f})")
         print(f"  H2 eligibility HOMEOSTASIS recovers it (>= {CRIT}, disjoint > naive): "
@@ -930,7 +937,7 @@ def main(argv=None):
                   f"hetero_homeo={r['hetero_homeo'][0]:.3f} {r['hetero_homeo'][1]}  "
                   f"best_single={r['best_single'][0]:.3f}")
         s1, s2 = grid["criteria"]["S1"], grid["criteria"]["S2"]
-        print("\n  === pre-registered criteria (at the field-free operating beta=0.85) ===")
+        print("\n  === retrospective criteria (at the field-free operating beta=0.85) ===")
         if s1 is not None:
             k1v, k085 = dmax[1.0]["k"], dmax[0.85]["k"]
             print(f"  S1 D_max law survives (monotone, R2>=0.90, k within 30% of beta=1): "
@@ -1005,7 +1012,7 @@ def main(argv=None):
         t0 = time.time()
         # LinearTrack corridor: reward = goal reached. The credit-assignment difficulty grows
         # with corridor length L, since the goal reward must propagate back across L forward/back
-        # decisions. Pre-registered question: does the bootstrapped device-native TD rule
+        # decisions. Retrospectively recorded question: does the bootstrapped device-native TD rule
         # overtake the whole-episode-return REINFORCE baseline once L is long enough that the
         # scalar baseline fails, and is that crossover monotone in L? A no-trace control anchors
         # the chance (random-walk goal-reach) level at each L.

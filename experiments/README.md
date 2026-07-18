@@ -16,6 +16,11 @@ default.
   DANDI dopamine and OpenNeuro EEG workflows.
 - `05_extensions.ipynb`: interval, beta-sensitivity, long-horizon, reversal,
   multi-timescale, vector-timer, consolidation, and device-TD results.
+- `06_nmi_predictive_linkage.ipynb`: the new held-out physical-identification,
+  empirical-retention timing, model-structure sensitivity, retention holdout and
+  reversal-quantile analyses. Its complete orchestration and physical-data analysis
+  are embedded in the notebook, while the original experiment contract remains
+  separate.
 - `REPRODUCE.ipynb`: validates the 41-figure manifest, fans lightweight notebooks
   into isolated children, and gives grid-heavy notebooks a spawn-safe worker pool.
 
@@ -40,6 +45,15 @@ validation snapshot.
 Numerical notebooks support `MRL_USE_ARCHIVED_RESULTS=1` where a matching archive
 exists. The default remains live, and `publication` restores the larger authored
 settings.
+
+Notebook 06 is deliberately not part of the original 41-figure `REPRODUCE.ipynb`
+contract. It runs live with `MRL_RUN_PROFILE=smoke|reduced|publication` and
+`MRL_WORKERS`; the default is `reduced`. Set `MRL_SAVE_RESULTS=1` and
+`MRL_OUTPUT_DIR` to retain full outputs. Publication mode may run locally or on any
+CPU compute service, and its bulky per-seed archive belongs with the archival DOI.
+The notebook's opening cells contain the exact laptop/cloud commands, workload table,
+archive policy and compatibility record; no separate execution or audit document is
+required.
 
 To save claimable figures, set `MRL_SAVE_FIGURES=1` and choose
 `MRL_OUTPUT_DIR`. Existing files are protected unless `MRL_OVERWRITE=1`.

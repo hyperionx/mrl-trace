@@ -44,9 +44,10 @@ class GateBankBatched:
     """
 
     def __init__(self, B, S, A, tau_leak=10.0, V=0.9, k=K_STAGES, dt=5e-3, Vnmax=1.0,
-                 beta_leak=1.0):
+                 beta_leak=1.0, tau_r_override=None):
         self.B, self.S, self.A, self.k, self.dt, self.Vnmax = B, S, A, k, dt, Vnmax
-        self.alpha = k / tau_r(V)
+        fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
+        self.alpha = k / fitted_tau_r
         self.tau_d = tau_d(V)
         # Dispersion of the trap-DISCHARGE. beta_leak=1 is the single-rate (mono-exponential)
         # leak used throughout the learning results; beta_leak<1 is the measured dispersive
@@ -131,7 +132,7 @@ class AbstractTrace:
 def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
           eta=0.2, in_rate=200.0, ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH,
           sigma0=0.15, sigma1=None, abstract=False, no_trace=False, seed0=0,
-          reward_pools=None):
+          reward_pools=None, device_k=K_STAGES, tau_r_override=None):
     """Train the contextual bandit on ``B`` parallel seeds; return rewards ``(B, trials)``.
 
     Parameters mirror the manuscript's experiments:
@@ -157,7 +158,8 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
     """
     rng = np.random.default_rng(seed0)
     Bank = AbstractTrace if abstract else GateBankBatched
-    bank = Bank(B, S, A, tau_leak=tau_leak, dt=dt)
+    bank = Bank(B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
+                tau_r_override=tau_r_override)
     w = np.full((B, S, A), W_INIT)
     correct = np.array([s % A for s in range(S)])      # rewarded action per state
     baseline = np.full(B, 1.0 / A)                     # baseline tracks chance for this A
@@ -249,7 +251,8 @@ def _mapping(S, A, shift):
 
 def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
                  n_phases=2, dt=5e-3, cue_dur=1.0, eta=0.2, in_rate=200.0,
-                 ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0):
+                 ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0,
+                 device_k=K_STAGES, tau_r_override=None):
     """Reversal learning (Experiment 18): the signed rule must UNLEARN a stale
     contingency.  Mirrors :func:`train` exactly, but the rewarded mapping is
     cyclically shifted by one at each of ``n_phases`` equal-length phase boundaries,
@@ -266,7 +269,8 @@ def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
     if cond == "abstract":
         bank = AbstractTrace(B, S, A, tau_elig=tau_leak, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt)
+        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
+                               tau_r_override=tau_r_override)
     no_trace = (cond == "no_trace")
 
     w = np.full((B, S, A), W_INIT)
@@ -402,7 +406,7 @@ def run_scaling(*, seeds=20, grid=((2, 2), (4, 2), (4, 4), (8, 4), (8, 8), (12, 
                 D=2.0, trials=1500, workers=1):
     """Fig 8a grid (tier4): does the policy still converge as ``S x A`` grows?
 
-    Criterion (pre-registered, no goalpost moving): reward rate >= 0.5*(1 + 1/A).
+    Retrospectively recorded criterion: reward rate >= 0.5*(1 + 1/A).
     Returns a dict keyed by ``(S, A)`` with device/no-trace means + bootstrap CIs,
     trials-to-criterion, and pass/fail; no file I/O.
     """
@@ -457,7 +461,7 @@ def run_remedies(*, seeds=20, trials=1500, budget_multiplier=4, workers=1):
 def _summarize_reversal(raw, conds, trials, crit, chance):
     """Package raw per-condition ``run_reversal`` output into the saved grid dict
     (mean curves, pre/post finals + CIs, re-acquisition cost, recovery bins,
-    pre-registered H1-H4/K1)."""
+    retrospectively recorded H1-H4/K1)."""
     from .stats import bootstrap_ci
     flips = raw[conds[0]][1]
     B = raw[conds[0]][0].shape[0]

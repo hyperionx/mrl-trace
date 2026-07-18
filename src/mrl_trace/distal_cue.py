@@ -541,7 +541,7 @@ def run_distal_cue(*, variant="deep", gaps=(1.0, 4.0, 10.0), p_grid=(0.0,), seed
     Serial by default (``workers=1``). Pass an existing spawn-safe ``pool`` to distribute
     conditions without nesting pools. ``batch_seeds=True`` evolves the native seed batch
     together inside each condition, reducing Python-loop overhead for notebook runs;
-    the publication driver retains its one-job-per-seed path.
+    full-scale execution retains its one-job-per-seed path.
 
     Sweeps ``gaps x arms x p_grid x seeds`` where the arms are device-LONG
     (``tau=20 s``), device-SHORT (``tau=1.5 s``) and ``no_trace`` always, plus an

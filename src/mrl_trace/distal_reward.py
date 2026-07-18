@@ -39,9 +39,11 @@ W_INIT, W_MAX = 0.5, 1.0
 # ----------------------------------------------------------------------------
 # Trace-level task (Fig 4): precomputed eligibility kernel + lag-based credit
 # ----------------------------------------------------------------------------
-def trace_kernel(t_grid, tau_leak, V=0.9):
+def trace_kernel(t_grid, tau_leak, V=0.9, k=K_STAGES, tau_r_override=None):
     """Device eligibility kernel e(t) on ``t_grid`` for a coincidence at t=0."""
-    g = TransientGate(V=V, tau_leak=tau_leak, dt=float(t_grid[1] - t_grid[0]))
+    g = TransientGate(V=V, tau_leak=tau_leak, k=k,
+                      tau_r_override=tau_r_override,
+                      dt=float(t_grid[1] - t_grid[0]))
     return g.trace(t_grid, coincidence_at=0.0, coincidence_dur=0.3)
 
 
@@ -51,7 +53,8 @@ def abstract_kernel(t_grid, tau):
 
 
 def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
-                      eta=0.05, seed=0, abstract=False, no_trace=False):
+                      eta=0.05, seed=0, abstract=False, no_trace=False, V=0.9,
+                      k=K_STAGES, tau_r_override=None):
     """One seed of the trace-level distal-reward task; returns final weights ``w``
     (``w[0]`` cue, ``w[1:]`` distractors).
 
@@ -67,7 +70,8 @@ def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
     elif abstract:
         kern = abstract_kernel(t, tau_leak)
     else:
-        kern = trace_kernel(t, tau_leak)
+        kern = trace_kernel(t, tau_leak, V=V, k=k,
+                            tau_r_override=tau_r_override)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):
@@ -99,9 +103,11 @@ class SpikingGateBank:
     Equivalent to a vectorised :class:`TransientGate` over an ``(N,)`` grid, with
     the signed/leak-dominant drive and ``[-Vnmax, Vnmax]`` bound."""
 
-    def __init__(self, N, V=0.9, tau_leak=5.0, k=K_STAGES, dt=1e-3, Vnmax=1.0):
+    def __init__(self, N, V=0.9, tau_leak=5.0, k=K_STAGES, dt=1e-3, Vnmax=1.0,
+                 tau_r_override=None):
         self.N, self.k, self.dt, self.Vnmax = N, k, dt, Vnmax
-        self.alpha = k / tau_r(V)
+        fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
+        self.alpha = k / fitted_tau_r
         self.tau_d = tau_d(V)
         self.tau_leak = tau_leak
         self.vn = np.zeros((N, k))
@@ -149,11 +155,13 @@ def _spiking_trial(bank, w, rewarded, D, *, dt=1e-3, cue_rate=200.0, dist_rate=4
     return w, R
 
 
-def train_spiking(tau_leak, D, *, N=8, trials=400, dt=1e-3, seed=0, eta=0.2):
+def train_spiking(tau_leak, D, *, N=8, trials=400, dt=1e-3, seed=0, eta=0.2,
+                  V=0.9, k=K_STAGES, tau_r_override=None):
     """One seed of the full-spiking distal-reward task; returns final weights ``w``
     (``w[0]`` cue saturation toward the bound is the success measure)."""
     rng = np.random.default_rng(seed)
-    bank = SpikingGateBank(N, tau_leak=tau_leak, dt=dt)
+    bank = SpikingGateBank(N, tau_leak=tau_leak, dt=dt, V=V, k=k,
+                           tau_r_override=tau_r_override)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):
@@ -171,10 +179,11 @@ def cue_saturation(w):
 
 def _spiking_saturation_cell(args):
     """Spawn-safe worker for one retention/delay cell of the Fig. 5 sweep."""
-    name, tau_leak, delay, seeds, trials, dt, eta = args
+    name, tau_leak, delay, seeds, trials, dt, eta, V, k, tau_r_override = args
     values = np.asarray([
         cue_saturation(train_spiking(
-            tau_leak, delay, trials=trials, dt=dt, seed=seed, eta=eta
+            tau_leak, delay, trials=trials, dt=dt, seed=seed, eta=eta,
+            V=V, k=k, tau_r_override=tau_r_override
         ))
         for seed in range(seeds)
     ], dtype=float)
@@ -185,7 +194,8 @@ def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
                            variants=(("gate_tl10", 10.0),
                                      ("gate_tl2", 2.0),
                                      ("gate_tl0.5", 0.5)),
-                           trials=400, dt=1e-3, eta=0.2, workers=1):
+                           trials=400, dt=1e-3, eta=0.2, workers=1, V=0.9,
+                           k=K_STAGES, tau_r_override=None):
     """Fig. 5 grid: live full-spiking credit saturation.
 
     This is the missing thin sweep driver around the preserved per-seed
@@ -195,7 +205,8 @@ def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
     the appendix figure can calculate honest uncertainty bands.
     """
     jobs = [
-        (name, tau_leak, delay, int(seeds), int(trials), float(dt), float(eta))
+        (name, tau_leak, delay, int(seeds), int(trials), float(dt), float(eta),
+         float(V), int(k), tau_r_override)
         for name, tau_leak in variants for delay in delays
     ]
     if workers in (None, "auto"):
@@ -257,18 +268,22 @@ def trace_ratio(w):
     return w[0] / max(np.mean(w[1:]), 1e-6)
 
 
-def _trace_cell(tau_leak, D, no_trace, seeds):
+def _trace_cell(tau_leak, D, no_trace, seeds, V=0.9, k=K_STAGES,
+                tau_r_override=None):
     """Per-seed cue/distractor ratios for one (variant, delay) cell (serial)."""
     if no_trace:
         # the no-trace control uses a delta kernel (no eligibility persistence)
-        return np.array([trace_ratio(train_trace_level(0.0, D, seed=s, no_trace=True))
+        return np.array([trace_ratio(train_trace_level(
+            0.0, D, seed=s, no_trace=True, V=V, k=k,
+            tau_r_override=tau_r_override))
                          for s in range(seeds)])
-    return np.array([trace_ratio(train_trace_level(tau_leak, D, seed=s))
+    return np.array([trace_ratio(train_trace_level(
+        tau_leak, D, seed=s, V=V, k=k, tau_r_override=tau_r_override))
                      for s in range(seeds)])
 
 
 def run_trace_window(*, seeds=20, delays=TIER1_DELAYS, variants=TIER1_VARIANTS,
-                     PASS=TIER1_PASS):
+                     PASS=TIER1_PASS, V=0.9, k=K_STAGES, tau_r_override=None):
     """Fig 4 grid (tier1): trace-level credit-assignment window.
 
     Learned cue-to-distractor weight ratio versus action--reward delay ``D``, for
@@ -286,21 +301,25 @@ def run_trace_window(*, seeds=20, delays=TIER1_DELAYS, variants=TIER1_VARIANTS,
     ``ratios_ci``, ``max_learn``, ``n_seeds``) match the published grid exactly.
     """
     from .stats import bootstrap_ci
-    ratios, ratios_ci = {}, {}
+    ratios, ratios_ci, seed_ratios = {}, {}, {}
     for name, tl, no_trace in variants:
-        row, row_ci = [], []
+        row, row_ci, row_seeds = [], [], {}
         for D in delays:
-            r = _trace_cell(tl, D, no_trace, seeds)
+            r = _trace_cell(tl, D, no_trace, seeds, V=V, k=k,
+                            tau_r_override=tau_r_override)
             row.append(float(r.mean()))
             row_ci.append(bootstrap_ci(r))
+            row_seeds[D] = np.asarray(r, float)
         ratios[name] = row
         ratios_ci[name] = row_ci
+        seed_ratios[name] = row_seeds
 
     def _maxd(name):
         ds = [d for d, v in zip(delays, ratios[name]) if v >= PASS]
         return max(ds) if ds else 0
 
     return {"delays": list(delays), "ratios": ratios, "ratios_ci": ratios_ci,
+            "seed_ratios": seed_ratios,
             "max_learn": {name: _maxd(name) for name, _, _ in variants},
             "n_seeds": seeds}
 

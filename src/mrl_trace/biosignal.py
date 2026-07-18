@@ -244,7 +244,7 @@ def run_biosignal_reward(pools, meta, *, seeds=20, trials=600, S=2, A=2,
       shuffled  : the SAME decoded values with valence permuted (a noise-matched control:
                   same reward statistics, no genuine outcome information).
 
-    Pre-registered criteria B1-B4 (BIOSIGNAL_RL_notes.md):
+    Retrospectively recorded criteria B1-B4 (BIOSIGNAL_RL_notes.md):
       B1 decoder beats chance (bal-acc > 0.55);
       B2 biosignal reaches criterion (>= 0.5*(1+1/A));
       B3 biosignal beats shuffled by > 0.10;
@@ -290,7 +290,7 @@ def run_biosignal_reward(pools, meta, *, seeds=20, trials=600, S=2, A=2,
 
 
 # --- capstone (Experiment 9, Arm E): EEG reward x deep all-local RL + homeostasis ---
-# Frozen Arm-D operating point (PREREGISTRATION_capstone_eeg_deep.md).
+# Frozen Arm-D operating point (retrospective protocol file).
 _CAP_HP = dict(H=16, tau_leak=10.0, D=5.0, eta=0.2, eta_hidden=3.0,
                fb_scale=2.0, bias_o=0.3, V=1.5, sigma0=0.15, sigma1=0.05)
 _CAP_HOMEO = 0.1
@@ -318,7 +318,7 @@ def _capstone_worker(spec, trials, pools, shuf, seeds):
 def _summarize_capstone(res, meta, *, seeds, trials, chance, crit, homeo):
     """Package raw per-cell ``_capstone_worker`` output into the saved grid dict
     (str-keyed ``finals``/``curves``/``ci`` as the driver saved them, plus the
-    pre-registered E2-E4 criteria)."""
+    retrospectively recorded E2-E4 criteria)."""
     from .stats import bootstrap_ci
     finals = {k: f for k, f, _ in res}
     curves = {k: c for k, _, c in res}
@@ -352,7 +352,7 @@ def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.7
                           (ds003474), the same biosignal reward as
                           :func:`run_biosignal_reward`.
 
-    Tests the pre-registered hypothesis (PREREGISTRATION_capstone_eeg_deep.md) that the
+    Tests the recorded hypothesis (retrospective protocol file) that the
     local homeostatic stabiliser -- which prevents the policy collapse behind deep-DFA's
     unreliability (Arm D) -- ALSO confers robustness to a noisy biological reward, so
     DFA+homeostasis learns under the EEG reward where DFA-alone does not.
@@ -361,7 +361,7 @@ def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.7
     on deep XOR at the frozen Arm-D operating point, 20 seeds, bootstrap 95% CI.  Reported
     reward rate is TRUE task performance; the EEG-decoded value only gates the update.
 
-    Pre-registered criteria:
+    Retrospectively recorded criteria:
       E2 homeostasis robustness (EEG homeo >= crit AND its CI-lo > DFA CI-hi);
       E3 genuine reward info (EEG homeo CI-lo > shuffled CI-hi, disjoint);
       E4 graceful vs clean (EEG homeo >= synthetic homeo - 0.25).

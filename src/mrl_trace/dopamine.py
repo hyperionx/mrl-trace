@@ -188,8 +188,8 @@ def build_reward_pools(cache_dir=DA_CACHE, *, seed=0, min_trials=40):
 #               shuffled} (mirrors exp9 capstone, frozen Arm-D operating point).
 #
 # Reported reward rate = TRUE task performance; the decoded dopamine value only gates
-# the update. Pre-registered criteria G1-G4 / KILL live in
-# PREREGISTRATION_dopamine_capstone.md. Negative results reported as-is; no goalpost
+# the update. Retrospective criteria G1-G4 / KILL live in
+# Retrospective dopamine protocol file. Negative results reported as-is; no goalpost
 # moving.
 #
 # The two ``run_*`` cores below are SERIAL and return plain result dicts (no file I/O,
@@ -301,7 +301,7 @@ def run_dopamine_deep(pools, shuf, *, seeds=20, trials=3000, pool=None):
 
 
 def _dopamine_criteria(shallow, deep, chance=_CHANCE):
-    """Evaluate the pre-registered criteria G1-G3 from the shallow + deep result dicts.
+    """Evaluate the retrospective criteria G1-G3 from the shallow + deep result dicts.
 
     G1  shallow learns from real dopamine (CI-lo > max(chance, shuffled CI-hi)).
     G2  deep genuine reward info (homeo dopamine CI-lo > its own shuffled CI-hi, disjoint).
@@ -365,7 +365,7 @@ def main(argv=None):
 
     Decodes the real dopamine reward pools from the DANDI 000351 cache
     (:func:`build_reward_pools`), runs the frozen-operating-point shallow bandit and deep
-    XOR grids, computes the pre-registered G1-G4 criteria and writes
+    XOR grids, computes the retrospective G1-G4 criteria and writes
     ``exp11_dopamine_capstone.npy`` (the exact filename the original driver produced) via
     ``paths.save_result``.
 
@@ -436,7 +436,7 @@ def main(argv=None):
     crit = _dopamine_criteria(shallow, deep)
     da_deep = d_finals[("dfa_homeo", "dopamine")].mean()
     da_shal = shallow["finals"]["dopamine"].mean()
-    print("\n=== pre-registered criteria (PREREGISTRATION_dopamine_capstone.md) ===")
+    print("\n=== recorded retrospective criteria (dopamine protocol) ===")
     print(f"  G1 shallow learns from dopamine (>chance & >shuffled, disjoint): "
           f"{'PASS' if crit['G1'] else 'FAIL'} "
           f"(dopamine {da_shal:.3f}{shallow['ci']['dopamine']} vs "

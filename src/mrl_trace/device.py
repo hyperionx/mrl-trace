@@ -28,9 +28,10 @@ import numpy as np
 __all__ = ["tau_r", "tau_d", "BETA", "K_STAGES", "TransientGate",
            "fit_kww_laws", "simulate_habituation", "KWW_VOLTAGES"]
 
-#: Fixed compression exponent of the trap-cascade rise (measured, bias-independent).
+#: Historical compact-model compression exponent of the Au rise.
 BETA = 2.0
-#: Number of sequential trap-filling stages (beta ~ 2 maps to k ~ 3).
+#: Historical compact representative (beta ~ 2 shape-matches k ~ 3); publication
+#: analysis freezes its pooled-CV representative and reports depth uncertainty.
 K_STAGES = 3
 
 
@@ -58,7 +59,8 @@ class TransientGate:
     V : float
         Bias magnitude (V); sets the field-accelerated ``tau_r``, ``tau_d``.
     tau_leak : float
-        Retention/relaxation time constant (s) -- the programmable knob.
+        Retention/relaxation time constant (s); measured or deliberately swept as
+        stated by the calling experiment.
     k : int
         Number of sequential cascade stages.
     dt : float
@@ -71,7 +73,9 @@ class TransientGate:
     """
 
     def __init__(self, V: float = 0.9, tau_leak: float = 2.0, k: int = K_STAGES,
-                 dt: float = 0.05, vnmax: float = 1.0, shape: tuple = ()):
+                 dt: float = 0.05, vnmax: float = 1.0, shape: tuple = (),
+                 tau_r_override: float | None = None,
+                 tau_d_override: float | None = None):
         self.V = V
         self.tau_leak = tau_leak
         self.k = k
@@ -80,8 +84,9 @@ class TransientGate:
         self.shape = tuple(shape)
         # per-stage rate: total rise matches the fitted tau_r(V) spread over k
         # sequential stages (Erlang-k).
-        self.alpha = k / tau_r(V)
-        self.tau_d = tau_d(V)
+        self.tau_r = float(tau_r(V) if tau_r_override is None else tau_r_override)
+        self.alpha = k / self.tau_r
+        self.tau_d = float(tau_d(V) if tau_d_override is None else tau_d_override)
         self.reset()
 
     def reset(self) -> None:
@@ -188,12 +193,12 @@ def _kww_load_traces(export_dir, voltages=KWW_VOLTAGES, n_grid=300):
 
 
 def _kww_beta_to_k():
-    """Exact ``beta <-> k`` (sequential-stage-count) bridge.
+    """Approximate ``beta <-> k`` shape-matching bridge.
 
     Fits the KWW compressed-exponential rise ``1 - exp(-(t/tau_r)^beta)`` to the
     normalised Erlang-``k`` CDF for ``k = 1..5``; the returned ``{k: beta}`` map is
-    exact-by-fit, so the measured ``beta ~ 2`` corresponds to ``~3`` sequential
-    trap-filling stages (``K_STAGES``).
+    obtained by fitting one family to the other. Thus ``beta ~ 2`` is represented
+    compactly by ``k ~ 3``; it does not uniquely observe three microscopic stages.
     """
     from scipy.optimize import curve_fit
     from scipy.special import gammainc
@@ -266,9 +271,10 @@ def fit_kww_laws(export_dir=None, *, beta=BETA, voltages=KWW_VOLTAGES):
     ``A, C``   per-voltage amplitude/offset (each trace sets its own scale, as the
                published model does).
 
-    Mechanistic equivalent: a cascade of ``k`` sequential first-order trap-filling
-    steps (Erlang-``k`` rise) is identical in shape to the KWW rise; the ``beta<->k``
-    map is exact-by-fit, so ``beta ~ 2`` == ``~3`` sequential stages (``K_STAGES``).
+    Mechanistic representation: a cascade of ``k`` sequential first-order
+    trap-filling steps (Erlang-``k`` rise) can approximate the KWW rise. The
+    ``beta<->k`` map is a fitted shape match, so ``beta ~ 2`` motivates ``k ~ 3``
+    without uniquely identifying a microscopic stage count.
     These are the very laws this module's :func:`tau_r`/:func:`tau_d` report.
 
     Reads the measured gold traces from ``export_dir`` (defaults to
@@ -397,7 +403,8 @@ def main(argv=None):
         print(f"FINAL KWW global law (beta fixed = {laws['beta']}):")
         print(f"  tau_r(V) = {laws['tr0']:.1f} * exp(-{laws['cr']:.2f} V)  [s]")
         print(f"  tau_d(V) = {laws['td0']:.0f} * exp(-{laws['cd']:.2f} V)  [s]")
-        print(f"  beta<->stages: {res['beta_to_k']}  (beta~2 == ~3 sequential trap stages)")
+        print(f"  beta<->stages shape match: {res['beta_to_k']}  "
+              "(beta~2 is represented by k~3; exact depth is not identified)")
         print(f"{'V':>5s} {'R2':>7s} {'tau_r':>8s} {'tau_d':>9s} {'A(nA)':>8s}")
         r2s = []
         for V in KWW_VOLTAGES:

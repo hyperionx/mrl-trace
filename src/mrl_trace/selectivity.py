@@ -12,11 +12,12 @@ top of the shared physics, so they live in their own module.
   non-zero lag ``t*`` (Eqs. 7.1--7.2), so it is a band-pass in time: it credits a
   coincidence at a *preferred interval* and suppresses a coincidence at lag~0
   (reward time), whereas a matched-decay exponential is monotone (recency-biased)
-  and credits the lag-0 confound.  The preferred interval is fabrication-tunable via
-  ``tau_leak``.  :func:`run_interval_selectivity` measures the *learned* selectivity
+  and credits the lag-0 confound. The preferred interval varies with ``tau_leak``;
+  fabrication control of that retention is a design hypothesis, not a result.
+  :func:`run_interval_selectivity` measures the *learned* selectivity
   ratio ``S = w_pref/w_late`` from a competitive three-factor loop and returns the
-  design-point comparison plus the ``S(D)`` crossover sweep.  Pre-registered criteria
-  P1--P4 and kills K1--K2 (PREREGISTRATION_interval_selectivity.md).
+  design-point comparison plus the ``S(D)`` crossover sweep. Retrospective criteria
+  P1--P4 and kills K1--K2 (retrospective interval-selectivity protocol).
 
 - **Vector timer (Experiment 20).**  The cascade occupancy *vector* ``v^1..v^k`` is a
   distributed clockless code for elapsed time: the stage occupancies peak at
@@ -25,7 +26,7 @@ top of the shared physics, so they live in their own module.
   closed-loop interval-discrimination bandit whose policy is driven by either the full
   cascade vector (this work), the last stage only (the CET/current-paper baseline), or
   a zeroed trace (necessity control), at a scalar-aliasing interval pair computed from
-  the device model.  Pre-registered criteria H1--H4 and kill K1.  (Physical-
+  the device model. Retrospective criteria H1--H4 and kill K1. (Physical-
   observability caveat: the individual stage occupancies are not exposed by a
   two-terminal cell, so the vector result *motivates* a staged-readout device rather
   than being a capability of the present one -- exploratory extension.)
@@ -38,9 +39,11 @@ coarse axis with a process pool, and writes each grid via
 """
 from __future__ import annotations
 
+from functools import lru_cache
+
 import numpy as np
 
-from .device import TransientGate, tau_r
+from .device import K_STAGES, TransientGate, tau_r
 from .distal_reward import trace_kernel, abstract_kernel, W_INIT
 from .bandit import GateBankBatched
 from .neurons import lif_step_batched, TAU_M, V_TH
@@ -59,12 +62,12 @@ __all__ = [
 # =============================================================================
 # Experiment 10 -- the dual-phase trace as a tunable interval-selective eligibility.
 #
-# Pre-registered in PREREGISTRATION_interval_selectivity.md (criteria P1-P4, kills
+# Recorded retrospectively in the interval-selectivity protocol (criteria P1-P4, kills
 # K1-K2). Claim: the device trace (Eqs. 7.1-7.2) is PEAKED at a non-zero lag t*, so it
 # implements a band-pass in time -- it credits a coincidence at a *preferred interval*
 # and SUPPRESSES a coincidence at lag~0 (reward time). A matched-decay exponential is
 # monotone (recency-biased) and credits the lag-0 confound instead. The preferred
-# interval is fabrication-tunable via tau_leak.
+# interval varies with tau_leak; fabrication tunability is not assumed.
 #
 # Task (trace level, competition for credit):
 #   - syn_pref : reward-correlated coincidence at lag D_rew (the preferred interval).
@@ -84,24 +87,48 @@ DECAY = 0.08         # weight-decay alpha: the leaky three-factor rule Dw=eta((R
                      # weight eligibility-proportional rather than clip-saturated.
 
 
-def peak_lag(tau_leak, V=0.9, T=80.0, dt=0.05):
+def peak_lag(tau_leak, V=0.9, T=80.0, dt=0.05, k=K_STAGES,
+             tau_r_override=None):
     """Preferred interval t* = argmax of the (unnormalised) device trace."""
-    g = TransientGate(V=V, tau_leak=tau_leak, dt=dt)
+    g = TransientGate(V=V, tau_leak=tau_leak, dt=dt, k=k,
+                      tau_r_override=tau_r_override)
     t = np.arange(0, T, dt)
     raw = g.trace(t, coincidence_at=0.0, coincidence_dur=0.3, normalise=False)
     return float(t[np.argmax(raw)])
 
 
-def _kernel(kind, t, tau_leak, V):
+def _kernel(kind, t, tau_leak, V, k=K_STAGES, tau_r_override=None):
     if kind == "device":
-        return trace_kernel(t, tau_leak, V=V)
+        return trace_kernel(t, tau_leak, V=V, k=k, tau_r_override=tau_r_override)
     if kind == "exp":
         return abstract_kernel(t, tau_leak)
+    if kind == "no_trace":
+        return np.zeros_like(t, dtype=float)
     raise ValueError(kind)
 
 
+@lru_cache(maxsize=256)
+def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override):
+    """Process-local immutable kernel cache for publication sweep workers.
+
+    A publication sweep previously rebuilt the same 1,600-point device kernel once
+    per seed.  Jobs are scheduled in seed-sized chunks, so each worker now constructs
+    a kernel once for a complete experimental cell and reuses it without changing the
+    seeded learning dynamics.
+    """
+    t = np.arange(0, float(T), float(dt))
+    kernel = np.asarray(
+        _kernel(kind, t, float(tau_leak), float(V), k=int(k),
+                tau_r_override=tau_r_override),
+        dtype=float,
+    )
+    kernel.setflags(write=False)
+    return kernel
+
+
 def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
-                      T=160.0, dt=0.1, eta=0.05, seed=0):
+                      T=160.0, dt=0.1, eta=0.05, seed=0, k=K_STAGES,
+                      tau_r_override=None, kernel=None):
     """One seed. Returns final weights w (w[0]=syn_pref @ lag D_rew,
     w[1]=syn_late @ lag LATE_LAG, w[2:]=reward-uncorrelated distractors).
 
@@ -113,7 +140,10 @@ def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
     rng = np.random.default_rng(seed)
     t = np.arange(0, T, dt)
     nt = len(t)
-    kern = _kernel(kind, t, tau_leak, V)
+    kern = (_cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override)
+            if kernel is None else np.asarray(kernel, dtype=float))
+    if kern.shape != t.shape:
+        raise ValueError("precomputed selectivity kernel has the wrong shape")
     # eligibility a synapse carries at reward time, given its coincidence LAG before
     # reward: e = kern[lag_index]. (kern is e(t) after a coincidence at t=0.)
     def elig_at_lag(lag):
@@ -154,13 +184,26 @@ def selectivity_ratio(w):
     return w[0] / max(w[1], 1e-6)
 
 
-def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500):
+def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500,
+                       k=K_STAGES, tau_r_override=None):
     """Per-seed selectivity ratios over ``seeds`` seeds (serial)."""
     return np.array([
         selectivity_ratio(train_selectivity(kind, tau_leak, D_rew, V=V,
-                                             trials=trials, seed=s))
+                                             trials=trials, seed=s, k=k,
+                                             tau_r_override=tau_r_override))
         for s in range(seeds)
     ])
+
+
+def _selectivity_seed_job(job):
+    """Spawn-safe worker for one deterministic selectivity seed."""
+    (cell_id, seed, kind, tau_leak, delay, V, trials, k,
+     tau_r_override) = job
+    weights = train_selectivity(
+        kind, tau_leak, delay, V=V, trials=trials, seed=seed, k=k,
+        tau_r_override=tau_r_override,
+    )
+    return cell_id, seed, float(selectivity_ratio(weights))
 
 
 def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
@@ -174,9 +217,9 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
     the per-seed learned selectivity ``S = w_pref/w_late`` for the device trace and
     the matched-tau exponential control, with bootstrap CIs; and the ``S(D)`` curve
     over a log-spaced design-interval grid for three retentions ``tau_leak in
-    {5,10,20} s`` (the pre-registered CROSSOVER: a short design interval is best
+    {5,10,20} s`` (the retrospectively recorded crossover: a short design interval is best
     served by short retention, a long one by long retention -- the peak sliding right
-    with ``tau_leak``).  Pre-registered criteria (fixed before running):
+    with ``tau_leak``). Retrospective criteria:
       P1  device interval-selective     : device S CI lower bound > 1.
       P2  exponential recency-biased     : exp S CI upper bound < 1.
       P3  preferred interval shifts w/ tau_leak : S(short D) decreases with tau_leak
@@ -226,6 +269,127 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
     }
 
 
+def run_predictive_interval_sweep(*, taus=(0.8, 1.3, 2.0, 3.6, 6.0, 10.0),
+                                  seeds=20, trials=1500, V=0.9,
+                                  lag_factors=(0.4, 0.7, 1.0, 1.4, 2.0),
+                                  k=K_STAGES, tau_r_override=None, workers=1,
+                                  pool=None):
+    """Test the device-model prediction of delay-peaked eligibility.
+
+    The model predicts ``tstar`` before learning.  For every retention, the learning
+    rule is then evaluated on a delay grid expressed relative to that frozen prediction
+    for the device, a decay-matched exponential, and a zeroed-trace control.  Raw
+    per-seed selectivity ratios are retained so the notebook record never has to
+    reconstruct evidence from plotted means.
+    """
+    from scipy.stats import spearmanr
+
+    taus = [float(tau) for tau in taus]
+    predictions = {tau: peak_lag(tau, V=V, k=k,
+                                 tau_r_override=tau_r_override) for tau in taus}
+    rows = []
+    learned_peak = {}
+    at_prediction = {"device": [], "exp": [], "no_trace": []}
+    cell_specs = []
+    for tau in taus:
+        delays = sorted(set(round(max(0.1, predictions[tau] * factor), 2)
+                            for factor in lag_factors))
+        for delay in delays:
+            for condition in ("device", "exp", "no_trace"):
+                cell_specs.append((float(tau), float(delay), condition))
+
+    jobs = [
+        (cell_id, seed, condition, tau, delay, float(V), int(trials), int(k),
+         tau_r_override)
+        for cell_id, (tau, delay, condition) in enumerate(cell_specs)
+        for seed in range(int(seeds))
+    ]
+    own_pool = None
+    if pool is None and int(workers) > 1:
+        from multiprocessing import get_context
+        own_pool = get_context("spawn").Pool(min(int(workers), len(cell_specs)))
+        pool = own_pool
+    try:
+        # One chunk is one cell's full seed set. This balances independent cells while
+        # allowing the process-local kernel cache to eliminate per-seed reconstruction.
+        mapped = (pool.map(_selectivity_seed_job, jobs, chunksize=max(1, int(seeds)))
+                  if pool is not None else map(_selectivity_seed_job, jobs))
+        values_by_cell = {
+            cell_id: np.empty(int(seeds), dtype=float)
+            for cell_id in range(len(cell_specs))
+        }
+        for cell_id, seed, value in mapped:
+            values_by_cell[cell_id][seed] = value
+    finally:
+        if own_pool is not None:
+            own_pool.close()
+            own_pool.join()
+
+    cell_lookup = {
+        spec: values_by_cell[cell_id]
+        for cell_id, spec in enumerate(cell_specs)
+    }
+    for tau in taus:
+        delays = sorted(set(round(max(0.1, predictions[tau] * factor), 2)
+                            for factor in lag_factors))
+        design_delay = min(delays, key=lambda delay: abs(delay - predictions[tau]))
+        device_means = []
+        for delay in delays:
+            for condition in ("device", "exp", "no_trace"):
+                values = cell_lookup[(float(tau), float(delay), condition)]
+                lo, hi = bootstrap_ci(values)
+                rows.append({
+                    "tau_s": tau, "predicted_tstar_s": predictions[tau],
+                    "delay_s": delay, "condition": condition,
+                    "mean_selectivity": float(values.mean()),
+                    "ci_low": float(lo), "ci_high": float(hi),
+                    "seed_values": values,
+                })
+                if condition == "device":
+                    device_means.append(float(values.mean()))
+                if delay == design_delay:
+                    at_prediction[condition].append(values)
+        learned_peak[tau] = float(delays[int(np.argmax(device_means))])
+
+    predicted = np.asarray([predictions[tau] for tau in taus], float)
+    learned = np.asarray([learned_peak[tau] for tau in taus], float)
+    peak_tracking_estimable = len(lag_factors) >= 3
+    if not peak_tracking_estimable or np.ptp(predicted) == 0 or np.ptp(learned) == 0:
+        correlation = None
+    else:
+        statistic = float(spearmanr(predicted, learned).statistic)
+        correlation = statistic if np.isfinite(statistic) else None
+    device_values = np.concatenate(at_prediction["device"])
+    exponential_values = np.concatenate(at_prediction["exp"])
+    paired_difference = device_values - exponential_values
+    diff_lo, diff_hi = bootstrap_ci(paired_difference)
+    diagnostics = {
+        "inference_status": (
+            "publication_scale" if seeds >= 20 and trials >= 1500
+            else "feasibility_only"
+        ),
+        "peak_tracking_estimable": peak_tracking_estimable,
+        "spearman_predicted_vs_learned": correlation,
+        "positive_peak_correlation": bool(correlation is not None and correlation > 0),
+        "device_minus_exponential_mean": float(paired_difference.mean()),
+        "device_minus_exponential_95ci": [float(diff_lo), float(diff_hi)],
+        "device_beats_exponential": bool(diff_lo > 0),
+        "all_predicted_peaks_after_reward_time_confound": bool(
+            all(value > LATE_LAG for value in predictions.values())),
+        "interpretation": (
+            "Scientific diagnostic only. Editorial suitability is not inferred from "
+            "this thresholded comparison."
+        ),
+    }
+    return {
+        "taus": taus, "predicted_tstar": predictions, "learned_peak": learned_peak,
+        "rows": rows, "diagnostics": diagnostics,
+        "seeds": int(seeds), "trials": int(trials),
+        "V": float(V), "lag_factors": list(lag_factors), "k": int(k),
+        "tau_r_override_s": tau_r_override,
+    }
+
+
 # =============================================================================
 # Experiment 20 -- the cascade occupancy VECTOR as a clockless elapsed-time code.
 #
@@ -268,10 +432,10 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
 # CHARACTERISATION SWEEP (turns "bounded resolution" into a result): vector-vs-scalar
 # accuracy across (interval separation) x (cascade depth k). Establishes (i) the
 # vector's advantage band, (ii) that resolution is limited by readout NOISE not by k
-# (high-k plateaus/regresses), so the measured k~3 already sits near the useful optimum
+# (high-k plateaus/regresses), so the historical k~3 representative sits near the useful optimum
 # -- not a limitation appealing to a deeper device that does not exist.
 #
-# PRE-REGISTRATION (fixed before running; reported as-is):
+# RECORDED ANALYSIS CRITERIA (retrospective; reported as-is):
 #   H1  vector readout learns the interval-discrimination task (straddling pair):
 #       vector >= CRIT.
 #   H2  scalar readout FAILS the same task (aliasing): scalar <= chance + 0.10, AND
@@ -426,7 +590,7 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None,
     Runs the vector/scalar/no_trace comparison at the MEASURED scalar-aliasing pair
     (:func:`aliasing_pair`, so the pair tracks ``tau_leak``/``k``), then the
     (interval separation) x (cascade depth ``k``) characterisation sweep.  Evaluates
-    the pre-registered H1--H4/K1.  ``quick`` shrinks the sweep grid exactly as the
+    the retrospective H1--H4/K1. ``quick`` shrinks the sweep grid exactly as the
     original ``--quick`` did.  An optional ``pool`` (a ``multiprocessing.Pool``) is
     used to parallelise the coarse axes when called from :func:`main`; when ``None``
     (the notebook path) everything runs serially in-kernel.

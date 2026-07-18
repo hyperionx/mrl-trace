@@ -31,13 +31,14 @@ SPATIAL-credit pathway varies, so the comparison isolates structural credit:
 Every condition uses the same :class:`GateBankBatched` device physics for eligibility,
 the same signed leak-dominant coincidence drive, and ``dw = eta * L * e`` updates,
 where ``L`` is the (global or per-layer) learning signal. See
-``experiments/PREREGISTRATION_deep_local.md`` for the pre-registered criteria.
+the legacy deep-local protocol file for the retrospective analysis criteria.
 """
 from __future__ import annotations
 
 import numpy as np
 
 from .bandit import GateBankBatched, W_INIT, W_MAX
+from .device import K_STAGES
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 
@@ -100,7 +101,8 @@ def train_deep(*, mode="dfa", B=20, H=8, tau_leak=10.0, D=5.0, trials=2000,
                bias_o=0.35, homeo=0.0, homeo_target=0.35, homeo_tau=200.0,
                t_distract=None, distract_dur=0.3, weight_fault=None, early_stop=None,
                reward_pools=None, state_sampler=None, n_features=None, n_actions=None,
-               seed0=0, return_weights=False, log_align=False):
+               seed0=0, return_weights=False, log_align=False,
+               device_k=K_STAGES, tau_r_override=None):
     """Train the XOR contextual bandit with a two-layer spiking device-synapse network.
 
     Architecture: ``F=4`` input lines -> ``H`` hidden LIF neurons -> ``A=2`` action LIF
@@ -112,7 +114,7 @@ def train_deep(*, mode="dfa", B=20, H=8, tau_leak=10.0, D=5.0, trials=2000,
     matching ``XOR``.
 
     ``mode`` selects the SPATIAL-credit pathway (the eligibility/temporal factor is the
-    device trace in all modes); see module docstring and the pre-registration.
+    device trace in all modes); see the module docstring and recorded criteria.
 
     ``state_sampler`` swaps the input STATE without touching the learning rule. By default
     (``None``) the state is the built-in XOR cue (``xor_inputs``, ``F=4``, ``A=2``). Pass a
@@ -169,8 +171,10 @@ def train_deep(*, mode="dfa", B=20, H=8, tau_leak=10.0, D=5.0, trials=2000,
         W1 = None
 
     # --- device eligibility gates (one bank per trained matrix) ---
-    g1 = GateBankBatched(B, F, H, tau_leak=tau_leak, dt=dt, V=V) if deep else None
-    g_out = GateBankBatched(B, (H if deep else F), A, tau_leak=tau_leak, dt=dt, V=V)
+    gate_kw = dict(tau_leak=tau_leak, dt=dt, V=V, k=device_k,
+                   tau_r_override=tau_r_override)
+    g1 = GateBankBatched(B, F, H, **gate_kw) if deep else None
+    g_out = GateBankBatched(B, (H if deep else F), A, **gate_kw)
 
     # --- DFA feedback matrix: fixed random, drawn ONCE, independent of W2 (no transport) ---
     B_fix = fb_scale * rng.standard_normal((A, H)) if deep else None
@@ -438,7 +442,7 @@ def reward_rate(rewards, window=100):
 # rather than in the selectivity module.
 # =============================================================================
 
-# Frozen operating points (pilot-tuned; see the pre-registration docs). Kept at
+# Frozen operating points (pilot-tuned; see the retrospective protocol docs). Kept at
 # module scope so both the ``run_*`` cores and ``main()`` share one source of truth.
 DEEP_LOCAL_HP = dict(H=32, tau_leak=10.0, D=5.0, eta=0.2, eta_hidden=3.0,
                      fb_scale=2.0, bias_o=0.3, V=1.5, sigma0=0.15, sigma1=0.05)
@@ -516,7 +520,8 @@ def _relax(bank, n_steps, dt, stride=10):
 
 def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
             dt=5e-3, cue_dur=0.3, distract_dur=0.3, eta=0.2, V=1.5, in_rate=200.0,
-            ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0):
+            ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0,
+            device_k=K_STAGES, tau_r_override=None):
     """One DMS-with-distractor condition (Experiment 12). SERIAL, returns rewards
     ``(B, trials)``; no file I/O.
 
@@ -542,7 +547,8 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
     if cond == "abstract":
         bank = AbstractTrace(B, S, A, tau_elig=tau_leak, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, V=V, dt=dt)
+        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, V=V, dt=dt,
+                               k=device_k, tau_r_override=tau_r_override)
     no_trace = (cond == "no_trace")
 
     w = np.full((B, S, A), W_INIT)
@@ -610,9 +616,9 @@ def final_rate(rw, window=300):
 def _summarize_dms(raw, conds, *, trials, chance, crit, tau_leak=1.5, G=5.0,
                    t_distract=4.0):
     """Package raw per-condition :func:`run_dms` output into the exp12 grid dict
-    (seed-mean curves, per-seed finals + bootstrap CIs, pre-registered H1-H3/K1).
+    (seed-mean curves, per-seed finals + bootstrap CIs, retrospective H1-H3/K1).
 
-    Pre-registered (fixed before running):
+    Retrospectively recorded:
       H1 device learns DMS-with-distractor:   device final >= crit
       H2 trace is necessary:                   no-trace <= chance + 0.10
       H3 band-pass beats recency at crediting the sample over the distractor:
@@ -643,21 +649,32 @@ def _summarize_dms(raw, conds, *, trials, chance, crit, tau_leak=1.5, G=5.0,
 
 def _dms_one_job(job):
     """Spawn-safe coarse worker for one shallow-DMS condition."""
-    cond, seeds, trials = job
-    return cond, run_dms(cond, B=seeds, trials=trials)
+    cond, seeds, trials, device_k, tau_r_override = job
+    return cond, run_dms(cond, B=seeds, trials=trials, device_k=device_k,
+                         tau_r_override=tau_r_override)
 
 
 def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace"),
-                pool=None):
+                pool=None, workers=1, device_k=K_STAGES, tau_r_override=None):
     """Experiment 12 core: DMS-with-distractor over all conditions.
 
     Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
     condition axis. Returns the packaged grid dict and performs no file I/O.
     """
-    jobs = [(c, seeds, trials) for c in conds]
-    pairs = (pool.map(_dms_one_job, jobs, chunksize=1) if pool is not None
-             else map(_dms_one_job, jobs))
-    raw = dict(pairs)
+    jobs = [(c, seeds, trials, device_k, tau_r_override) for c in conds]
+    own_pool = None
+    if pool is None and int(workers) > 1:
+        from multiprocessing import get_context
+        own_pool = get_context("spawn").Pool(min(int(workers), len(jobs)))
+        pool = own_pool
+    try:
+        pairs = (pool.map(_dms_one_job, jobs, chunksize=1) if pool is not None
+                 else map(_dms_one_job, jobs))
+        raw = dict(pairs)
+    finally:
+        if own_pool is not None:
+            own_pool.close()
+            own_pool.join()
     return _summarize_dms(raw, conds, trials=trials, chance=0.5, crit=0.75)
 
 
@@ -667,7 +684,7 @@ def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace
 # Five conditions isolate the SPATIAL-credit pathway (the device trace is the
 # temporal factor in all of them); "dfa_homeo" adds the local homeostatic activity
 # regulator (the diagnosed fix for the DFA policy-collapse bimodality). See
-# experiments/PREREGISTRATION_deep_local.md for the frozen operating point + criteria.
+# The legacy deep-local protocol records the operating point and criteria.
 # ----------------------------------------------------------------------------
 def _deep_local_one(mode, *, seeds, trials, hp, homeo):
     """Run one deep-local condition over all seeds. Returns (mode, finals[seeds],
@@ -690,7 +707,7 @@ def _deep_local_one(mode, *, seeds, trials, hp, homeo):
 def _summarize_deep_local(res, *, seeds, trials, hp, homeo, chance, crit,
                           modes=None):
     """Package raw ``(mode, finals, curve)`` triples into the exp7 grid dict with
-    bootstrap CIs and the pre-registered criteria C1-C4/C6/K4.
+    bootstrap CIs and the retrospective criteria C1-C4/C6/K4.
 
     C1 shallow fails (<= chance+0.10) -> depth is genuinely required
     C2 no-trace fails                 -> eligibility necessity
@@ -723,7 +740,7 @@ def _deep_local_job(job):
 
 
 def run_deep_local(*, seeds=20, trials=3000, hp=None, homeo=DEEP_LOCAL_HOMEO,
-                   modes=None, chance=0.5, crit=0.75, pool=None):
+                   modes=None, chance=0.5, crit=0.75, pool=None, workers=1):
     """Experiment 7 core: deep all-local XOR over all conditions.
 
     Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
@@ -732,8 +749,18 @@ def run_deep_local(*, seeds=20, trials=3000, hp=None, homeo=DEEP_LOCAL_HOMEO,
     hp = DEEP_LOCAL_HP if hp is None else hp
     modes = list(modes) if modes is not None else DEEP_LOCAL_MODES
     jobs = [(m, seeds, trials, hp, homeo) for m in modes]
-    res = (pool.map(_deep_local_job, jobs, chunksize=1) if pool is not None
-           else list(map(_deep_local_job, jobs)))
+    own_pool = None
+    if pool is None and int(workers) > 1:
+        from multiprocessing import get_context
+        own_pool = get_context("spawn").Pool(min(int(workers), len(jobs)))
+        pool = own_pool
+    try:
+        res = (pool.map(_deep_local_job, jobs, chunksize=1) if pool is not None
+               else list(map(_deep_local_job, jobs)))
+    finally:
+        if own_pool is not None:
+            own_pool.close()
+            own_pool.join()
     return _summarize_deep_local(res, seeds=seeds, trials=trials, hp=hp, homeo=homeo,
                                  chance=chance, crit=crit, modes=modes)
 
@@ -761,7 +788,7 @@ def _deep_dms_one(spec, *, seeds, trials, hp, t_distract, distract_dur):
 def _summarize_deep_dms(raw, conds, *, seeds, trials, hp, homeo, t_distract,
                         chance, crit):
     """Package raw exp13 output into the grid dict with per-seed finals, bootstrap
-    CIs, seeds-solved robustness, and the pre-registered H1-H3/K1.
+    CIs, seeds-solved robustness, and the retrospective H1-H3/K1.
 
     H1 full stack survives the distractor:   dfa_homeo+dist >= crit
     H2 eligibility necessary:                no_trace+dist <= chance + 0.10
@@ -800,7 +827,7 @@ def _deep_dms_job(job):
 def run_deep_dms(*, seeds=20, trials=3000, hp=None, homeo=DEEP_DMS_HOMEO,
                  conds=None, t_distract=DEEP_DMS_T_DISTRACT,
                  distract_dur=DEEP_DMS_DISTRACT_DUR, chance=0.5, crit=0.75,
-                 pool=None):
+                 pool=None, workers=1):
     """Experiment 13 core: deep XOR plus temporal distractor over all conditions.
 
     Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
@@ -809,9 +836,19 @@ def run_deep_dms(*, seeds=20, trials=3000, hp=None, homeo=DEEP_DMS_HOMEO,
     hp = DEEP_DMS_HP if hp is None else hp
     conds = DEEP_DMS_CONDS if conds is None else conds
     jobs = [(spec, seeds, trials, hp, t_distract, distract_dur) for spec in conds]
-    pairs = (pool.map(_deep_dms_job, jobs, chunksize=1) if pool is not None
-             else map(_deep_dms_job, jobs))
-    raw = dict(pairs)
+    own_pool = None
+    if pool is None and int(workers) > 1:
+        from multiprocessing import get_context
+        own_pool = get_context("spawn").Pool(min(int(workers), len(jobs)))
+        pool = own_pool
+    try:
+        pairs = (pool.map(_deep_dms_job, jobs, chunksize=1) if pool is not None
+                 else map(_deep_dms_job, jobs))
+        raw = dict(pairs)
+    finally:
+        if own_pool is not None:
+            own_pool.close()
+            own_pool.join()
     return _summarize_deep_dms(raw, conds, seeds=seeds, trials=trials, hp=hp,
                                homeo=homeo, t_distract=t_distract,
                                chance=chance, crit=crit)

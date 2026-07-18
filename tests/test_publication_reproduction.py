@@ -5,14 +5,24 @@ import hashlib
 import re
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PUB = ROOT / "data" / "publication"
 EXPERIMENTS = ROOT / "experiments"
 
 
+def _load_publication_json(name: str):
+    """Load an optional deposited/generated archive, or skip its contract checks."""
+    path = PUB / name
+    if not path.is_file():
+        pytest.skip(f"optional publication archive is not present: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def test_manifest_contract() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     figures = manifest["figures"]
     assert manifest["figure_count"] == len(figures) == 41
     assert len({row["filename"] for row in figures}) == 41
@@ -30,7 +40,7 @@ def test_active_manuscript_figure_names() -> None:
         "fig_distal_cue_deep.png", "fig_deep_local.png", "fig_deep_dms.png",
         "fig_dopamine_capstone.png",
     }
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     assert {row["filename"] for row in manifest["figures"] if row["tier"] == "main"} == expected
     manuscript = ROOT.parent / "manuscript-MRL" / "main.tex"
     if manuscript.exists():
@@ -41,7 +51,7 @@ def test_active_manuscript_figure_names() -> None:
 
 
 def test_curated_aggregates_are_summary_records() -> None:
-    aggregates = json.loads((PUB / "aggregates.json").read_text(encoding="utf-8"))
+    aggregates = _load_publication_json("aggregates.json")
     assert "fig_tier1_window.png" in aggregates
     assert "fig_rl_curve.png" not in aggregates  # a delay table is not a learning curve
     assert "tier3_delay_retention_summary" in aggregates
@@ -51,13 +61,13 @@ def test_curated_aggregates_are_summary_records() -> None:
 
 
 def test_curated_fixture_and_reference_hashes() -> None:
-    fixtures = json.loads((PUB / "fixture_hashes.json").read_text(encoding="utf-8"))
+    fixtures = _load_publication_json("fixture_hashes.json")
     for relative, expected in fixtures.items():
         target = ROOT / relative
         assert target.is_file()
         assert hashlib.sha256(target.read_bytes()).hexdigest() == expected
 
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     for row in manifest["figures"]:
         if row["reference_hash"] is None:
             continue
@@ -71,7 +81,7 @@ def test_curated_fixture_and_reference_hashes() -> None:
 
 
 def test_notebook_controls_and_ownership() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     controls = ["RUN_PROFILE", "DEVICE", "WORKERS", "SAVE_FIGURES", "OUTPUT_DIR",
                 "OVERWRITE", "RUN_EXTERNAL_DATA", "ALLOW_DATA_DOWNLOADS"]
     for notebook in sorted({row["notebook"] for row in manifest["figures"]}):
@@ -115,7 +125,7 @@ def test_distal_credit_notebook_is_fully_live_unique_and_appendix_faithful() -> 
 
 
 def test_distal_credit_manifest_uses_live_or_authored_provenance() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     owned = {
         row["filename"]: row for row in manifest["figures"]
         if row["notebook"] == "01_distal_credit_ladder.ipynb"
@@ -130,7 +140,7 @@ def test_distal_credit_manifest_uses_live_or_authored_provenance() -> None:
 
 
 def test_external_data_is_gated() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     external = [row for row in manifest["figures"] if row["provenance_class"] == "external-gated"]
     assert {row["filename"] for row in external} == {
         "fig_dopamine_signal.png", "fig_dopamine_capstone.png",
@@ -140,7 +150,7 @@ def test_external_data_is_gated() -> None:
 
 
 def test_topic_notebook_ownership_is_unique_and_current() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     expected_counts = {
         "00_device_physics_and_trace.ipynb": 7,
         "01_distal_credit_ladder.ipynb": 7,
@@ -177,7 +187,7 @@ def test_remaining_offline_notebooks_compute_live_without_raster_replay() -> Non
 
 
 def test_live_manifest_provenance_for_notebooks_02_03_and_05() -> None:
-    manifest = json.loads((PUB / "figure_manifest.json").read_text(encoding="utf-8"))
+    manifest = _load_publication_json("figure_manifest.json")
     rows = {row["filename"]: row for row in manifest["figures"]}
     for filename in {
         "fig_dmax_dense.png", "fig_sequential.png", "fig_scaling.png", "fig_hybrid.png",
@@ -198,6 +208,9 @@ def test_live_manifest_provenance_for_notebooks_02_03_and_05() -> None:
 def test_extensions_use_valid_measured_tau_population() -> None:
     from mrl_trace.extensions import load_measured_tau
 
+    fixture = ROOT / "data" / "device_model" / "ito_decay_data.npz"
+    if not fixture.is_file():
+        pytest.skip("optional measured-ITO fit archive is not present")
     tau, source = load_measured_tau()
     assert len(tau) >= 10
     assert tau.min() >= 0.56

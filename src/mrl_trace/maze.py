@@ -44,6 +44,7 @@ from __future__ import annotations
 import numpy as np
 
 from .bandit import GateBankBatched, AbstractTrace, W_INIT, W_MAX
+from .device import K_STAGES
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 
@@ -235,7 +236,7 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
                      in_rate=200.0, ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH,
                      sigma0=0.15, sigma1=None, abstract=False, no_trace=False,
                      eprop=False, beta_pol=1.0, beta_leak=1.0, weight_fault=None, seed0=0,
-                     return_weights=False):
+                     return_weights=False, device_k=K_STAGES, tau_r_override=None):
     """Train the sequential policy on ``env`` for ``B`` parallel seeds.
 
     The network is a state x action grid of device synapses ``w[state, action]``.
@@ -269,7 +270,9 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     elif abstract:
         bank = AbstractTrace(B, S, A, tau_leak=tau_leak, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, V=V, beta_leak=beta_leak)
+        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, V=V,
+                               beta_leak=beta_leak, k=device_k,
+                               tau_r_override=tau_r_override)
     w = np.full((B, S, A), W_INIT)
     baseline = np.full(B, 1.0 / A)
     bidx = np.arange(B)
@@ -488,7 +491,7 @@ def policy_correct(env, w):
 #   eprop    : network-computed eligibility (reward-modulated policy gradient, Bellec 2020);
 #   no_trace : eligibility zeroed (device-necessity control).
 # Operating point V=1.5 (rise time tau_r=1.9 s) so the eligibility snapshot reflects
-# RETENTION (tau_leak), not the sigmoidal rise.  Pre-registered criteria C1-C4 / kill K1
+# RETENTION (tau_leak), not the sigmoidal rise. Retrospective criteria C1-C4 / kill K1
 # are evaluated in the summary.
 # -----------------------------------------------------------------------------
 EPROP_ETA = 2000.0        # e-prop eligibility magnitude ~1e-4 << device/R-STDP; eta scaled up
@@ -502,7 +505,7 @@ def running_rate(r1d, window=50):
 
 def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
                    taus=(2.0, 5.0, 20.0), delays=(2, 4, 8, 16, 32, 64), seed0=0,
-                   workers=1):
+                   workers=1, device_k=K_STAGES, tau_r_override=None):
     """Experiment 6: sequential T-maze learning curves + retention x delay grid.
 
     Runs the four conditions (device / rstdp / eprop / no_trace) as learning curves
@@ -515,7 +518,7 @@ def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
     serially or dispatched across a spawn-safe process pool with ``workers > 1``.
     Returns the result
     dict (per-condition per-seed finals + running curves, policy correctness, the
-    retention x delay grid with bootstrap CIs, ``D_max`` per tau, and the pre-registered
+    retention x delay grid with bootstrap CIs, ``D_max`` per tau, and the retrospective
     criteria); no file I/O.
     """
     from functools import partial
@@ -531,7 +534,8 @@ def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
         for D in delays:
             specs.append((("grid", tau, D), tau, D, dict(), False))
     worker = partial(_exp6_worker_seeded, seeds=seeds, episodes=episodes, V=V,
-                     seed0=seed0)
+                     seed0=seed0, device_k=device_k,
+                     tau_r_override=tau_r_override)
     if int(workers) > 1:
         from multiprocessing import get_context
         with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
@@ -604,16 +608,17 @@ def _dmax_origin_fit(taus, dvals, mask):
     return kk, (1 - float(np.sum(res ** 2)) / sst if sst > 0 else float("nan"))
 
 
-def _dmax_cell(spec, episodes, V, seeds):
-    """One (tau, D) device cell -> (tau, D, mean reward rate, lo, hi). Top-level for
-    multiprocessing; deterministic by seed0=0."""
+def _dmax_cell(spec, episodes, V, seeds, device_k=K_STAGES, tau_r_override=None):
+    """One device cell, retaining the per-seed final reward rates."""
     from .stats import bootstrap_ci
     tau, D = spec
     env = TMaze(L=3, A_goal=2)
-    r = train_sequential(env, B=seeds, tau_leak=tau, D=D, episodes=episodes, V=V, seed0=0)
+    r = train_sequential(env, B=seeds, tau_leak=tau, D=D, episodes=episodes, V=V,
+                         seed0=0, device_k=device_k,
+                         tau_r_override=tau_r_override)
     f = reward_rate(r, 100)
     lo, hi = bootstrap_ci(f)
-    return (tau, D, float(f.mean()), lo, hi)
+    return (tau, D, float(f.mean()), lo, hi, np.asarray(f, float))
 
 
 def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
@@ -621,8 +626,10 @@ def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
     reward-rate rows, interpolated ``D_max``, the origin-forced headline fit + the
     asymptotic plateau slope, and the right-censoring flags)."""
     grid = {tau: {} for tau in taus}
-    for tau, D, m, lo, hi in results:
+    seed_grid = {tau: {} for tau in taus}
+    for tau, D, m, lo, hi, seed_values in results:
         grid[tau][D] = (m, lo, hi)
+        seed_grid[tau][D] = seed_values
     dmax = {tau: interp_dmax(delays, [grid[tau][D][0] for D in delays], crit)
             for tau in taus}
     taus_a = np.array(taus); dvals = np.array([dmax[t] for t in taus])
@@ -631,7 +638,8 @@ def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
     k, r2 = _dmax_origin_fit(taus_a, dvals, fitmask)                     # all resolved points
     platmask = fitmask & (taus_a >= DMAX_PLATEAU_TAU)
     k_plateau, r2_plateau = _dmax_origin_fit(taus_a, dvals, platmask)    # asymptotic slope
-    return {"taus": list(taus), "delays": list(delays), "grid": grid, "dmax": dmax,
+    return {"taus": list(taus), "delays": list(delays), "grid": grid,
+            "seed_grid": seed_grid, "dmax": dmax,
             "k": k, "r2": r2, "k_plateau": k_plateau, "r2_plateau": r2_plateau,
             "plateau_tau": DMAX_PLATEAU_TAU, "crit": crit,
             "censored": censored.tolist(), "seeds": seeds, "episodes": episodes,
@@ -639,7 +647,7 @@ def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
 
 
 def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=0.75,
-                 workers=1):
+                 workers=1, device_k=K_STAGES, tau_r_override=None):
     """Experiment 8: dense D_max(tau_leak) scaling law (device condition only).
 
     Runs every ``(tau, D)`` device cell serially and reads off the interpolated
@@ -653,7 +661,8 @@ def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=
     taus = DMAX_TAUS if taus is None else list(taus)
     delays = DMAX_DELAYS if delays is None else list(delays)
     specs = [(tau, D) for tau in taus for D in delays]
-    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds)
+    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds,
+                     device_k=device_k, tau_r_override=tau_r_override)
     if int(workers) > 1:
         from multiprocessing import get_context
         with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
@@ -664,7 +673,8 @@ def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=
 
 
 def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
-                      delay_ratios=(4, 8, 12, 16, 20), crit=0.75, workers=1):
+                      delay_ratios=(4, 8, 12, 16, 20), crit=0.75, workers=1,
+                      device_k=K_STAGES, tau_r_override=None):
     """Reduced live validation of the dense retention--delay law.
 
     The publication sweep uses one 18-value absolute-delay grid for every retention.
@@ -683,7 +693,8 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
         for tau in taus
     }
     specs = [(tau, D) for tau in taus for D in sampled_delays[tau]]
-    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds)
+    worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds,
+                     device_k=device_k, tau_r_override=tau_r_override)
     if int(workers) > 1:
         from multiprocessing import get_context
         with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
@@ -692,8 +703,10 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
         results = list(map(worker, specs))
 
     sampled = {tau: {} for tau in taus}
-    for tau, D, mean, lo, hi in results:
+    seed_grid = {tau: {} for tau in taus}
+    for tau, D, mean, lo, hi, seed_values in results:
         sampled[tau][D] = (mean, lo, hi)
+        seed_grid[tau][D] = seed_values
     dmax = {}
     censored = []
     for tau in taus:
@@ -710,6 +723,7 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
     k_plateau, r2_plateau = _dmax_origin_fit(
         taus_a, dvals, fitmask & (taus_a >= plateau_tau))
     return {"taus": list(taus), "sampled_delays": sampled_delays, "sampled": sampled,
+            "seed_grid": seed_grid,
             "dmax": dmax, "k": k, "r2": r2, "k_plateau": k_plateau,
             "r2_plateau": r2_plateau, "plateau_tau": plateau_tau, "crit": crit,
             "censored": censored, "seeds": seeds, "episodes": episodes, "V_op": V,
@@ -998,12 +1012,14 @@ def _exp6_worker(spec, seeds, episodes, V):
     return (key, out)
 
 
-def _exp6_worker_seeded(spec, seeds, episodes, V, seed0=0):
+def _exp6_worker_seeded(spec, seeds, episodes, V, seed0=0, device_k=K_STAGES,
+                        tau_r_override=None):
     """Spawn-safe exp6 worker that retains the public runner's ``seed0`` control."""
     key, tau_leak, D, kw, want_w = spec
     env = TMaze(L=3, A_goal=2)
     out = train_sequential(env, B=seeds, tau_leak=tau_leak, D=D, episodes=episodes,
-                           V=V, seed0=seed0, return_weights=want_w, **kw)
+                           V=V, seed0=seed0, return_weights=want_w,
+                           device_k=device_k, tau_r_override=tau_r_override, **kw)
     return (key, out)
 
 

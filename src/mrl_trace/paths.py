@@ -67,7 +67,7 @@ def gold_export_dir() -> Path:
 
 
 def preregistration_dir() -> Path:
-    """``data/preregistration`` -- the pre-registration protocol documents."""
+    """Legacy ``data/preregistration`` directory of retrospective protocol documents."""
     return data_dir() / "preregistration"
 
 

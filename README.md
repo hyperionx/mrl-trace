@@ -52,6 +52,8 @@ The examiner-readable topic notebooks are:
 - `04_biological_grounding.ipynb`: Frank-task and gated dopamine/EEG studies.
 - `05_extensions.ipynb`: beta-sensitivity validation, long-horizon, reversal,
   multi-timescale, capture, working-memory, and device-TD studies.
+- `06_nmi_predictive_linkage.ipynb`: self-contained replicate-level Au/ITO model
+  identification and the new timing, empirical-retention, and reversal analyses.
 
 Together they catalogue 41 unique first-party, generator-backed figures: ten
 used by the accompanying manuscript, 17 supplementary or contextual figures,
@@ -94,6 +96,20 @@ synthetic seed runs or used to replace the default live computations.
 The numerical notebooks accept `MRL_USE_ARCHIVED_RESULTS=1` where a matching full
 sweep archive exists. This is always explicit: merely finding an archive never
 changes a live default, and archived sample counts are reported as stored.
+
+## Predictive-linkage extension
+
+The NMI-facing additions live in `experiments/06_nmi_predictive_linkage.ipynb`,
+not in a second source-level publication framework. It calls the package's scientific
+models directly, embeds the physical fitting workflow needed to audit the raw Au and
+ITO files, and writes no results by default. Profiles are `smoke`, `reduced`, and
+`publication`; only the last is intended for final inference.
+
+Set `MRL_SAVE_RESULTS=1` and `MRL_OUTPUT_DIR` to save per-trace, per-seed, and summary
+artifacts to an external archival directory. Full result arrays and generated figures
+are intentionally ignored by Git. SageMaker is optional: the same notebook runs on a
+laptop, workstation, cluster, or ordinary cloud VM. Exact commands, workload sizes,
+archive policy and historical-run provenance are contained in the notebook itself.
 
 ## External biological data
 

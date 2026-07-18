@@ -258,10 +258,10 @@ def reward_rate(rewards, window=200):
 # ``run_probselect`` returns one condition's result as a plain dict -- no file I/O,
 # no plotting, no stdout -- so a notebook can call it in-kernel at a small (quick)
 # trial count.  ``main()`` (below) runs the published 20-seed grid across a process
-# Pool over conditions, computes bootstrap CIs + the pre-registered F1--F5 criteria,
+# Pool over conditions, computes bootstrap CIs + the retrospective F1--F5 criteria,
 # and writes ``exp10_probselect.npy`` under ``data/results/`` for full-cache mode.
 # Provenance: experiments/05_biological_grounding/probabilistic_selection.py
-# (Arm F), pre-registered criteria F1--F5 in PREREGISTRATION_probselect.md.
+# (Arm F), retrospective criteria F1--F5 in the associated protocol file.
 # =============================================================================
 
 #: Fixed hyper-parameters of the published Arm-F grid (H, code width, retention,
@@ -344,9 +344,9 @@ def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
                           chance=PST_CHANCE, crit=PST_CRIT):
     """Package the per-condition :func:`run_probselect` output into the saved grid dict
     (the exact schema the Arm-F driver wrote to ``exp10_probselect.npy``) plus the
-    pre-registered criteria F1--F5.
+    retrospective criteria F1--F5.
 
-    Criteria (no goalpost moving; from PREREGISTRATION_probselect.md):
+    Retrospectively recorded criteria (from the associated protocol file):
       F1  device learns the train phase             (dfa_homeo mean >= ``crit``);
       F2  depth is needed                            (homeo CI lower > shallow CI upper);
       F3  eligibility is necessary                   (no-trace mean <= 0.60);
@@ -442,7 +442,7 @@ def main(argv=None):
         print(f"  {c:22s} choose-A {cA.mean():.3f} [{clo:.2f},{chi:.2f}]  "
               f"avoid-B {aB.mean():.3f} [{alo:.2f},{ahi:.2f}]")
 
-    print(f"\n=== pre-registered criteria ===  {grid['criteria']}")
+    print(f"\n=== retrospective criteria ===  {grid['criteria']}")
     paths.save_result("exp10_probselect.npy", grid)
     print("  wrote exp10_probselect.npy")
 

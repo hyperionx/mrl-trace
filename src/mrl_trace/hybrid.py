@@ -15,7 +15,7 @@ Two complementary studies live here, sharing the same perception front-end:
     ``C``-dim frozen readout (*hybrid*), the ``P`` raw pixels (*raw*, no front-end), or
     the hybrid wiring with the eligibility zeroed (*no_trace*). Plastic device synapses
     carry the :class:`~mrl_trace.bandit.GateBankBatched` eligibility and are
-    updated by the signed three-factor rule at EQUAL RL budget. Pre-registered: C1
+    updated by the signed three-factor rule at EQUAL RL budget. Retrospective criteria: C1
     front-end acc >= 0.85; C2 hybrid >= criterion and no-trace at chance; C3 hybrid -
     raw >= 0.15. Reference (MPS): acc 0.87, hybrid 0.62, raw 0.27, no-trace 0.27 -- the
     front-end is the remedy. Writes ``tier6_results.npy``.
@@ -288,7 +288,7 @@ def run_hybrid_decision(*, seeds=_N_SEEDS, front_steps=600, front_seed=0,
     (reads P pixels, no front-end) and *no_trace* (hybrid wiring, eligibility zeroed) --
     at equal RL budget.
 
-    Pre-registered (verbatim): C1 front-end acc >= 0.85; C2 hybrid >= criterion AND
+    Retrospectively recorded: C1 front-end acc >= 0.85; C2 hybrid >= criterion AND
     no-trace at chance (<= chance + 0.10); C3 the front-end is the remedy (hybrid - raw
     >= 0.15). ``criterion = 0.5*(1 + 1/A)``, ``A = C``. Reference (MPS): acc 0.87, hybrid
     0.62, raw 0.27, no-trace 0.27.
