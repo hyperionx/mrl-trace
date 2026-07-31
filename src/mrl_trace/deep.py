@@ -36,15 +36,23 @@ legacy analysis notes were retrospective protocol records.
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
-from .bandit import GateBankBatched, W_INIT, W_MAX
+from .bandit import (
+    GateBankBatched, LinearErlangGateBankBatched, AbstractTrace, W_INIT, W_MAX,
+)
 from .device import K_STAGES, decay_matched_exponential_tau
+from .model_specs import (
+    PRIMARY_MODEL_ID, LINEAR_MODEL_ID, device_model_spec,
+)
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 
 __all__ = ["xor_inputs", "train_deep", "reward_rate",
            "run_dms", "final_rate", "run_dms_all",
+           "calibrate_dms_scales", "tune_dms_learning_rates",
            "run_deep_local", "run_deep_dms", "run_array_scale", "main",
            "DEEP_METHOD_PROVENANCE"]
 
@@ -102,7 +110,7 @@ def train_deep(*, mode="dfa", B=20, H=8, tau_leak=10.0, D=5.0, trials=2000,
                fb_scale=1.0, w_scale1=0.6, w_scale2=0.35, w_max=W_MAX,
                bias_o=0.35, homeo=0.0, homeo_target=0.35, homeo_tau=200.0,
                t_distract=None, distract_dur=0.3, weight_fault=None, early_stop=None,
-               reward_pools=None, state_sampler=None, n_features=None, n_actions=None,
+               state_sampler=None, n_features=None, n_actions=None,
                seed0=0, return_weights=False, log_align=False,
                device_k=K_STAGES, tau_r_override=None):
     """Train the XOR contextual bandit with a two-layer spiking device-synapse network.
@@ -336,14 +344,7 @@ def train_deep(*, mode="dfa", B=20, H=8, tau_leak=10.0, D=5.0, trials=2000,
         chosen = np.argmax(spk_o, 1)
         chosen[tie] = rng.integers(A, size=int(tie.sum()))
         R_true = (chosen == correct).astype(float)        # task performance (returned)
-        if reward_pools is None:
-            R = R_true                                     # synthetic clean reward
-        else:
-            # biosignal reward: per seed draw a decoded reward VALUE from the EEG pool
-            # matching the TRUE outcome valence (exactly as bandit.train) -- a real, noisy
-            # reward-prediction-error gates the update, while R_true scores performance.
-            R = np.array([reward_pools[int(R_true[b])][
-                rng.integers(len(reward_pools[int(R_true[b])]))] for b in range(B)])
+        R = R_true                                       # synthetic clean reward
 
         # --- learning signals ---
         adv = (R - baseline)
@@ -542,7 +543,10 @@ def _relax(bank, n_steps, dt, stride=10):
 def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
             dt=5e-3, cue_dur=0.3, distract_dur=0.3, eta=0.2, V=1.5, in_rate=200.0,
             ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0,
-            device_k=K_STAGES, tau_r_override=None):
+            device_k=K_STAGES, tau_r_override=None,
+            eligibility_normalizer=1.0, forced_classes=None,
+            forced_actions=None, return_diagnostics=False,
+            gate_model=PRIMARY_MODEL_ID):
     """One DMS-with-distractor condition (Experiment 12). SERIAL, returns rewards
     ``(B, trials)``; no file I/O.
 
@@ -562,18 +566,32 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
     stride (:func:`_relax`); ~88% of dt-ticks are silent, so this is ~6x fewer
     iterations with no change to the dynamics that matter.
     """
-    from .bandit import GateBankBatched, AbstractTrace, W_INIT, W_MAX
+    if cond == "linear_device":
+        cond = "device"
+        gate_model = LINEAR_MODEL_ID
+    if cond not in {"device", "abstract", "no_trace"}:
+        raise ValueError(f"unknown DMS condition: {cond!r}")
+    eligibility_normalizer = float(eligibility_normalizer)
+    if not np.isfinite(eligibility_normalizer) or eligibility_normalizer <= 0:
+        raise ValueError("eligibility_normalizer must be finite and positive")
     rng = np.random.default_rng(seed0)
     S, A = 3, 2                       # [sample0, sample1, distractor] x {A, B}
     DIST_LINE = 2
     if cond == "abstract":
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=V, k=device_k, tau_r_override=tau_r_override,
+            gate_model=gate_model,
         )
         bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, V=V, dt=dt,
-                               k=device_k, tau_r_override=tau_r_override)
+        bank_cls = {
+            PRIMARY_MODEL_ID: GateBankBatched,
+            LINEAR_MODEL_ID: LinearErlangGateBankBatched,
+        }.get(gate_model)
+        if bank_cls is None:
+            raise ValueError(f"unknown gate_model: {gate_model!r}")
+        bank = bank_cls(B, S, A, tau_leak=tau_leak, V=V, dt=dt,
+                        k=device_k, tau_r_override=tau_r_override)
     no_trace = (cond == "no_trace")
 
     w = np.full((B, S, A), W_INIT)
@@ -584,6 +602,16 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
     n_dist = int(round(distract_dur / dt))
     n_gap2 = int(round((G - t_distract - distract_dur) / dt))
     rewards = np.zeros((B, trials))
+    if forced_classes is not None:
+        forced_classes = np.asarray(forced_classes, dtype=int)
+        if forced_classes.shape != (trials, B):
+            raise ValueError(f"forced_classes must have shape {(trials, B)}")
+    if forced_actions is not None:
+        forced_actions = np.asarray(forced_actions, dtype=int)
+        if forced_actions.shape != (trials, B):
+            raise ValueError(f"forced_actions must have shape {(trials, B)}")
+    diag_rms = []
+    diag_peak = []
 
     def active_window(v, spk, sample_line, count_spikes, distractor):
         """Step LIF + gate for one active window; return (v, e_last)."""
@@ -609,7 +637,8 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
 
     for tr in range(trials):
         bank.reset()
-        cls = rng.integers(2, size=B)                  # sample class this trial
+        cls = (rng.integers(2, size=B) if forced_classes is None
+               else forced_classes[tr].copy())
         sample_line = np.where(cls == 0, 0, 1)
         v = np.zeros((B, A))
         spk = np.zeros((B, A))                          # decision-window spike count
@@ -623,14 +652,35 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
         e_rew = _relax(bank, n_gap2, dt)
         # action = spiking winner over the sample window (ties -> random); membrane
         # noise provides exploration
-        tie = spk.max(1) == spk.min(1)
-        chosen = np.argmax(spk, 1)
-        chosen[tie] = rng.integers(A, size=int(tie.sum()))
+        if forced_actions is None:
+            tie = spk.max(1) == spk.min(1)
+            chosen = np.argmax(spk, 1)
+            chosen[tie] = rng.integers(A, size=int(tie.sum()))
+        else:
+            chosen = forced_actions[tr].copy()
         r = (chosen == cls).astype(float)              # match-to-sample reward
-        w = np.clip(w + (eta * (r - baseline))[:, None, None] * e_rew, 0.0, W_MAX)
+        raw_update = (r - baseline)[:, None, None] * e_rew
+        w = np.clip(
+            w + eta * raw_update / eligibility_normalizer, 0.0, W_MAX
+        )
+        if return_diagnostics:
+            diag_rms.append(float(np.sqrt(np.mean(raw_update ** 2))))
+            diag_peak.append(float(np.max(np.abs(e_rew))))
         baseline += 0.02 * (r - baseline)
         rewards[:, tr] = r
-    return rewards
+    if not return_diagnostics:
+        return rewards
+    raw_rms = float(np.sqrt(np.mean(np.square(diag_rms))))
+    return rewards, {
+        "raw_effective_update_rms": raw_rms,
+        "raw_trace_peak": float(np.mean(diag_peak)),
+        "eligibility_normalizer": eligibility_normalizer,
+        "normalized_effective_update_rms": raw_rms / eligibility_normalizer,
+        "gate_model": gate_model if cond != "no_trace" else None,
+        "matched_exponential_tau_s": (
+            float(matched_tau) if cond == "abstract" else None
+        ),
+    }
 
 
 def final_rate(rw, window=300):
@@ -675,35 +725,289 @@ def _summarize_dms(raw, conds, *, trials, chance, crit, tau_leak=1.5, G=5.0,
             "criteria": {"H1": h1, "H2": h2, "H3": h3, "K1": k1}}
 
 
-def _dms_one_job(job):
-    """Spawn-safe coarse worker for one shallow-DMS condition."""
-    cond, seeds, trials, device_k, tau_r_override = job
-    return cond, run_dms(cond, B=seeds, trials=trials, device_k=device_k,
-                         tau_r_override=tau_r_override)
+_DMS_DEFAULT_TUNING_SEEDS = tuple(range(1000, 1020))
+_DMS_DEFAULT_EVALUATION_SEEDS = tuple(range(2000, 2020))
+_DMS_DEFAULT_ETA_GRID = (0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0)
 
 
-def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace"),
-                pool=None, workers=1, device_k=K_STAGES, tau_r_override=None):
-    """Experiment 12 core: DMS-with-distractor over all conditions.
+def _dms_condition_kwargs(name):
+    if name == "device":
+        return "device", {"gate_model": PRIMARY_MODEL_ID}
+    if name == "linear_device":
+        return "device", {"gate_model": LINEAR_MODEL_ID}
+    if name == "abstract":
+        return "abstract", {"gate_model": PRIMARY_MODEL_ID}
+    if name == "no_trace":
+        return "no_trace", {"gate_model": PRIMARY_MODEL_ID}
+    raise ValueError(f"unknown DMS condition: {name!r}")
 
-    Serial by default; pass a spawn-safe process ``pool`` to distribute the coarse
-    condition axis. Returns the packaged grid dict and performs no file I/O.
+
+def calibrate_dms_scales(*, trials=256, tau_leak=1.5, G=5.0,
+                         t_distract=4.0, V=1.5, dt=5e-3,
+                         cue_dur=0.3, distract_dur=0.3,
+                         conds=("device", "linear_device", "abstract", "no_trace"),
+                         seed=271828, device_k=K_STAGES,
+                         tau_r_override=None):
+    """Freeze reward-time RMS normalizers on 256 balanced DMS trials."""
+    trials = int(trials)
+    if trials < 2 or trials % 2:
+        raise ValueError("calibration trials must be a positive even integer")
+    rng = np.random.default_rng(int(seed))
+    classes = np.arange(trials, dtype=int) % 2
+    actions = classes.copy()
+    actions[trials // 2:] = 1 - actions[trials // 2:]
+    order = rng.permutation(trials)
+    classes = classes[order][None, :]
+    actions = actions[order][None, :]
+    records = {}
+    for name in conds:
+        actual, kwargs = _dms_condition_kwargs(name)
+        _, diagnostics = run_dms(
+            actual, B=trials, trials=1, tau_leak=tau_leak, G=G,
+            t_distract=t_distract, V=V, dt=dt, cue_dur=cue_dur,
+            distract_dur=distract_dur, eta=0.0, seed0=int(seed),
+            forced_classes=classes, forced_actions=actions,
+            return_diagnostics=True, device_k=device_k,
+            tau_r_override=tau_r_override, **kwargs,
+        )
+        raw = diagnostics["raw_effective_update_rms"]
+        normalizer = raw if np.isfinite(raw) and raw > np.finfo(float).eps else 1.0
+        records[name] = {
+            **diagnostics,
+            "eligibility_normalizer": float(normalizer),
+            "normalized_effective_update_rms": float(raw / normalizer),
+        }
+    return {
+        "protocol": "fixed_balanced_dms_trials",
+        "trials": trials,
+        "rewarded": trials // 2,
+        "unrewarded": trials // 2,
+        "seed": int(seed),
+        "records": records,
+        "model_specifications": {
+            model_id: device_model_spec(model_id)
+            for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID)
+        },
+    }
+
+
+def _dms_rate_job(job):
+    (name, actual, kwargs, trials, eta, seed, normalizer, common) = job
+    curve = run_dms(
+        actual, B=1, trials=trials, eta=eta, seed0=seed,
+        eligibility_normalizer=normalizer, **common, **kwargs,
+    )[0]
+    return name, float(eta), int(seed), np.asarray(curve, dtype=float)
+
+
+def _dms_map(function, jobs, *, workers=1, pool=None):
+    if pool is not None:
+        return pool.map(function, jobs, chunksize=max(1, len(jobs) // (4 * int(workers))))
+    if int(workers) <= 1:
+        return list(map(function, jobs))
+    from multiprocessing import get_context
+    with get_context("spawn").Pool(min(int(workers), len(jobs))) as own_pool:
+        return own_pool.map(
+            function, jobs, chunksize=max(1, len(jobs) // (4 * int(workers)))
+        )
+
+
+def tune_dms_learning_rates(*, calibration, trials=2500,
+                            learning_rates=_DMS_DEFAULT_ETA_GRID,
+                            tuning_seeds=_DMS_DEFAULT_TUNING_SEEDS,
+                            conds=("device", "linear_device", "abstract", "no_trace"),
+                            tau_leak=1.5, G=5.0, t_distract=4.0,
+                            V=1.5, dt=5e-3, cue_dur=0.3,
+                            distract_dur=0.3, device_k=K_STAGES,
+                            tau_r_override=None, max_boundary_expansions=3,
+                            workers=1, pool=None):
+    """Tune each learned DMS condition by pilot-seed unsmoothed AULC."""
+    rates = sorted(set(float(value) for value in learning_rates))
+    seeds = tuple(int(value) for value in tuning_seeds)
+    if not rates or any(not np.isfinite(value) or value <= 0 for value in rates):
+        raise ValueError("learning_rates must be finite positive values")
+    if not seeds:
+        raise ValueError("tuning_seeds must not be empty")
+    conds = tuple(conds)
+    learned = tuple(name for name in conds if name != "no_trace")
+    common = {
+        "tau_leak": float(tau_leak), "G": float(G),
+        "t_distract": float(t_distract), "V": float(V), "dt": float(dt),
+        "cue_dur": float(cue_dur), "distract_dur": float(distract_dur),
+        "device_k": int(device_k), "tau_r_override": tau_r_override,
+    }
+    raw = {name: {} for name in learned}
+    expansion_log = []
+
+    def evaluate_missing(candidate_rates):
+        jobs = []
+        for name in learned:
+            actual, kwargs = _dms_condition_kwargs(name)
+            normalizer = calibration["records"][name]["eligibility_normalizer"]
+            for eta in candidate_rates:
+                if eta in raw[name]:
+                    continue
+                raw[name][eta] = {}
+                for seed in seeds:
+                    jobs.append((name, actual, kwargs, int(trials), eta, seed,
+                                 normalizer, common))
+        for name, eta, seed, curve in _dms_map(
+                _dms_rate_job, jobs, workers=workers, pool=pool):
+            raw[name][eta][seed] = curve
+
+    evaluate_missing(rates)
+    for _ in range(int(max_boundary_expansions)):
+        boundary = set()
+        for name in learned:
+            selected = min(
+                rates,
+                key=lambda eta: (
+                    -np.mean([raw[name][eta][seed].mean() for seed in seeds]), eta
+                ),
+            )
+            if selected == rates[0]:
+                boundary.add(rates[0] / 10.0)
+            if selected == rates[-1]:
+                boundary.add(rates[-1] * 10.0)
+        new_rates = sorted(boundary.difference(rates))
+        if not new_rates:
+            break
+        expansion_log.append({"reason": "pilot_optimum_on_boundary",
+                              "added_rates": list(new_rates)})
+        rates = sorted(set(rates).union(new_rates))
+        evaluate_missing(new_rates)
+
+    results = {}
+    for name in conds:
+        if name == "no_trace":
+            results[name] = {"selected_eta": 0.0, "scores": {0.0: None}}
+            continue
+        scores = {}
+        for eta in rates:
+            curves = np.asarray([raw[name][eta][seed] for seed in seeds])
+            scores[eta] = {
+                "mean_aulc": float(curves.mean(axis=1).mean()),
+                "mean_final_300_reward": float(
+                    curves[:, -min(300, int(trials)):].mean(axis=1).mean()
+                ),
+                "per_seed_aulc": curves.mean(axis=1),
+            }
+        selected = min(rates, key=lambda eta: (-scores[eta]["mean_aulc"], eta))
+        results[name] = {
+            "selected_eta": float(selected), "scores": scores,
+            "boundary_after_expansion": selected in {rates[0], rates[-1]},
+        }
+    return {
+        "selection_rule": "highest_mean_unsmoothed_per_seed_aulc_then_smallest_eta",
+        "evaluation_data_used": False,
+        "tuning_seeds": list(seeds), "trials": int(trials),
+        "initial_learning_rate_grid": sorted(set(float(x) for x in learning_rates)),
+        "learning_rate_grid": list(rates), "grid_expansions": expansion_log,
+        "conditions": results,
+    }
+
+
+def run_dms_all(*, seeds=None, trials=2500, tuning_trials=2500,
+                conds=("device", "linear_device", "abstract", "no_trace"),
+                tuning_seeds=_DMS_DEFAULT_TUNING_SEEDS,
+                evaluation_seeds=_DMS_DEFAULT_EVALUATION_SEEDS,
+                learning_rates=_DMS_DEFAULT_ETA_GRID,
+                calibration_trials=256, pool=None, workers=1,
+                device_k=K_STAGES, tau_r_override=None, tau_leak=1.5,
+                G=5.0, t_distract=4.0, V=1.5, dt=5e-3,
+                cue_dur=0.3, distract_dur=0.3,
+                bootstrap_resamples=10000, max_boundary_expansions=3):
+    """Learning-rate-fair shallow DMS benchmark with disjoint seed blocks.
+
+    ``seeds=N`` is retained as a deprecated shorthand for taking the first ``N``
+    values of both explicit seed blocks.
     """
-    jobs = [(c, seeds, trials, device_k, tau_r_override) for c in conds]
-    own_pool = None
-    if pool is None and int(workers) > 1:
-        from multiprocessing import get_context
-        own_pool = get_context("spawn").Pool(min(int(workers), len(jobs)))
-        pool = own_pool
-    try:
-        pairs = (pool.map(_dms_one_job, jobs, chunksize=1) if pool is not None
-                 else map(_dms_one_job, jobs))
-        raw = dict(pairs)
-    finally:
-        if own_pool is not None:
-            own_pool.close()
-            own_pool.join()
-    return _summarize_dms(raw, conds, trials=trials, chance=0.5, crit=0.75)
+    if seeds is not None:
+        warnings.warn(
+            "seeds= is deprecated; pass tuning_seeds= and evaluation_seeds=",
+            DeprecationWarning, stacklevel=2,
+        )
+        tuning_seeds = tuple(tuning_seeds)[:int(seeds)]
+        evaluation_seeds = tuple(evaluation_seeds)[:int(seeds)]
+    tuning_seeds = tuple(int(value) for value in tuning_seeds)
+    evaluation_seeds = tuple(int(value) for value in evaluation_seeds)
+    overlap = set(tuning_seeds).intersection(evaluation_seeds)
+    if overlap:
+        raise ValueError(f"tuning and evaluation seeds overlap: {sorted(overlap)}")
+    if not tuning_seeds or not evaluation_seeds:
+        raise ValueError("tuning and evaluation seeds must not be empty")
+    conds = tuple(conds)
+    common = {
+        "tau_leak": tau_leak, "G": G, "t_distract": t_distract,
+        "V": V, "dt": dt, "cue_dur": cue_dur,
+        "distract_dur": distract_dur, "device_k": device_k,
+        "tau_r_override": tau_r_override,
+    }
+    calibration = calibrate_dms_scales(
+        trials=calibration_trials, conds=conds, **common
+    )
+    tuning = tune_dms_learning_rates(
+        calibration=calibration, trials=tuning_trials,
+        learning_rates=learning_rates, tuning_seeds=tuning_seeds,
+        conds=conds, workers=workers, pool=pool,
+        max_boundary_expansions=max_boundary_expansions, **common,
+    )
+    jobs = []
+    for name in conds:
+        actual, kwargs = _dms_condition_kwargs(name)
+        eta = tuning["conditions"][name]["selected_eta"]
+        normalizer = calibration["records"][name]["eligibility_normalizer"]
+        for seed in evaluation_seeds:
+            jobs.append((name, actual, kwargs, int(trials), eta, seed,
+                         normalizer, common))
+    gathered = {name: {} for name in conds}
+    for name, _, seed, curve in _dms_map(
+            _dms_rate_job, jobs, workers=workers, pool=pool):
+        gathered[name][seed] = curve
+    raw = {
+        name: np.asarray([gathered[name][seed] for seed in evaluation_seeds])
+        for name in conds
+    }
+    finals = {name: final_rate(curves, min(300, int(trials)))
+              for name, curves in raw.items()}
+    aulc = {name: curves.mean(axis=1) for name, curves in raw.items()}
+    from .stats import bootstrap_ci
+    paired = {}
+    for index, name in enumerate(conds):
+        if name == "device":
+            continue
+        difference = aulc["device"] - aulc[name]
+        lo, hi = bootstrap_ci(difference, n_boot=int(bootstrap_resamples),
+                              seed=271828 + index)
+        paired[name] = {
+            "mean": float(difference.mean()), "ci95": [lo, hi],
+            "metric": "device_minus_comparator_aulc",
+            "n_resamples": int(bootstrap_resamples),
+            "verdict": "device_advantage" if lo > 0 else "unresolved",
+        }
+    ci = {
+        name: bootstrap_ci(values, n_boot=int(bootstrap_resamples), seed=1234 + index)
+        for index, (name, values) in enumerate(finals.items())
+    }
+    return {
+        "curves": {name: curves.mean(axis=0) for name, curves in raw.items()},
+        "raw": raw, "finals": finals, "ci": ci, "aulc": aulc,
+        "calibration": calibration, "tuning": tuning,
+        "paired_bootstrap": paired, "trials": int(trials),
+        "final_window": min(300, int(trials)),
+        "seeds": len(evaluation_seeds), "chance": 0.5, "crit": 0.75,
+        "seed_partition": {"tuning": list(tuning_seeds),
+                           "evaluation": list(evaluation_seeds),
+                           "disjoint": True},
+        "model_specifications": {
+            model_id: device_model_spec(model_id)
+            for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID)
+        },
+        "claim_limit": (
+            "A device advantage is reported only when its paired AULC interval is "
+            "wholly positive; otherwise the comparison is unresolved."
+        ),
+    }
 
 
 # ----------------------------------------------------------------------------

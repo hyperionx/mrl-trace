@@ -2,13 +2,17 @@ include README.md
 include LICENSE
 include CITATION.cff
 include pyproject.toml
+include .gitignore
+include src/mrl_trace/dandi001340_assets.csv
 
 recursive-include experiments *.ipynb *.md
 prune experiments/.executed
 prune experiments/generated_figures
-include data/SiO_x-multistate-data.mat
-recursive-include data/device_model *.json *.npz *.csv
+include data/device_model/kww_final.json
+recursive-include data/results/reference *.json *.csv *.tex
 recursive-include tests *.py
+prune data/device_model/gold_export
+recursive-exclude data *.nwb *.xls *.mat *.npz
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

@@ -4,8 +4,8 @@ Reference implementation for the manuscript *"Memristive transients as physical
 eligibility traces for all-local reinforcement learning"*.  The package
 exposes, as small composable pieces:
 
-- :mod:`mrl_trace.device`   -- the empirical current fit and separate
-  ``CascadeEligibilityGate`` computational surrogate;
+- :mod:`mrl_trace.device`   -- the empirical current fit, the default nonlinear
+  ``CascadeEligibilityGate``, and the explicit linear-Erlang sensitivity;
 - :mod:`mrl_trace.neurons`  -- LIF neuron updates (scalar and batched);
 - :mod:`mrl_trace.learning` -- the signed coincidence kernel and the
   three-factor reward-modulated update ``dw = eta (R - b) e``;
@@ -35,6 +35,7 @@ finally:
 
 from .device import (
     CascadeEligibilityGate,
+    LinearErlangEligibilityGate,
     TransientGate,
     tau_r,
     tau_d,
@@ -44,6 +45,7 @@ from .device import (
     simulate_habituation,
     KWW_VOLTAGES,
     CASCADE_METHOD_PROVENANCE,
+    LINEAR_ERLANG_METHOD_PROVENANCE,
     KWW_METHOD_PROVENANCE,
 )
 from .neurons import lif_step, lif_step_batched
@@ -52,6 +54,7 @@ from .learning import (signed_coincidence, unsigned_coincidence, coincidence_dri
                        THREE_FACTOR_PROVENANCE)
 from .bandit import (
     GateBankBatched,
+    LinearErlangGateBankBatched,
     AbstractTrace,
     train,
     reward_rate,
@@ -72,6 +75,7 @@ from .distal_reward import (
     abstract_kernel,
     train_trace_level,
     SpikingGateBank,
+    LinearErlangSpikingGateBank,
     train_spiking,
     cue_saturation,
     run_trace_window,
@@ -102,6 +106,8 @@ from .maze import (
 from .deep import (
     run_deep_local,
     run_deep_dms,
+    calibrate_dms_scales,
+    tune_dms_learning_rates,
     run_array_scale,
     run_dms,
     run_dms_all,
@@ -121,14 +127,52 @@ from .probselect import (
     PST_CRIT,
     PST_METHOD_PROVENANCE,
 )
-from .dopamine import (load_session as load_dopamine_session, pair_cue_events,
-                       reward_aligned_epochs, reject_legacy_capstone)
+from .dopamine import (
+    DANDISET_ID,
+    DANDISET_VERSION,
+    DANDI001340_METHOD_PROVENANCE,
+    AssetRecord,
+    LoggedSession,
+    asset_manifest,
+    airpls,
+    robust_reference_regression,
+    preprocess_photometry,
+    download_dandi001340,
+    prepare_dandi001340,
+    load_logged_session,
+)
+from .model_specs import (
+    PRIMARY_MODEL_ID,
+    LINEAR_MODEL_ID,
+    MODEL_SPEC_SCHEMA_VERSION,
+    device_model_spec,
+    model_spec_digest,
+    known_model_ids,
+    select_supported_state_space,
+    build_predictive_linkage_manifest,
+)
+from .predictive_linkage import (
+    candidate_response,
+    affine_trace_score,
+    fit_candidate,
+    score_candidate,
+    grouped_held_out_scores,
+    default_candidates,
+)
+from .dopamine_replay import (
+    REPLAY_CONDITIONS,
+    ReplayParameters,
+    trial_modulators,
+    run_logged_replay,
+    evaluate_logged_replay_loso,
+    write_replay_artifacts,
+)
 from .biosignal import (
-    build_reward_pools,
-    run_biosignal_reward,
-    run_eeg_capstone,
-    EEG_DATA_DEFAULT,
-    EEG_POOLS_CACHE,
+    load_subject as load_eeg_subject,
+    epoch_feedback,
+    rewp_features,
+    decode_reward as decode_eeg_reward,
+    FRONTOCENTRAL,
     EEG_METHOD_PROVENANCE,
 )
 from .selectivity import (
@@ -174,12 +218,17 @@ from .hybrid import (
 )
 from .stats import bootstrap_ci, summarise
 from . import paths
-from .paths import data_dir, results_dir, device_model_dir, save_result, load_result
+from .paths import (
+    data_dir, results_dir, device_model_dir, ITO_PRIMARY_ACQUISITION_DATES,
+    ITO_SUPPLEMENTAL_NEAR_ZERO_FILENAMES, select_ito_source_cohort,
+    publication_device_preflight, save_result, load_result,
+)
 
 __all__ = [
     "__version__",
     # device
     "CascadeEligibilityGate",
+    "LinearErlangEligibilityGate",
     "TransientGate",
     "tau_r",
     "tau_d",
@@ -189,7 +238,22 @@ __all__ = [
     "simulate_habituation",
     "KWW_VOLTAGES",
     "CASCADE_METHOD_PROVENANCE",
+    "LINEAR_ERLANG_METHOD_PROVENANCE",
     "KWW_METHOD_PROVENANCE",
+    "PRIMARY_MODEL_ID",
+    "LINEAR_MODEL_ID",
+    "MODEL_SPEC_SCHEMA_VERSION",
+    "device_model_spec",
+    "model_spec_digest",
+    "known_model_ids",
+    "select_supported_state_space",
+    "build_predictive_linkage_manifest",
+    "candidate_response",
+    "affine_trace_score",
+    "fit_candidate",
+    "score_candidate",
+    "grouped_held_out_scores",
+    "default_candidates",
     # neurons
     "lif_step",
     "lif_step_batched",
@@ -203,6 +267,7 @@ __all__ = [
     "THREE_FACTOR_PROVENANCE",
     # bandit / RL task
     "GateBankBatched",
+    "LinearErlangGateBankBatched",
     "AbstractTrace",
     "train",
     "reward_rate",
@@ -222,6 +287,7 @@ __all__ = [
     "abstract_kernel",
     "train_trace_level",
     "SpikingGateBank",
+    "LinearErlangSpikingGateBank",
     "train_spiking",
     "cue_saturation",
     "run_trace_window",
@@ -252,6 +318,8 @@ __all__ = [
     # deep / multi-layer crossbar tasks (deep-local, DMS, array scaling)
     "run_deep_local",
     "run_deep_dms",
+    "calibrate_dms_scales",
+    "tune_dms_learning_rates",
     "run_array_scale",
     "run_dms",
     "run_dms_all",
@@ -271,17 +339,31 @@ __all__ = [
     "PST_CHANCE",
     "PST_CRIT",
     "PST_METHOD_PROVENANCE",
-    # validated descriptive dopamine analysis (no omission/learning inference)
-    "load_dopamine_session",
-    "pair_cue_events",
-    "reward_aligned_epochs",
-    "reject_legacy_capstone",
-    # biosignal reward (EEG capstone)
-    "build_reward_pools",
-    "run_biosignal_reward",
-    "run_eeg_capstone",
-    "EEG_DATA_DEFAULT",
-    "EEG_POOLS_CACHE",
+    # DANDI 001340 preparation and action-contingent logged replay
+    "DANDISET_ID",
+    "DANDISET_VERSION",
+    "DANDI001340_METHOD_PROVENANCE",
+    "AssetRecord",
+    "LoggedSession",
+    "asset_manifest",
+    "airpls",
+    "robust_reference_regression",
+    "preprocess_photometry",
+    "download_dandi001340",
+    "prepare_dandi001340",
+    "load_logged_session",
+    "REPLAY_CONDITIONS",
+    "ReplayParameters",
+    "trial_modulators",
+    "run_logged_replay",
+    "evaluate_logged_replay_loso",
+    "write_replay_artifacts",
+    # descriptive EEG helpers (never injected into learning)
+    "load_eeg_subject",
+    "epoch_feedback",
+    "rewp_features",
+    "decode_eeg_reward",
+    "FRONTOCENTRAL",
     "EEG_METHOD_PROVENANCE",
     # interval selectivity / vector timer
     "run_interval_selectivity",
@@ -329,6 +411,10 @@ __all__ = [
     "data_dir",
     "results_dir",
     "device_model_dir",
+    "ITO_PRIMARY_ACQUISITION_DATES",
+    "ITO_SUPPLEMENTAL_NEAR_ZERO_FILENAMES",
+    "select_ito_source_cohort",
+    "publication_device_preflight",
     "save_result",
     "load_result",
 ]

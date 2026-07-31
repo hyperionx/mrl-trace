@@ -71,7 +71,8 @@ def test_balanced_calibration_records_scale_and_provenance() -> None:
     assert calibration["rewarded"] == calibration["unrewarded"] == 2
     assert calibration["required_actions"] == [0, 1, 1, 0]
     assert set(calibration["records"]) == {
-        "device", "exponential", "conventional_rstdp", "shallow_eprop", "no_trace",
+        "device", "linear_device", "exponential", "conventional_rstdp",
+        "shallow_eprop", "no_trace",
     }
     for name, record in calibration["records"].items():
         assert record["eligibility_normalizer"] > 0

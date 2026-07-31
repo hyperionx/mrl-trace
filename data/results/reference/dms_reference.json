@@ -1,0 +1,1486 @@
+{
+  "analysis": "shallow_dms_learning_rate_fair",
+  "calibration": {
+    "model_specifications": {
+      "linear_erlang_v1": {
+        "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+        "default_beta_leak": 1.0,
+        "default_cascade_depth": 3,
+        "default_voltage_v": 0.9,
+        "equation_family": "linear_erlang_cascade",
+        "model_id": "linear_erlang_v1",
+        "primary": false,
+        "schema_version": 1,
+        "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+        "tau_r_law": {
+          "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+          "expression": "145*exp(-2.9*abs(V))",
+          "field_coefficient_per_v": 2.9,
+          "prefactor_s": 145.0,
+          "source": "global Au transient fit; kww_final.json",
+          "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+        },
+        "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+      },
+      "physical_headroom_v1": {
+        "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+        "default_beta_leak": 1.0,
+        "default_cascade_depth": 3,
+        "default_voltage_v": 0.9,
+        "equation_family": "nonlinear_normalized_headroom_cascade",
+        "model_id": "physical_headroom_v1",
+        "primary": true,
+        "schema_version": 1,
+        "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+        "tau_r_law": {
+          "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+          "expression": "145*exp(-2.9*abs(V))",
+          "field_coefficient_per_v": 2.9,
+          "prefactor_s": 145.0,
+          "source": "global Au transient fit; kww_final.json",
+          "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+        },
+        "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+      }
+    },
+    "protocol": "fixed_balanced_dms_trials",
+    "records": {
+      "abstract": {
+        "eligibility_normalizer": 0.005047870927472296,
+        "gate_model": "physical_headroom_v1",
+        "matched_exponential_tau_s": 2.891676119845189,
+        "normalized_effective_update_rms": 1.0,
+        "raw_effective_update_rms": 0.005047870927472296,
+        "raw_trace_peak": 0.03306325953466776
+      },
+      "device": {
+        "eligibility_normalizer": 0.013410458703166725,
+        "gate_model": "physical_headroom_v1",
+        "matched_exponential_tau_s": null,
+        "normalized_effective_update_rms": 1.0,
+        "raw_effective_update_rms": 0.013410458703166725,
+        "raw_trace_peak": 0.0829080217565983
+      },
+      "linear_device": {
+        "eligibility_normalizer": 0.0014767678693561772,
+        "gate_model": "linear_erlang_v1",
+        "matched_exponential_tau_s": null,
+        "normalized_effective_update_rms": 1.0,
+        "raw_effective_update_rms": 0.0014767678693561772,
+        "raw_trace_peak": 0.009978666538359188
+      },
+      "no_trace": {
+        "eligibility_normalizer": 1.0,
+        "gate_model": null,
+        "matched_exponential_tau_s": null,
+        "normalized_effective_update_rms": 0.0,
+        "raw_effective_update_rms": 0.0,
+        "raw_trace_peak": 0.0
+      }
+    },
+    "rewarded": 128,
+    "seed": 271828,
+    "trials": 256,
+    "unrewarded": 128
+  },
+  "model_specifications": {
+    "linear_erlang_v1": {
+      "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "linear_erlang_cascade",
+      "model_id": "linear_erlang_v1",
+      "primary": false,
+      "schema_version": 1,
+      "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+    },
+    "physical_headroom_v1": {
+      "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "nonlinear_normalized_headroom_cascade",
+      "model_id": "physical_headroom_v1",
+      "primary": true,
+      "schema_version": 1,
+      "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+    }
+  },
+  "paired_bootstrap": {
+    "abstract": {
+      "ci95": [
+        -0.0015199999999999938,
+        0.00024050000000000967
+      ],
+      "mean": -0.0006599999999999995,
+      "metric": "device_minus_comparator_aulc",
+      "n_resamples": 10000,
+      "verdict": "unresolved"
+    },
+    "linear_device": {
+      "ci95": [
+        -0.0020399999999999975,
+        -0.0003599999999999937
+      ],
+      "mean": -0.0011799999999999923,
+      "metric": "device_minus_comparator_aulc",
+      "n_resamples": 10000,
+      "verdict": "unresolved"
+    },
+    "no_trace": {
+      "ci95": [
+        0.4947000000000001,
+        0.50376
+      ],
+      "mean": 0.49928000000000006,
+      "metric": "device_minus_comparator_aulc",
+      "n_resamples": 10000,
+      "verdict": "device_advantage"
+    }
+  },
+  "per_seed_metrics": [
+    {
+      "aulc": 0.9956,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2000,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9952,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2001,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.994,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2002,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.99,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2003,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2004,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.994,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2005,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9952,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2006,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9936,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2007,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9964,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2008,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.998,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2009,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.996,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2010,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2011,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.992,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2012,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2013,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2014,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2015,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.998,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2016,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2017,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2018,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "device",
+      "final_300_reward": 1.0,
+      "seed": 2019,
+      "selected_eta": 0.03
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2000,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2001,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9928,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2002,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9948,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2003,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2004,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.996,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2005,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9988,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2006,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2007,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9972,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2008,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2009,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9964,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2010,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9988,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2011,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2012,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9964,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2013,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2014,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9988,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2015,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2016,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2017,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9968,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2018,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9964,
+      "condition": "linear_device",
+      "final_300_reward": 1.0,
+      "seed": 2019,
+      "selected_eta": 10.0
+    },
+    {
+      "aulc": 0.9972,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2000,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2001,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9912,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2002,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9948,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2003,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2004,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9956,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2005,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9956,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2006,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9956,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2007,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2008,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9936,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2009,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9972,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2010,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9988,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2011,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9952,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2012,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2013,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9992,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2014,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9988,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2015,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9976,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2016,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9984,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2017,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9956,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2018,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.9964,
+      "condition": "abstract",
+      "final_300_reward": 1.0,
+      "seed": 2019,
+      "selected_eta": 0.1
+    },
+    {
+      "aulc": 0.4824,
+      "condition": "no_trace",
+      "final_300_reward": 0.46,
+      "seed": 2000,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4968,
+      "condition": "no_trace",
+      "final_300_reward": 0.5066666666666667,
+      "seed": 2001,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.498,
+      "condition": "no_trace",
+      "final_300_reward": 0.47,
+      "seed": 2002,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5008,
+      "condition": "no_trace",
+      "final_300_reward": 0.48333333333333334,
+      "seed": 2003,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5052,
+      "condition": "no_trace",
+      "final_300_reward": 0.49333333333333335,
+      "seed": 2004,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4872,
+      "condition": "no_trace",
+      "final_300_reward": 0.52,
+      "seed": 2005,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4784,
+      "condition": "no_trace",
+      "final_300_reward": 0.48333333333333334,
+      "seed": 2006,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5076,
+      "condition": "no_trace",
+      "final_300_reward": 0.55,
+      "seed": 2007,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4944,
+      "condition": "no_trace",
+      "final_300_reward": 0.43,
+      "seed": 2008,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.494,
+      "condition": "no_trace",
+      "final_300_reward": 0.5033333333333333,
+      "seed": 2009,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4844,
+      "condition": "no_trace",
+      "final_300_reward": 0.44666666666666666,
+      "seed": 2010,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4908,
+      "condition": "no_trace",
+      "final_300_reward": 0.48333333333333334,
+      "seed": 2011,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5012,
+      "condition": "no_trace",
+      "final_300_reward": 0.5133333333333333,
+      "seed": 2012,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5024,
+      "condition": "no_trace",
+      "final_300_reward": 0.47,
+      "seed": 2013,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4896,
+      "condition": "no_trace",
+      "final_300_reward": 0.55,
+      "seed": 2014,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.5228,
+      "condition": "no_trace",
+      "final_300_reward": 0.5533333333333333,
+      "seed": 2015,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4996,
+      "condition": "no_trace",
+      "final_300_reward": 0.49333333333333335,
+      "seed": 2016,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4908,
+      "condition": "no_trace",
+      "final_300_reward": 0.47333333333333333,
+      "seed": 2017,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.512,
+      "condition": "no_trace",
+      "final_300_reward": 0.5566666666666666,
+      "seed": 2018,
+      "selected_eta": 0.0
+    },
+    {
+      "aulc": 0.4972,
+      "condition": "no_trace",
+      "final_300_reward": 0.4533333333333333,
+      "seed": 2019,
+      "selected_eta": 0.0
+    }
+  ],
+  "protocol": {
+    "final_window": 300,
+    "positive_difference_is_better": true,
+    "seed_partition": {
+      "disjoint": true,
+      "evaluation": [
+        2000,
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019
+      ],
+      "tuning": [
+        1000,
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+        1009,
+        1010,
+        1011,
+        1012,
+        1013,
+        1014,
+        1015,
+        1016,
+        1017,
+        1018,
+        1019
+      ]
+    },
+    "selection_rule": "highest_mean_unsmoothed_per_seed_aulc_then_smallest_eta",
+    "trials": 2500
+  },
+  "schema_version": 1,
+  "source_revision": "3a7ffc5a3cc02ff5c72e265b216799a2e24c90a1-dirty",
+  "tuning": {
+    "conditions": {
+      "abstract": {
+        "boundary_after_expansion": false,
+        "scores": {
+          "0.01": {
+            "mean_aulc": 0.9941400000000001,
+            "mean_final_300_reward": 1.0,
+            "per_seed_aulc": [
+              0.9932,
+              0.9964,
+              0.9964,
+              0.9936,
+              0.9952,
+              0.9936,
+              0.9928,
+              0.9944,
+              0.9948,
+              0.9936,
+              0.9948,
+              0.9932,
+              0.9928,
+              0.9944,
+              0.9936,
+              0.9944,
+              0.9948,
+              0.9908,
+              0.9968,
+              0.9932
+            ]
+          },
+          "0.03": {
+            "mean_aulc": 0.97952,
+            "mean_final_300_reward": 0.9996666666666666,
+            "per_seed_aulc": [
+              0.9756,
+              0.978,
+              0.9808,
+              0.9788,
+              0.9788,
+              0.98,
+              0.9748,
+              0.978,
+              0.9752,
+              0.978,
+              0.992,
+              0.9792,
+              0.982,
+              0.9916,
+              0.976,
+              0.9764,
+              0.9804,
+              0.9792,
+              0.978,
+              0.9776
+            ]
+          },
+          "0.1": {
+            "mean_aulc": 0.9973799999999999,
+            "mean_final_300_reward": 1.0,
+            "per_seed_aulc": [
+              0.9944,
+              0.998,
+              0.9968,
+              0.9976,
+              0.9968,
+              0.998,
+              0.9964,
+              0.9968,
+              0.9964,
+              0.9992,
+              0.9964,
+              0.9988,
+              0.9984,
+              0.9976,
+              0.9976,
+              0.9968,
+              0.9992,
+              0.9984,
+              0.996,
+              0.998
+            ]
+          },
+          "0.3": {
+            "mean_aulc": 0.5614,
+            "mean_final_300_reward": 0.5688333333333333,
+            "per_seed_aulc": [
+              0.5344,
+              0.5376,
+              0.5384,
+              0.548,
+              0.534,
+              0.5336,
+              0.5296,
+              0.66,
+              0.5352,
+              0.528,
+              0.524,
+              0.7528,
+              0.5472,
+              0.7436,
+              0.5284,
+              0.53,
+              0.5312,
+              0.5316,
+              0.5328,
+              0.5276
+            ]
+          },
+          "1.0": {
+            "mean_aulc": 0.5017,
+            "mean_final_300_reward": 0.5111666666666668,
+            "per_seed_aulc": [
+              0.5084,
+              0.5156,
+              0.5144,
+              0.49,
+              0.4908,
+              0.5044,
+              0.5052,
+              0.5116,
+              0.4996,
+              0.5052,
+              0.5064,
+              0.516,
+              0.4872,
+              0.4952,
+              0.5056,
+              0.4868,
+              0.5,
+              0.5052,
+              0.5024,
+              0.484
+            ]
+          },
+          "10.0": {
+            "mean_aulc": 0.51222,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5056,
+              0.504,
+              0.4864,
+              0.4888,
+              0.5072,
+              0.4956,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          },
+          "100.0": {
+            "mean_aulc": 0.51222,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5056,
+              0.504,
+              0.4864,
+              0.4888,
+              0.5072,
+              0.4956,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          },
+          "3.0": {
+            "mean_aulc": 0.51254,
+            "mean_final_300_reward": 0.5168333333333334,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5052,
+              0.5136,
+              0.504,
+              0.4864,
+              0.5024,
+              0.5056,
+              0.486,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          }
+        },
+        "selected_eta": 0.1
+      },
+      "device": {
+        "boundary_after_expansion": false,
+        "scores": {
+          "0.01": {
+            "mean_aulc": 0.9609,
+            "mean_final_300_reward": 0.9996666666666666,
+            "per_seed_aulc": [
+              0.9532,
+              0.948,
+              0.9528,
+              0.956,
+              0.9728,
+              0.9912,
+              0.964,
+              0.9512,
+              0.9532,
+              0.972,
+              0.9604,
+              0.9496,
+              0.9592,
+              0.9548,
+              0.9572,
+              0.974,
+              0.962,
+              0.9456,
+              0.9504,
+              0.9904
+            ]
+          },
+          "0.03": {
+            "mean_aulc": 0.9965399999999999,
+            "mean_final_300_reward": 1.0,
+            "per_seed_aulc": [
+              0.9948,
+              0.9976,
+              0.9976,
+              0.9976,
+              0.9992,
+              0.998,
+              0.9928,
+              0.9968,
+              0.9932,
+              0.9992,
+              0.9952,
+              0.9984,
+              0.998,
+              0.9976,
+              0.9988,
+              0.992,
+              0.9992,
+              0.9984,
+              0.9896,
+              0.9968
+            ]
+          },
+          "0.1": {
+            "mean_aulc": 0.6133200000000001,
+            "mean_final_300_reward": 0.6101666666666666,
+            "per_seed_aulc": [
+              0.6024,
+              0.5992,
+              0.5968,
+              0.744,
+              0.5976,
+              0.7556,
+              0.5976,
+              0.6016,
+              0.5928,
+              0.5976,
+              0.5948,
+              0.606,
+              0.6032,
+              0.5992,
+              0.5948,
+              0.5852,
+              0.6044,
+              0.6032,
+              0.6008,
+              0.5896
+            ]
+          },
+          "0.3": {
+            "mean_aulc": 0.5015799999999999,
+            "mean_final_300_reward": 0.5111666666666668,
+            "per_seed_aulc": [
+              0.5084,
+              0.5156,
+              0.5144,
+              0.49,
+              0.4908,
+              0.5044,
+              0.5052,
+              0.5092,
+              0.4996,
+              0.5052,
+              0.5064,
+              0.516,
+              0.4872,
+              0.4952,
+              0.5056,
+              0.4868,
+              0.5,
+              0.5052,
+              0.5024,
+              0.484
+            ]
+          },
+          "1.0": {
+            "mean_aulc": 0.5128199999999999,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5136,
+              0.504,
+              0.4864,
+              0.5024,
+              0.5072,
+              0.486,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          },
+          "10.0": {
+            "mean_aulc": 0.51222,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5056,
+              0.504,
+              0.4864,
+              0.4888,
+              0.5072,
+              0.4956,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          },
+          "100.0": {
+            "mean_aulc": 0.51222,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5056,
+              0.504,
+              0.4864,
+              0.4888,
+              0.5072,
+              0.4956,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          },
+          "3.0": {
+            "mean_aulc": 0.51222,
+            "mean_final_300_reward": 0.5151666666666667,
+            "per_seed_aulc": [
+              0.496,
+              0.5084,
+              0.5032,
+              0.4716,
+              0.506,
+              0.756,
+              0.5028,
+              0.5092,
+              0.502,
+              0.5092,
+              0.5056,
+              0.504,
+              0.4864,
+              0.4888,
+              0.5072,
+              0.4956,
+              0.5016,
+              0.5036,
+              0.4992,
+              0.488
+            ]
+          }
+        },
+        "selected_eta": 0.03
+      },
+      "linear_device": {
+        "boundary_after_expansion": false,
+        "scores": {
+          "0.01": {
+            "mean_aulc": 0.6335799999999999,
+            "mean_final_300_reward": 0.7353333333333334,
+            "per_seed_aulc": [
+              0.636,
+              0.634,
+              0.6144,
+              0.6376,
+              0.6224,
+              0.6456,
+              0.6464,
+              0.6396,
+              0.6416,
+              0.6408,
+              0.6244,
+              0.6376,
+              0.6328,
+              0.6224,
+              0.6248,
+              0.6192,
+              0.6364,
+              0.6252,
+              0.6508,
+              0.6396
+            ]
+          },
+          "0.03": {
+            "mean_aulc": 0.78624,
+            "mean_final_300_reward": 0.9241666666666669,
+            "per_seed_aulc": [
+              0.7892,
+              0.7896,
+              0.784,
+              0.7944,
+              0.7836,
+              0.7828,
+              0.7868,
+              0.784,
+              0.7844,
+              0.786,
+              0.78,
+              0.7936,
+              0.7948,
+              0.7932,
+              0.7848,
+              0.794,
+              0.7768,
+              0.78,
+              0.7864,
+              0.7764
+            ]
+          },
+          "0.1": {
+            "mean_aulc": 0.92004,
+            "mean_final_300_reward": 0.9870000000000001,
+            "per_seed_aulc": [
+              0.914,
+              0.9252,
+              0.9224,
+              0.918,
+              0.9184,
+              0.9188,
+              0.9168,
+              0.92,
+              0.9152,
+              0.9284,
+              0.926,
+              0.9176,
+              0.9244,
+              0.9224,
+              0.9272,
+              0.9216,
+              0.918,
+              0.9096,
+              0.9252,
+              0.9116
+            ]
+          },
+          "0.3": {
+            "mean_aulc": 0.9748199999999999,
+            "mean_final_300_reward": 0.9981666666666668,
+            "per_seed_aulc": [
+              0.97,
+              0.9776,
+              0.9764,
+              0.9748,
+              0.972,
+              0.9772,
+              0.9732,
+              0.9768,
+              0.9784,
+              0.9732,
+              0.9772,
+              0.9744,
+              0.976,
+              0.976,
+              0.976,
+              0.976,
+              0.9708,
+              0.9756,
+              0.9732,
+              0.9716
+            ]
+          },
+          "1.0": {
+            "mean_aulc": 0.9940000000000003,
+            "mean_final_300_reward": 0.9998333333333334,
+            "per_seed_aulc": [
+              0.9944,
+              0.9972,
+              0.9964,
+              0.994,
+              0.9924,
+              0.9928,
+              0.9948,
+              0.9944,
+              0.9948,
+              0.9936,
+              0.9912,
+              0.9932,
+              0.9956,
+              0.9944,
+              0.9928,
+              0.9944,
+              0.9948,
+              0.9892,
+              0.9964,
+              0.9932
+            ]
+          },
+          "10.0": {
+            "mean_aulc": 0.9974999999999998,
+            "mean_final_300_reward": 1.0,
+            "per_seed_aulc": [
+              0.9928,
+              0.9984,
+              0.9984,
+              0.996,
+              0.9992,
+              0.998,
+              0.9968,
+              0.9976,
+              0.9972,
+              0.9992,
+              0.9972,
+              0.998,
+              0.996,
+              0.9984,
+              0.9988,
+              0.9968,
+              0.9992,
+              0.9984,
+              0.9976,
+              0.996
+            ]
+          },
+          "100.0": {
+            "mean_aulc": 0.5015799999999999,
+            "mean_final_300_reward": 0.5111666666666668,
+            "per_seed_aulc": [
+              0.5084,
+              0.5156,
+              0.5144,
+              0.49,
+              0.4908,
+              0.5044,
+              0.5052,
+              0.5092,
+              0.4996,
+              0.5052,
+              0.5064,
+              0.516,
+              0.4872,
+              0.4952,
+              0.5056,
+              0.4868,
+              0.5,
+              0.5052,
+              0.5024,
+              0.484
+            ]
+          },
+          "3.0": {
+            "mean_aulc": 0.9807599999999999,
+            "mean_final_300_reward": 1.0,
+            "per_seed_aulc": [
+              0.9756,
+              0.9788,
+              0.9748,
+              0.976,
+              0.9892,
+              0.9804,
+              0.9748,
+              0.9796,
+              0.9804,
+              0.99,
+              0.9932,
+              0.9756,
+              0.9832,
+              0.9924,
+              0.9776,
+              0.9784,
+              0.9804,
+              0.9788,
+              0.9776,
+              0.9784
+            ]
+          }
+        },
+        "selected_eta": 10.0
+      },
+      "no_trace": {
+        "scores": {
+          "0.0": null
+        },
+        "selected_eta": 0.0
+      }
+    },
+    "evaluation_data_used": false,
+    "grid_expansions": [
+      {
+        "added_rates": [
+          100.0
+        ],
+        "reason": "pilot_optimum_on_boundary"
+      }
+    ],
+    "initial_learning_rate_grid": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "learning_rate_grid": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      100.0
+    ],
+    "selection_rule": "highest_mean_unsmoothed_per_seed_aulc_then_smallest_eta",
+    "trials": 2500,
+    "tuning_seeds": [
+      1000,
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008,
+      1009,
+      1010,
+      1011,
+      1012,
+      1013,
+      1014,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019
+    ]
+  },
+  "verdicts": {
+    "abstract": "unresolved",
+    "linear_device": "unresolved",
+    "no_trace": "device_advantage"
+  }
+}

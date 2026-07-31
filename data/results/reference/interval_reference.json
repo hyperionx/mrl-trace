@@ -1,0 +1,1779 @@
+{
+  "analysis": "interval_selectivity_eta_sensitivity",
+  "model_specifications": {
+    "linear_erlang_v1": {
+      "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "linear_erlang_cascade",
+      "model_id": "linear_erlang_v1",
+      "primary": false,
+      "schema_version": 1,
+      "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+    },
+    "physical_headroom_v1": {
+      "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "nonlinear_normalized_headroom_cascade",
+      "model_id": "physical_headroom_v1",
+      "primary": true,
+      "schema_version": 1,
+      "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+    }
+  },
+  "per_seed_metrics": [
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 3.9707495450586916
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 3.974766987310923
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 3.9719900340363297
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 3.9753275132607184
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 3.977400214208231
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 3.968388489061033
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 3.976925519910756
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 3.9770941510449003
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 3.9764535989059087
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 3.9751158448544923
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 3.976803161704614
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 3.976397428973703
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 3.976339368925195
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 3.976357637887119
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 3.9769992505855396
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 3.9747848410713207
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 3.975380287425286
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 3.973015250729861
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 3.9777901947791348
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 3.975969270749963
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 0.6233996155092603
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 0.6217671495762493
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 0.6198500659865013
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 0.6162171084178865
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 0.615493814536326
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 0.6141277524220318
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 0.6224727790730732
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 0.6209631485918026
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 0.6220992751573207
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 0.6171535476431772
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 0.6196517492877691
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 0.6186873065454395
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 0.621511322298194
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 0.6174993429244908
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 0.6184005286423037
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 0.622217019718991
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 0.621858571037903
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 0.6216103113705278
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 0.617450027047146
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 0.6218656572703258
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 3.8998683829952436
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 3.9442187679307774
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 3.918288066966954
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 3.9443569025861858
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 3.9664737806768673
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 3.8808543866539735
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 3.9664768945827276
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 3.967650586591469
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 3.9655222279614133
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 3.946220701776536
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 3.9653009480894625
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 3.9665492130419255
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 3.963619370092026
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 3.9653737287271142
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 3.965534491430433
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 3.9435390543748547
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 3.943519582159365
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 3.919982196343005
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 3.9683890527988765
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 3.9430640327985844
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 0.772738578509078
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 0.7893884470054021
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 0.770439809686617
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 0.7563743791052999
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 0.788238115913622
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 0.7638828357222239
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 0.7907783392185719
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 0.7777078392041168
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 0.799761189586453
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 0.7533277031814525
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 0.7802470609185397
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 0.7878083418325577
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 0.7922415779522824
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 0.7838215887894064
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 0.7921503768126483
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 0.7827830603766495
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 0.7794863188646568
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 0.8231936389561724
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 0.7544456011235848
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 0.7928958857489404
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 3.6330354842688246
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 3.851268682461031
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 3.7354369793249553
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 3.8500070353047557
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 3.96375127986229
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 3.6400341558035954
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 3.9662200241533663
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 3.970216725229342
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 3.968868599217982
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 3.899021382961987
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 3.9637316651304966
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 3.959579058008356
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 3.960637505518368
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 3.9614622705597626
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 3.9571197031984395
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 3.9155030489953764
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 3.8493612828196246
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 3.7329747229101375
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 3.968335346060282
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 3.8463986451934398
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 0,
+      "selectivity": 0.7567916070005847
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 1,
+      "selectivity": 0.7508405450969275
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 2,
+      "selectivity": 0.7623749556065322
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 3,
+      "selectivity": 0.7684674344727344
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 4,
+      "selectivity": 0.8634684284035936
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 5,
+      "selectivity": 0.7303950210252647
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 6,
+      "selectivity": 0.8149004698222855
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 7,
+      "selectivity": 0.756590145940075
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 8,
+      "selectivity": 0.7918737541861262
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 9,
+      "selectivity": 0.6988559025583216
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 10,
+      "selectivity": 0.829749590870635
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 11,
+      "selectivity": 0.8569139916241887
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 12,
+      "selectivity": 0.8151585080080401
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 13,
+      "selectivity": 0.781102555288425
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 14,
+      "selectivity": 0.878975817868504
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 15,
+      "selectivity": 0.7145052559952244
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 16,
+      "selectivity": 0.7921295141262282
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 17,
+      "selectivity": 0.8673134544287783
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 18,
+      "selectivity": 0.7530642404243363
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "physical_headroom_v1",
+      "seed": 19,
+      "selectivity": 0.8143388045735658
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 3.7589981894770093
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 3.7559833949567567
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 3.750007920397967
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 3.761903331869097
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 3.7606273356280844
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 3.7541561888433055
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 3.756040412068804
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 3.7576739592838413
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 3.7515768612409865
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 3.763233292566565
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 3.7547967307886805
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 3.7511183991971824
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 3.750354391557273
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 3.750644023986464
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 3.7568604446119545
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 3.7602143470176737
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 3.7621746310637363
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 3.759966286154368
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 3.7644743668940848
+    },
+    {
+      "condition": "device",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 3.767569154300506
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 0.5822812068544322
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 0.5806167950058361
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 0.5787169026960488
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 0.5754024886649731
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 0.5744184323177489
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 0.5734347139828667
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 0.581073942691082
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 0.5795465036119994
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 0.58035712145151
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 0.5765704375816085
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 0.5780365047529231
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 0.5772163203142726
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 0.5800591665881544
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 0.576007658616
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 0.5771120231235872
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 0.5807753777492473
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 0.5806565655851271
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 0.5799855459437633
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 0.5763480757959374
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.01,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 0.5803828760124815
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 3.6290374166782393
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 3.6463276869867203
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 3.6038683280097668
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 3.649621040273164
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 3.6542789521991264
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 3.5872262439306852
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 3.65463866761527
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 3.6651148083485516
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 3.645527319547545
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 3.680672552428714
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 3.643589417022001
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 3.6555202101779787
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 3.628370188059259
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 3.6443314505353808
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 3.645696659673986
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 3.6499207453101166
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 3.6415296335881684
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 3.618741576939948
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 3.6724985418448206
+    },
+    {
+      "condition": "device",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 3.6354450472114075
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 0.7151071758922066
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 0.7309004653481972
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 0.7122505323151089
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 0.7001204659347374
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 0.728035744507198
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 0.7092359463660729
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 0.7313947324686983
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 0.7193466725360993
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 0.7380621556580623
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 0.698613143948191
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 0.7197825771834294
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 0.7272407634045799
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 0.7309460967971109
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 0.7232194707523126
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 0.7316810051618189
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 0.7253853280137745
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 0.7217449471930786
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 0.7603451135282303
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 0.698591096842946
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.1,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 0.7320602339020519
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 3.4295221082788467
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 3.580238184714926
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 3.4605547862323465
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 3.569693947349906
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 3.6279506707481257
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 3.3988323962962985
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 3.6518990450668896
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 3.6889249328819984
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 3.6769599356139024
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 3.64925968683379
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 3.6288342230390263
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 3.591229281229876
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 3.6004397309469987
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 3.60859252481352
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 3.5688451536147343
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 3.6524692199160684
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 3.5656060845466837
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 3.43699875157407
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 3.672197608608195
+    },
+    {
+      "condition": "device",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 3.5335124244226916
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 0,
+      "selectivity": 0.7034944784708028
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 1,
+      "selectivity": 0.6941089645432925
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 2,
+      "selectivity": 0.706385727655466
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 3,
+      "selectivity": 0.7117216126034289
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 4,
+      "selectivity": 0.7928666881259248
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 5,
+      "selectivity": 0.6876614983443466
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 6,
+      "selectivity": 0.7534514900425455
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 7,
+      "selectivity": 0.7001128426694342
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 8,
+      "selectivity": 0.7317028276266461
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 9,
+      "selectivity": 0.6564694956060515
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 10,
+      "selectivity": 0.7635104769492481
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 11,
+      "selectivity": 0.7889725130467894
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 12,
+      "selectivity": 0.7507448286994157
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 13,
+      "selectivity": 0.719457535290168
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 14,
+      "selectivity": 0.80699918808845
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 15,
+      "selectivity": 0.67249955282234
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 16,
+      "selectivity": 0.7356084900130309
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 17,
+      "selectivity": 0.8021579003505119
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 18,
+      "selectivity": 0.7007403856242933
+    },
+    {
+      "condition": "matched_exponential",
+      "eta": 0.5,
+      "model_id": "linear_erlang_v1",
+      "seed": 19,
+      "selectivity": 0.7495335508218809
+    }
+  ],
+  "protocol": {
+    "eta_values": [
+      0.01,
+      0.1,
+      0.5
+    ],
+    "require_device_above_one": true,
+    "require_matched_exponential_below_one": true,
+    "seeds": 20,
+    "trials": 1500
+  },
+  "schema_version": 1,
+  "source_revision": "3a7ffc5a3cc02ff5c72e265b216799a2e24c90a1-dirty",
+  "summary": {
+    "linear_erlang_v1": {
+      "direction_holds_all_eta": true,
+      "means": {
+        "0.01": {
+          "device": 3.757418683095217,
+          "matched_exponential": 0.57844993296698
+        },
+        "0.1": {
+          "device": 3.642597824319042,
+          "matched_exponential": 0.7227031833876952
+        },
+        "0.5": {
+          "device": 3.5796280348364453,
+          "matched_exponential": 0.7314100023697032
+        }
+      },
+      "preferred_delay": 5.4
+    },
+    "physical_headroom_v1": {
+      "direction_holds_all_eta": true,
+      "means": {
+        "0.01": {
+          "device": 3.9752024295241855,
+          "matched_exponential": 0.619714804652836
+        },
+        "0.1": {
+          "device": 3.9472401184288897,
+          "matched_exponential": 0.7815855344254137
+        },
+        "0.5": {
+          "device": 3.8796481798491214,
+          "matched_exponential": 0.7898904998660187
+        }
+      },
+      "preferred_delay": 19.3
+    }
+  },
+  "verdict": "kernel_shape_direction_supported"
+}

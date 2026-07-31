@@ -42,13 +42,14 @@ from functools import lru_cache
 
 import numpy as np
 
-from .device import (K_STAGES, CascadeEligibilityGate,
+from .device import (K_STAGES, CascadeEligibilityGate, LinearErlangEligibilityGate,
                      decay_matched_exponential_tau, tau_r)
 from .distal_reward import trace_kernel, abstract_kernel, W_INIT
 from .bandit import GateBankBatched
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 from .stats import bootstrap_ci
+from .model_specs import PRIMARY_MODEL_ID, LINEAR_MODEL_ID, device_model_spec
 
 __all__ = [
     "run_interval_selectivity",
@@ -117,24 +118,31 @@ DECAY = 0.08         # weight-decay alpha: the leaky three-factor rule Dw=eta((R
 
 
 def peak_lag(tau_leak, V=0.9, T=80.0, dt=0.05, k=K_STAGES,
-             tau_r_override=None, beta_leak=1.0):
+             tau_r_override=None, beta_leak=1.0,
+             gate_model=PRIMARY_MODEL_ID):
     """Preferred interval t* = argmax of the (unnormalised) device trace."""
-    g = CascadeEligibilityGate(V=V, tau_leak=tau_leak, dt=dt, k=k,
-                      tau_r_override=tau_r_override, beta_leak=beta_leak)
+    gate_cls = {
+        PRIMARY_MODEL_ID: CascadeEligibilityGate,
+        LINEAR_MODEL_ID: LinearErlangEligibilityGate,
+    }.get(gate_model)
+    if gate_cls is None:
+        raise ValueError(f"unknown gate_model: {gate_model!r}")
+    g = gate_cls(V=V, tau_leak=tau_leak, dt=dt, k=k,
+                 tau_r_override=tau_r_override, beta_leak=beta_leak)
     t = np.arange(0, T, dt)
     raw = g.trace(t, coincidence_at=0.0, coincidence_dur=0.3, normalise=False)
     return float(t[np.argmax(raw)])
 
 
 def _kernel(kind, t, tau_leak, V, k=K_STAGES, tau_r_override=None,
-            beta_leak=1.0):
+            beta_leak=1.0, gate_model=PRIMARY_MODEL_ID):
     if kind == "device":
         return trace_kernel(t, tau_leak, V=V, k=k, tau_r_override=tau_r_override,
-                            beta_leak=beta_leak)
+                            beta_leak=beta_leak, gate_model=gate_model)
     if kind == "exp":
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=V, k=k, tau_r_override=tau_r_override,
-            beta_leak=beta_leak,
+            beta_leak=beta_leak, gate_model=gate_model,
         )
         return abstract_kernel(t, matched_tau)
     if kind == "no_trace":
@@ -142,8 +150,9 @@ def _kernel(kind, t, tau_leak, V, k=K_STAGES, tau_r_override=None,
     raise ValueError(kind)
 
 
-@lru_cache(maxsize=256)
-def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak):
+@lru_cache(maxsize=512)
+def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak,
+                   gate_model):
     """Process-local immutable kernel cache for publication sweep workers.
 
     A publication sweep previously rebuilt the same 1,600-point device kernel once
@@ -154,7 +163,8 @@ def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak):
     t = np.arange(0, float(T), float(dt))
     kernel = np.asarray(
         _kernel(kind, t, float(tau_leak), float(V), k=int(k),
-                tau_r_override=tau_r_override, beta_leak=float(beta_leak)),
+                tau_r_override=tau_r_override, beta_leak=float(beta_leak),
+                gate_model=gate_model),
         dtype=float,
     )
     kernel.setflags(write=False)
@@ -163,7 +173,8 @@ def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak):
 
 def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
                       T=160.0, dt=0.1, eta=0.05, seed=0, k=K_STAGES,
-                      tau_r_override=None, beta_leak=1.0, kernel=None):
+                      tau_r_override=None, beta_leak=1.0, kernel=None,
+                      gate_model=PRIMARY_MODEL_ID):
     """One seed. Returns final weights w (w[0]=syn_pref @ lag D_rew,
     w[1]=syn_late @ lag LATE_LAG, w[2:]=reward-uncorrelated distractors).
 
@@ -175,7 +186,8 @@ def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
     rng = np.random.default_rng(seed)
     t = np.arange(0, T, dt)
     nt = len(t)
-    kern = (_cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak)
+    kern = (_cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override,
+                           beta_leak, gate_model)
             if kernel is None else np.asarray(kernel, dtype=float))
     if kern.shape != t.shape:
         raise ValueError("precomputed selectivity kernel has the wrong shape")
@@ -220,13 +232,15 @@ def selectivity_ratio(w):
 
 
 def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500,
-                       k=K_STAGES, tau_r_override=None, beta_leak=1.0):
+                       k=K_STAGES, tau_r_override=None, beta_leak=1.0,
+                       eta=0.05, gate_model=PRIMARY_MODEL_ID):
     """Per-seed selectivity ratios over ``seeds`` seeds (serial)."""
     return np.array([
         selectivity_ratio(train_selectivity(kind, tau_leak, D_rew, V=V,
                                              trials=trials, seed=s, k=k,
                                              tau_r_override=tau_r_override,
-                                             beta_leak=beta_leak))
+                                             beta_leak=beta_leak, eta=eta,
+                                             gate_model=gate_model))
         for s in range(seeds)
     ])
 
@@ -234,15 +248,17 @@ def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500,
 def _selectivity_seed_job(job):
     """Spawn-safe worker for one deterministic selectivity seed."""
     (cell_id, seed, kind, tau_leak, delay, V, trials, k,
-     tau_r_override, beta_leak) = job
+     tau_r_override, beta_leak, eta, gate_model) = job
     weights = train_selectivity(
         kind, tau_leak, delay, V=V, trials=trials, seed=seed, k=k,
         tau_r_override=tau_r_override, beta_leak=beta_leak,
+        eta=eta, gate_model=gate_model,
     )
     return cell_id, seed, float(selectivity_ratio(weights))
 
 
-def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9, beta_leak=1.0):
+def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9, beta_leak=1.0,
+                             eta_values=(0.01, 0.1, 0.5)):
     """Experiment 10 core: device vs exponential interval selectivity + tunability.
 
     Serial; returns the result grid as a plain dict, no file I/O / no plotting /
@@ -265,15 +281,23 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9, beta_leak=1.0):
       K2  (kill) device/exp CIs overlap (= not P4).
     """
     taus = [5.0, 10.0, 20.0]
+    eta_values = tuple(float(value) for value in eta_values)
+    if not eta_values or any(value <= 0 or not np.isfinite(value)
+                             for value in eta_values):
+        raise ValueError("eta_values must contain finite positive values")
     tstar = {tl: peak_lag(tl, V=V, beta_leak=beta_leak) for tl in taus}
 
     tl0 = 10.0
     D0 = round(tstar[tl0], 1)
+    eta_primary = min(eta_values, key=lambda value: abs(value - 0.1))
     dev_S = _sweep_selectivity(
         "device", tl0, D0, V=V, seeds=seeds, trials=trials,
-        beta_leak=beta_leak,
+        beta_leak=beta_leak, eta=eta_primary,
     )
-    exp_S = _sweep_selectivity("exp", tl0, D0, V=V, seeds=seeds, trials=trials)
+    exp_S = _sweep_selectivity(
+        "exp", tl0, D0, V=V, seeds=seeds, trials=trials,
+        eta=eta_primary,
+    )
     dlo, dhi = bootstrap_ci(dev_S)
     elo, ehi = bootstrap_ci(exp_S)
 
@@ -303,11 +327,53 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9, beta_leak=1.0):
     P3 = bool(short_decreases and long_increases)
     P4 = bool((dlo > ehi) or (dhi < elo))
 
+    eta_sweep = {}
+    for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID):
+        model_peak = peak_lag(
+            tl0, V=V, beta_leak=beta_leak, gate_model=model_id
+        )
+        model_delay = round(model_peak, 1)
+        model_rows = {}
+        for eta in eta_values:
+            device_values = _sweep_selectivity(
+                "device", tl0, model_delay, V=V, seeds=seeds, trials=trials,
+                beta_leak=beta_leak, eta=eta, gate_model=model_id,
+            )
+            exponential_values = _sweep_selectivity(
+                "exp", tl0, model_delay, V=V, seeds=seeds, trials=trials,
+                beta_leak=beta_leak, eta=eta, gate_model=model_id,
+            )
+            model_rows[eta] = {
+                "device": device_values,
+                "matched_exponential": exponential_values,
+                "device_mean": float(device_values.mean()),
+                "matched_exponential_mean": float(exponential_values.mean()),
+                "direction_holds": bool(
+                    device_values.mean() > 1.0
+                    and exponential_values.mean() < 1.0
+                ),
+            }
+        eta_sweep[model_id] = {
+            "preferred_delay": model_delay,
+            "by_eta": model_rows,
+            "direction_holds_all_eta": bool(
+                all(row["direction_holds"] for row in model_rows.values())
+            ),
+        }
+
     return {
         "V": V, "taus": taus, "tstar": tstar, "D0": D0, "late_lag": LATE_LAG,
         "dev_S": dev_S, "exp_S": exp_S, "dev_ci": (dlo, dhi), "exp_ci": (elo, ehi),
         "D_grid": D_grid, "Scurve": Scurve,
         "P1": P1, "P2": P2, "P3": P3, "P4": P4, "seeds": seeds, "trials": trials,
+        "eta_primary": eta_primary, "eta_sweep": eta_sweep,
+        "eta_direction_required": bool(
+            all(row["direction_holds_all_eta"] for row in eta_sweep.values())
+        ),
+        "model_specifications": {
+            model_id: device_model_spec(model_id)
+            for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID)
+        },
         "beta_leak": float(beta_leak),
         "retention_definition": "deliberately_swept",
         "method_provenance": SELECTIVITY_METHOD_PROVENANCE,
@@ -395,7 +461,7 @@ def run_predictive_interval_sweep(*, taus=(0.8, 1.3, 2.0, 3.6, 6.0, 10.0),
 
     jobs = [
         (cell_id, seed, condition, tau, delay, float(V), int(trials), int(k),
-         tau_r_override, float(beta_leak))
+         tau_r_override, float(beta_leak), 0.05, PRIMARY_MODEL_ID)
         for cell_id, (tau, delay, condition) in enumerate(cell_specs)
         for seed in range(int(seeds))
     ]

@@ -1,0 +1,394 @@
+{
+  "analysis": "predictive_device_model_linkage",
+  "candidate_scores": {
+    "kww": 0.0564075041736366,
+    "linear_k2": 0.05493896687393365,
+    "linear_k3": 0.05480028787140087,
+    "linear_k4": 0.05536816131083105,
+    "linear_k5": 0.05587602351646511,
+    "physical_k2": 0.13200115400120513,
+    "physical_k3": 0.13201259028826787,
+    "physical_k4": 0.13194620028454385,
+    "physical_k5": 0.13193460879708604
+  },
+  "claim_limit": "Empirical representation scoring is independent of downstream learning performance and does not identify microscopic cascade depth.",
+  "manifest_digest_sha256": "bc6eb8f7539a5f8299b4a65d26ddabc98993a4deccad5dcf86c61372a164a6ee",
+  "model_specifications": {
+    "linear_erlang_v1": {
+      "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "linear_erlang_cascade",
+      "model_id": "linear_erlang_v1",
+      "primary": false,
+      "schema_version": 1,
+      "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+    },
+    "physical_headroom_v1": {
+      "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+      "default_beta_leak": 1.0,
+      "default_cascade_depth": 3,
+      "default_voltage_v": 0.9,
+      "equation_family": "nonlinear_normalized_headroom_cascade",
+      "model_id": "physical_headroom_v1",
+      "primary": true,
+      "schema_version": 1,
+      "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+      "tau_r_law": {
+        "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+        "expression": "145*exp(-2.9*abs(V))",
+        "field_coefficient_per_v": 2.9,
+        "prefactor_s": 145.0,
+        "source": "global Au transient fit; kww_final.json",
+        "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+      },
+      "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+    }
+  },
+  "parameter_estimates": {
+    "gold": {
+      "cascade_k1": {
+        "cd_per_v": 1.8148708492131842,
+        "cr_per_v": 4.090778926793034,
+        "td0_s": 672.0782945825571,
+        "tr0_s": 697.0288320410707
+      },
+      "cascade_k2": {
+        "cd_per_v": 1.9743799154702733,
+        "cr_per_v": 3.5552464244599054,
+        "td0_s": 835.88978993169,
+        "tr0_s": 373.07434463601805
+      },
+      "cascade_k3": {
+        "cd_per_v": 2.039027757173861,
+        "cr_per_v": 3.4327641751734728,
+        "td0_s": 915.9623670773494,
+        "tr0_s": 321.1569629934206
+      },
+      "cascade_k4": {
+        "cd_per_v": 2.0741371001441498,
+        "cr_per_v": 3.3905775458116025,
+        "td0_s": 963.32093088053,
+        "tr0_s": 303.65338773035774
+      },
+      "cascade_k5": {
+        "cd_per_v": 2.094450963571727,
+        "cr_per_v": 3.3837826176231913,
+        "td0_s": 992.5094730636054,
+        "tr0_s": 299.1819851310106
+      },
+      "kww": {
+        "beta_fill": 2.6409523920528097,
+        "cd_per_v": 2.116071864987271,
+        "cr_per_v": 3.3623355077403567,
+        "td0_s": 1024.2863442519952,
+        "tr0_s": 324.9207781472924
+      }
+    },
+    "ito_summary": {
+      "additional_workbooks_disclosed": 0,
+      "analysis_schema_version": 2,
+      "beta_mean": 0.4698006453334779,
+      "beta_sd": 0.08953034003044746,
+      "conditioning_files": 21,
+      "device_identity_available": false,
+      "direct_held_tau_quantiles_s": {
+        "q10": 0.8448946663770562,
+        "q25": 1.1669372374932345,
+        "q50": 1.3896742156393977,
+        "q75": 1.6179662155669912
+      },
+      "excluded_fits": 20,
+      "experimental_unit": "workbook/run",
+      "field_law": {
+        "interpretation": "held-bias extrapolation; not a direct zero-field measurement",
+        "slope_bootstrap_95ci": [
+          0.19515542464183436,
+          1.18212808185807
+        ],
+        "slope_sqrt_v": 0.66539360821373,
+        "tau_zero_bootstrap_95ci_s": [
+          1.727773309460672,
+          3.846675403005156
+        ],
+        "tau_zero_s": 2.5507868690989177
+      },
+      "floor_independence_regression": {
+        "expected_tau_s": 2.3,
+        "passed": true,
+        "recovered_tau_s": [
+          2.300000000003098,
+          2.300000000050146
+        ]
+      },
+      "floor_interpretation": "fitted offset only; no kinetic rescaling",
+      "held_bias_files": 70,
+      "held_tau_median_s": 1.3896742156393977,
+      "held_tau_range_s": [
+        0.48332161377892496,
+        4.604502911319397
+      ],
+      "included_fits": 50,
+      "measurement_regime": "held_bias",
+      "median_r2_exponential": 0.8551522523015318,
+      "median_r2_stretched": 0.9819282792273846,
+      "method_provenance": {
+        "claim_limit": "workbook/run is the experimental unit; device identity is unavailable",
+        "established_basis": [
+          "KWW relaxation fitting"
+        ],
+        "repository_adaptation": "per-workbook held-bias fits with auditable QC",
+        "status": "empirical_fit"
+      },
+      "near_zero_read": {
+        "beta": [
+          0.8355676787373933,
+          0.8143868714338124
+        ],
+        "expected_count_matches": true,
+        "expected_records": 2,
+        "included_records": 2,
+        "interpretation": "Preliminary near-zero-read measurements kept separate from held-bias quantiles and field-law fitting; they are not exact zero-field retention or evidence of electrode tuning.",
+        "maximum_absolute_bias_v": 0.002,
+        "records": [
+          {
+            "beta": 0.8355676787373933,
+            "bias_v": 0.0010000000474974513,
+            "filename": "vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run471 06-26-2026.xls",
+            "qc_status": "included",
+            "r2_stretched": 0.8764974205215408,
+            "tau_held_s": 4.313092216253574
+          },
+          {
+            "beta": 0.8143868714338124,
+            "bias_v": 0.0010000000474974513,
+            "filename": "vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run498 06-26-2026.xls",
+            "qc_status": "included",
+            "r2_stretched": 0.9995721918180406,
+            "tau_held_s": 9.19741209250884
+          }
+        ],
+        "tau_s": [
+          4.313092216253574,
+          9.19741209250884
+        ]
+      },
+      "near_zero_read_files": 2,
+      "primary_workbooks": 91,
+      "qc_sensitivity": {
+        "additional_files_at_r2_0.70": [
+          "vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run382 01-16-2025.xls",
+          "vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run395 01-16-2025.xls",
+          "vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run400 01-16-2025.xls"
+        ],
+        "count_at_r2_0.70": 53,
+        "historical_count_reproduced_at_r2_0.70": true,
+        "historical_target_count": 53,
+        "interpretation": "The count at R2=0.70 is reported rather than assumed to equal the historical n=53. Any remaining count or beta discrepancy requires reconciliation of fitting, preprocessing and dataset version.",
+        "primary_r2_threshold": 0.8,
+        "rows": [
+          {
+            "beta_mean": 0.47018163811441954,
+            "beta_sd": 0.0898878612200763,
+            "field_slope_sqrt_v": 0.6646522674145505,
+            "field_tau_zero_s": 2.5762132862067317,
+            "held_tau_median_s": 1.3896773257202908,
+            "included_fits": 53,
+            "r2_threshold": 0.7
+          },
+          {
+            "beta_mean": 0.47068313880204493,
+            "beta_sd": 0.09068993640514612,
+            "field_slope_sqrt_v": 0.6560164229591698,
+            "field_tau_zero_s": 2.528235745173852,
+            "held_tau_median_s": 1.3896742156393977,
+            "included_fits": 52,
+            "r2_threshold": 0.75
+          },
+          {
+            "beta_mean": 0.4698006453334779,
+            "beta_sd": 0.08953034003044746,
+            "field_slope_sqrt_v": 0.66539360821373,
+            "field_tau_zero_s": 2.5507868690989177,
+            "held_tau_median_s": 1.3896742156393977,
+            "included_fits": 50,
+            "r2_threshold": 0.8
+          },
+          {
+            "beta_mean": 0.4694905845540373,
+            "beta_sd": 0.09043101309140168,
+            "field_slope_sqrt_v": 0.6674860639958752,
+            "field_tau_zero_s": 2.558558510339395,
+            "held_tau_median_s": 1.3896711055585045,
+            "included_fits": 49,
+            "r2_threshold": 0.85
+          },
+          {
+            "beta_mean": 0.473558392489247,
+            "beta_sd": 0.08673929902383447,
+            "field_slope_sqrt_v": 0.6062378616825059,
+            "field_tau_zero_s": 2.4411739766898126,
+            "held_tau_median_s": 1.3896742156393977,
+            "included_fits": 48,
+            "r2_threshold": 0.9
+          }
+        ]
+      },
+      "retention_definition": "direct_held_bias_tau",
+      "supplemental_near_zero_workbooks": 2,
+      "voltage_bias_files": 72,
+      "workbooks_total": 93
+    }
+  },
+  "retention_definition": "direct_held_bias_tau",
+  "schema_version": 1,
+  "selection": {
+    "best_candidate": "linear_k3",
+    "best_score": 0.05480028787140087,
+    "physical_within_tolerance": false,
+    "relative_tolerance": 0.05,
+    "supported_candidates": [
+      "kww",
+      "linear_k2",
+      "linear_k3",
+      "linear_k4",
+      "linear_k5"
+    ],
+    "threshold": 0.057540302264970915
+  },
+  "software_versions": {
+    "matplotlib": "3.11.0",
+    "mrl-trace": "0.1.0",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0"
+  },
+  "source_digests": {
+    "au_transient/trace_Vm0.80_tr1.csv": "16dc113e7bb1397d7f648c861d1c13394d4c6ad8a8c88bff7c190d1b32893168",
+    "au_transient/trace_Vm0.80_tr2.csv": "7df6848ef42286eed599273813b4f46470f0d85863298da3f9e77ae03c6fb373",
+    "au_transient/trace_Vm0.80_tr3.csv": "9e32107b219e7d8a02047b2dd4324504bc76fd33882af98f5f001543c1dcf2c6",
+    "au_transient/trace_Vm0.90_tr1.csv": "22db47bc9a133128f230b016afc2c1e2c95068c10c9c2ddfafbd0638c6c099b7",
+    "au_transient/trace_Vm0.90_tr2.csv": "b9a1873568e6492699fbef3370d6b58c7fa421e49f59c0211e328b7765f067e2",
+    "au_transient/trace_Vm0.90_tr3.csv": "ec1ccc4657f32a8652d6a0bd3cecb17f4579802b3397ea7c7f39243175c34c0e",
+    "au_transient/trace_Vm1.10_tr1.csv": "76d737531210a73532901e49ec3b5c1407e4948cb4f63edc443f8ba1bed6fea3",
+    "au_transient/trace_Vm1.10_tr2.csv": "dac3c8cd33915711817a2e6fb7ad8d8e95efc9674950cd69e6e970a3993eaac4",
+    "au_transient/trace_Vm1.10_tr3.csv": "1d3f5b5962b0f2e4bbc2276ebbb4d28af6a6778a7b129d94413751df40d301d6",
+    "au_transient/trace_Vm1.20_tr1.csv": "3bc098872af00361cea68c8944fa112006617effa48fab6741fd4975de78f7a0",
+    "au_transient/trace_Vm1.20_tr2.csv": "dcf3df49646ad8d4d6f51d6d397e5e708d09a64709e3a241cfb55a7a7460d136",
+    "au_transient/trace_Vm1.20_tr3.csv": "de3af2994245681aa628b518b67e1f8ba96dd9521e710530498fbce26875000c",
+    "au_transient/trace_Vm1.40_tr1.csv": "3c047a513c6a298b7b7700620681ac40f6044b7ded0837d0424acab0603c99bb",
+    "au_transient/trace_Vm1.40_tr2.csv": "9ec195b2d263d91381b1f639edaa9aeee000c047c044122d4dc6ebaf0e32d813",
+    "au_transient/trace_Vm1.40_tr3.csv": "7e9d0eb5399554e56a6f7814210afe08717e515c22675eeeaf03b548b75c1801",
+    "au_transient/trace_Vm1.50_tr1.csv": "0dc65cc2200eeee7a4b2520bf2160d16ad635538eba05e558c6c599a3aa451fa",
+    "au_transient/trace_Vm1.50_tr2.csv": "cb1ad6b76f7ee2249253709bec4cd779eaaf0693bb06950812c84d4bb2fcb220",
+    "au_transient/trace_Vm1.50_tr3.csv": "eaa5f4f84a5f80c51201c0c8978f33324a37937cdc559b4b37a0bd2b51d0178b",
+    "au_transient/trace_Vm1.70_tr1.csv": "1c923e396b61ab49d408ba6cd1aeb4e6fb9b94186fc355b4bbd6cfbb46ed1a55",
+    "au_transient/trace_Vm1.70_tr2.csv": "7cf95cbafe90b60ef8788c8368770decee0d6e00431e21cf451ff48480d1e6fe",
+    "au_transient/trace_Vm1.70_tr3.csv": "198a280ced4226bd624257c8df030d3c582b852c97ca502570aa286d7e595518",
+    "au_transient/trace_Vm1.80_tr1.csv": "75c3b2065b9b35f61f557c0a64a51ba4c2660617299d209d4440576d62fc4a7a",
+    "au_transient/trace_Vm1.80_tr2.csv": "a4609dffb083ab5485c9f72b223a57b449cbf155655a2fd2f0f6db68f6fe55f1",
+    "au_transient/trace_Vm1.80_tr3.csv": "840e4d30de3e9e1100c7992d5247b56f65bffe4c498ae2e1b36a16fa58566a90",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run296 01-15-2025.xls": "7774d8e9cd9b73e31ec6e9083db455e60c4d66bb3bfa6badfff3ec86aeeb7b2e",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run297 01-15-2025.xls": "07ea10f44d86e7c4628788ea1ac4d1d60b118a1fe7616210e4e1241d65e28bb3",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run298 01-15-2025.xls": "e4bec73923189573542fb54fd98ad947632883b9381ca7d143c077dcaa95b5c3",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run299 01-15-2025.xls": "b9a87aa3a5001f074c0e2afb945e48051e98889e9ffd56db4434a6bffa0461fc",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run300 01-15-2025.xls": "3122d6ed818861f47531cea9d55bfc4c2064c46d18408b94027163cf15d85e7b",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run301 01-15-2025.xls": "4f88162a5a5e8116f9e3af29cdb7f241521342c544e517179745137cf17b9dd8",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run311 01-15-2025.xls": "249e62d3891a799676f3de063d270081e97085970018477594e0d632f0025084",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run312 01-15-2025.xls": "6ae3249cecb0e725a84e538c3ad3708c196a72cb6b9050bcb43619a8d9ac182d",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run313 01-15-2025.xls": "85de5f416d9350ef139a4e3043e791e88e913c47c0c8f391978539c28a74c2a1",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run314 01-15-2025.xls": "362f594213b2b35e861bd65dd7af278bdf7b99fe1a9013ae02edeca56b80646f",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run315 01-15-2025.xls": "b46f84e848f4619dfb19864833f072f90d6b2891bfa1be86580840879c3d319e",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run316 01-15-2025.xls": "c917012273538282e2035fc846316e8c58dac52e12739d84395b14fc12aad20a",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run317 01-15-2025.xls": "ad761f149516b21e49aed476302bbf6858bf229a192ead8d906eff1386849cab",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run319 01-15-2025.xls": "a519c64950f549f940c47a5f055fad7d6fbc44fd5a99a651deefae30268cdf61",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run320 01-15-2025.xls": "f6302398be74a450f767be20547fb1f50d5a13c47c78decc76a1284ad74b804e",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run321 01-15-2025.xls": "e0d3f266af37c5af716a880abbe4b7735ac5f1a8a0b83802c25a989bd7662d41",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run322 01-15-2025.xls": "baf8eced3fd4bb789bb56d385a9f23d3cfa310afc5c824c7b200b756a745678e",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run323 01-15-2025.xls": "b7ae2846eb6124fa87db4d3cebaffd0c606a7f61f6730bc83b71c7b4ca466812",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run327 01-15-2025.xls": "0695d710e092e72b4f19c2d7a3457addf9b1408690467a269323edd9477f9f21",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run328 01-15-2025.xls": "3c16405e250f477e0fa780c321cf7825b6e3423b6d74e65fe562b9ff89651e17",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run329 01-15-2025.xls": "250dbebbf06c346dfc024833f20e95f25d0b662b6aecf9992331251bab43ac94",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run330 01-15-2025.xls": "dfcf20e82f154d6bffddc19d54cbc431da389ce969352beeddded70a69e58431",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run334 01-15-2025.xls": "12f78c369864bac6cfb9842bbc364cdf5bdedce0faf5f07b78e31049867aec14",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run335 01-15-2025.xls": "6eb2ef8cfe6468773a102acebf6037f24f6d063b7df7ca47d91a5a3c5075a60c",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run336 01-15-2025.xls": "120bf977006b1d5b7a75f16144f097229e2e42fd90ed5d27a2bd69541482a5ac",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run337 01-15-2025.xls": "3e7d970af06e07414f1be7714e6dad8f11eb538d31aea8cdf0a6c874c84cf5b8",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run338 01-15-2025.xls": "979d5fdb6d29329993917fffc29891ddc17c8ae6ae41fc39ecaf316f6e932934",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run339 01-15-2025.xls": "487b335826eac494ab0b0392223e8d840f2c0552ef936e52c8df42d070499abc",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run340 01-15-2025.xls": "8361321fdb667b01aa3e68ad85caca629af026dda3d070504bd5467ff77ac858",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run341 01-15-2025.xls": "7dad39a7c8d48f457305d3ae012a8a2a0b096dfbbec375e7b5f74f45ed3a50c9",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run342 01-15-2025.xls": "8d704a198512b5524cd5de3926e774686c76eebe2fbd5069541f0c4c9b20cf7b",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run343 01-15-2025.xls": "403ae300baab10d0f12413a7bbd5244613064ec0080089496e763eae8329c744",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run344 01-15-2025.xls": "4b1b3ffade8303a5e8d7932b8d872177ad12d122c310c9c3d2fa20c0407fde6f",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run345 01-15-2025.xls": "83ba33298d62aa02e2156125ce87dcd188c672d74f2c7629bdba042c3113c226",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run346 01-15-2025.xls": "58529cc9e349177f3101c8c47b02783080d8572f142b250af86a3f4c0967a1e8",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run347 01-15-2025.xls": "d885ffa5f79fb66467d6eca74d2ccdfe245b5b4bec4b8c3272934811dc69ce92",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run348 01-15-2025.xls": "6dcd56f9a73180891eed885ba25db557d7cf966c3da24ca5f9c05b9184d065c1",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run349 01-15-2025.xls": "5917185978fbc07dd15cd1b95c1d4f7dd5924b3f125df53ae6fba050752b1eaf",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run353 01-16-2025.xls": "56e9836338379fe8a099a1908960b7b2a996105ec7f08865609ad1b6d4dc4f08",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run354 01-16-2025.xls": "e87139d50ededd773edece0f046e9329919697beb0ec4e84f04788c71c00cae1",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run355 01-16-2025.xls": "1351b0e179abfd8f4bc29c8d93d49f8d9b468714d2833c5e645d4acd63f993b4",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run356 01-16-2025.xls": "331bf24bfcdca223820b997bbc0155ae0456152e601a879e7a4ecc30a46a27d2",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run357 01-16-2025.xls": "8d261e2789dfffba59226ea466f982c32ef5f9b895f443d6e5c50e7aa5141751",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run358 01-16-2025.xls": "5e50512526208000dc58c3eb2aff0191c969258433d497a9575edb555b7b3596",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run359 01-16-2025.xls": "afff082719891182bd0727902cfc0f68db46f81147ee8195a864ae3a8a44a599",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run360 01-16-2025.xls": "55c8299d69d9f828dbd6364935b3e421ddb9fbf083157b72b7fa83793ca2e884",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run361 01-16-2025.xls": "1e901da9ee4697cafdb37428ee7e6c8bfce7bc23426f27676f8e136475b88799",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run377 01-16-2025.xls": "fba27123679a3abfb34e7c65ccde6ffeb5b438b7cce150babde4da33f83a1911",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run379 01-16-2025.xls": "44ec9fde35122cab3dee7539c42ea49fa2cddbdf317416452529e54dd341acc2",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run380 01-16-2025.xls": "a57fe6f04912c974e4010eb64656472a4c4b83cd893516511c0635a4097d13e9",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run381 01-16-2025.xls": "9f0a191caca945b4f1f7f50fa74e0b5df01b0862d82a23f558366c941fbcfca7",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run382 01-16-2025.xls": "de90510551beb3c533d161f25c08354afc4ee2fc6c23d8e36a7c2e6cbaf00535",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run383 01-16-2025.xls": "6f7d27e364069c6b6dbf818da7515f61fa4a055ed3bbc9a52fbc2108778f10ff",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run384 01-16-2025.xls": "8c1eb342f0dacd27f45dbdd990f2e78f71657b34229f3e5d440b131b817b9ad2",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run385 01-16-2025.xls": "58c565a55f71b476725565ab4d1d24da23a8e40bf9d6f7e4ceb4e654d636807e",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run386 01-16-2025.xls": "1a958bd6bbd36ca480d25e5d660e489493e9952a25bfe9254094c8401a5ee6cb",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run387 01-16-2025.xls": "492a27ac0e52367b794169b4adfe14970365e3d03023020c71c3a8a6e59215e4",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run388 01-16-2025.xls": "89a4cb83601f042c756b1c23847bde6cba915c2f4c67dcf06c870f720d6d17df",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run389 01-16-2025.xls": "7412669ceccbd744e3d142f5d220ced1b2ccd5dc9d8aa326c5166788a98fc394",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run390 01-16-2025.xls": "c840eb8ec7324ca75eb92393fcb806dc8828aad7ae75d9ed879624f65225a9de",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run395 01-16-2025.xls": "7faf0abd2bedbd4c1420aece02476a6fcc06a6dcac03e9fed21e59c0a1ba45dd",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run396 01-16-2025.xls": "555c94f2dd641ea8d815a80934378560ce9ca6d3148382da7e47b27395853249",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run397 01-16-2025.xls": "fb18cea0a12f8f97aecdc38c986aa7ab0eb28c48eade37574dab44300249f274",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run398 01-16-2025.xls": "31699a01aff663a717e5f38792bce45d26ee6d3b9de56b1354256b90776344b1",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run399 01-16-2025.xls": "26f2179852f6391d480bd57c2e39cb66f74b8c6a7d76bfb877e6ce433a36aab8",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run400 01-16-2025.xls": "67d226b8d61fab111ebff9be89c3ed0bdd3f2447e9b11ae54cd028e86248697a",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run401 01-16-2025.xls": "c69cb724b9c7efeec368e35b470aae546aeea865d6d263d084a8af12a6ab034b",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run402 01-16-2025.xls": "0838e2d6cdbe03a35b1b23a11221bb6b8ff824f9293cc4c7dd1c70e206b325b9",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run403 01-16-2025.xls": "344db3ae25bf088ed1fb395844c00ff49909142d4d7741ee282fe849090ae163",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run404 01-16-2025.xls": "4fb152dcef984bd72931a073be43111b50f0b2486e0f060fe6ae7032e3c6cea4",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run471 06-26-2026.xls": "e64968aead3904adcf62fc4880429f98d50fccde53a7cb481b44e0612267cb08",
+    "ito_relaxation/vcv Site@1 Subsite 2-wire-resistor voltage bias#1 Run498 06-26-2026.xls": "5357f69c51c8680b4b2915f7f2f7147eea9c5e13bad9b9bfc4a29773866d7c60",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run250 01-15-2025.xls": "c03374567d33b39b443a0f209da6cb80576afc42f95ee6d581d55a0435189ddf",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run253 01-15-2025.xls": "6b78372fb573bd0625b6d269eaff54acac208cf1d18a3f606b5b29e9d109c9a7",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run259 01-15-2025.xls": "75ccd536dc1d87babc204b62ba93808db7fd6b230668da25ad8dd02f5d04a4fe",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run262 01-15-2025.xls": "a650105312cdd2df21b95080c02f6eaa760085e856b8f2059f9c08cc194a0697",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run263 01-15-2025.xls": "361da6c83c33852b67a78fc078344ea969c79281c5cb86a1fb3fbffeaa6770d2",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run264 01-15-2025.xls": "bdbaac79ca22335ed0d16bf6d83a3ac970883a78176f4ad8cbe03b2c10c78495",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run272 01-16-2025.xls": "3bc36041eeb9f5db848a59ab673d1ed1c98e454f6072c4611e4eddc5b12adebd",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run273 01-16-2025.xls": "1da5cea4dd77ed00b7f48a51db2995e2af694c4430059aeec3354e0b61befca6",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run275 01-16-2025.xls": "f8c5909acbb0d12293e5c841438e8260fb342af6b1d302d6deb503218b03cd2c",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run279 01-16-2025.xls": "8fb00a7a852c9bad25ed2cc2301787e9b5d4c7c54a3cbd4d997b3ef7202a1d65",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run281 01-16-2025.xls": "13a22bab0694ff07c034477744bd430faf5e54bf201d39f743430cb7f19e7df3",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run282 01-16-2025.xls": "1559aee6b8fc74bd7018abd3679b91da76dc53da3d91212fe589c50ef9e402ed",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run284 01-16-2025.xls": "9ded66e376517ef9a7ad22b5df609526dfaab4c4f23d799de93690ab78f6d902",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run285 01-16-2025.xls": "9b6fbb4ab9bbb169fcc09385544fbd58ab4026ce1b941087877a783bec068ccc",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run286 01-16-2025.xls": "5790e3998fa731b403c59e99b8c00c1688c3ec1fa1acd7277eeade6c693f11be",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run289 01-16-2025.xls": "939176ab470782b93eccf7a6da162a99b85ff5a2d875218243d3b54e2b7dd6c2",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run292 01-16-2025.xls": "b6d2b2544fc89e5fdcc7be51c08294f516dc8380b879ca198b02a1c6621d1ced",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run293 01-16-2025.xls": "256c92fc79e57cb7e242f9416818c0d3e573dfb1888fa3a3a2914b6aab2a5804",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run294 01-16-2025.xls": "1967b75a6905b377af7f1de005c3f2a2a9901353280e644316b015f6100f9424",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run295 01-16-2025.xls": "bff22b320395c18541bd7e5e092fe27aebb2baafdddded9a86020e2a2d0a0e1d",
+    "ito_relaxation/vcv Site@1 Subsite 2terminal-generic current stress#1 Run296 01-16-2025.xls": "2217ca6081e6f2cc9b3c7243d650ef6b1182d53cf7f7d268b5d4777f7aaa4cc5"
+  }
+}

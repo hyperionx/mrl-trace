@@ -1,12 +1,9 @@
-r"""Empirical SiO\ :sub:`x` current model and an Erlang-cascade eligibility surrogate.
+r"""Empirical SiO\ :sub:`x` current model and eligibility-gate representations.
 
-The measured current is fitted empirically by a KWW rise multiplied by a screening
-decay.  The learning simulations use a separate linear cascade-plus-leak state.  With
-no discharge and a unit step, its continuous-time final-stage response is exactly the
-Erlang CDF used by the model-identification workflow.  That Erlang response is only a
-compact approximation to the KWW rise: the cascade is not a state-space realisation of
-the complete product-current fit, and its integer depth is not an identified microscopic
-trap count.
+The primary learning model is the manuscript's nonlinear headroom cascade with
+dimensionless upstream occupancy.  A separate linear Erlang-exact representation is
+retained as a named sensitivity.  Neither integer depth uniquely identifies a
+microscopic trap count.
 
 Fitted field-acceleration laws (manuscript Eqs. (5.8)/(5.9), ``V`` = ``|bias|`` in volts)::
 
@@ -28,8 +25,12 @@ from functools import lru_cache
 
 import numpy as np
 
+from .model_specs import LINEAR_MODEL_ID, PRIMARY_MODEL_ID, device_model_spec
+
 __all__ = ["tau_r", "tau_d", "BETA", "K_STAGES", "CascadeEligibilityGate",
-           "TransientGate", "CASCADE_METHOD_PROVENANCE", "KWW_METHOD_PROVENANCE",
+           "LinearErlangEligibilityGate", "TransientGate",
+           "CASCADE_METHOD_PROVENANCE", "LINEAR_ERLANG_METHOD_PROVENANCE",
+           "KWW_METHOD_PROVENANCE", "device_model_spec",
            "fit_kww_laws", "simulate_habituation", "KWW_VOLTAGES",
            "decay_matched_exponential_tau"]
 
@@ -52,17 +53,27 @@ def tau_d(V: float) -> float:
 
 CASCADE_METHOD_PROVENANCE = {
     "status": "adapted",
-    "established_basis": ["sequential-state waiting times", "leaky eligibility traces"],
+    "established_basis": ["normalised headroom cascade", "leaky eligibility traces"],
     "repository_adaptation": (
-        "A linear Erlang cascade is shape-calibrated to the empirical KWW rise and "
-        "combined with a specified leakage time and, when beta_leak differs from one, "
-        "an age-dependent stretched-discharge hazard."
+        "The manuscript headroom cascade is integrated with dimensionless upstream "
+        "occupancy and an optional age-dependent stretched-discharge hazard."
     ),
     "claim_limit": (
-        "The no-leak step response matches the fitted Erlang candidate, but that "
-        "candidate only approximates the KWW rise; it neither exactly realises the "
-        "product-current model nor identifies a microscopic stage count. The "
-        "stretched-discharge clock resets on drive and is a non-Markov surrogate."
+        "The equation-matching model is a computational representation of the fitted "
+        "rise, not proof of a microscopic stage count. The stretched-discharge clock "
+        "resets on drive and is a non-Markov surrogate."
+    ),
+}
+
+LINEAR_ERLANG_METHOD_PROVENANCE = {
+    "status": "sensitivity",
+    "established_basis": ["linear Erlang waiting-time cascade"],
+    "repository_adaptation": (
+        "A linear Erlang-exact cascade is retained as a representation sensitivity."
+    ),
+    "claim_limit": (
+        "This linear representation is not the nonlinear physical headroom equation "
+        "and does not identify microscopic stages."
     ),
 }
 
@@ -75,7 +86,87 @@ KWW_METHOD_PROVENANCE = {
 
 
 class CascadeEligibilityGate:
-    """Stateful linear Erlang-cascade-plus-leak eligibility surrogate.
+    """Primary nonlinear headroom eligibility model.
+
+    For stage one the dimensionless input is ``drive``.  Every later stage receives
+    the previous stage as an occupancy fraction ``v_previous / V_max``::
+
+        dv_m/dt = alpha * p_m * (V_max - |v_m|) - h(age) * v_m
+
+    Consequently ``V_max`` is a true state scale rather than an implicit gain.  Once
+    upstream drive has vanished, a one-stage trace decays with ``tau_leak`` exactly
+    when ``beta_leak == 1``.
+    """
+
+    model_id = PRIMARY_MODEL_ID
+
+    def __init__(self, V: float = 0.9, tau_leak: float = 2.0, k: int = K_STAGES,
+                 dt: float = 0.05, vnmax: float = 1.0, shape: tuple = (),
+                 tau_r_override: float | None = None, beta_leak: float = 1.0):
+        if (not np.isfinite(tau_leak) or not np.isfinite(beta_leak)
+                or tau_leak <= 0 or beta_leak <= 0 or not np.isfinite(vnmax)
+                or vnmax <= 0 or int(k) < 1):
+            raise ValueError("gate scales, depth and leakage parameters must be positive")
+        self.V = float(V)
+        self.tau_leak = float(tau_leak)
+        self.k = int(k)
+        self.dt = float(dt)
+        self.vnmax = float(vnmax)
+        self.shape = tuple(shape)
+        self.beta_leak = float(beta_leak)
+        self.tau_r = float(tau_r(V) if tau_r_override is None else tau_r_override)
+        self.alpha = self.k / self.tau_r
+        self.reset()
+
+    def reset(self) -> None:
+        self.vn = np.zeros(self.shape + (self.k,))
+        self._t_since = np.full(self.shape, self.dt, dtype=float)
+
+    def _leak_rate(self, drive):
+        self._t_since = np.where(
+            np.abs(drive) > 1e-9, self.dt, self._t_since + self.dt
+        )
+        if self.beta_leak == 1.0:
+            return 1.0 / self.tau_leak
+        return (self.beta_leak / self.tau_leak) * np.power(
+            np.clip(self._t_since / self.tau_leak, 1e-6, None),
+            self.beta_leak - 1.0,
+        )
+
+    def step(self, drive):
+        drive = np.asarray(drive, dtype=float)
+        leak_rate = self._leak_rate(drive)
+        new = self.vn.copy()
+        previous_fraction = drive
+        for stage in range(self.k):
+            value = self.vn[..., stage]
+            new[..., stage] = value + self.dt * (
+                self.alpha * previous_fraction * (self.vnmax - np.abs(value))
+                - value * leak_rate
+            )
+            previous_fraction = value / self.vnmax
+        self.vn = np.clip(new, -self.vnmax, self.vnmax)
+        return self.vn[..., -1] / self.vnmax
+
+    def trace(self, t_grid, coincidence_at: float, coincidence_dur: float = 0.2,
+              normalise: bool = True) -> np.ndarray:
+        if self.shape:
+            raise ValueError("trace() is for a single gate (shape=()).")
+        self.reset()
+        t_grid = np.asarray(t_grid, float)
+        out = np.zeros_like(t_grid)
+        for index, time in enumerate(t_grid):
+            drive = 1.0 if coincidence_at <= time < coincidence_at + coincidence_dur else 0.0
+            out[index] = self.step(drive)
+        if normalise:
+            peak = float(np.max(out))
+            if peak > 0:
+                out = out / peak
+        return out
+
+
+class LinearErlangEligibilityGate:
+    """Linear Erlang-exact cascade retained as an explicit sensitivity.
 
     State is ``k`` identical first-order low-pass nodes in series.  With a unit-step
     drive and no leakage, the final-stage continuous-time response is
@@ -108,6 +199,8 @@ class CascadeEligibilityGate:
         Optional grid shape for a vectorised bank of independent gates (e.g.
         ``(n_state, n_action)`` for a crossbar).  Default ``()`` is a single gate.
     """
+
+    model_id = LINEAR_MODEL_ID
 
     def __init__(self, V: float = 0.9, tau_leak: float = 2.0, k: int = K_STAGES,
                  dt: float = 0.05, vnmax: float = 1.0, shape: tuple = (),
@@ -199,13 +292,14 @@ def decay_matched_exponential_tau(
     tau_r_override: float | None = None,
     beta_leak: float = 1.0,
     coincidence_dur: float = 0.3,
+    gate_model: str = PRIMARY_MODEL_ID,
 ) -> float:
     """Fit the exponential control to the surrogate's post-peak decay.
 
-    Matching nominal ``tau_leak`` values is not decay matching because every cascade
-    stage also contains the intrinsic ``-alpha*v`` term.  This deterministic protocol
-    simulates one standard coincidence pulse, normalises the last-stage response, and
-    fits ``log(e/e_peak)`` against time over the predeclared 80--10% post-peak band.
+    This deterministic protocol simulates one standard coincidence pulse, normalises
+    the last-stage response, and fits ``log(e/e_peak)`` against time over the
+    predeclared 80--10% post-peak band.  Matching is repeated independently for the
+    physical and linear representations.
     The returned time constant is used only by the single-exponential control; it does
     not alter or reinterpret the fitted ITO retention.
     """
@@ -214,6 +308,8 @@ def decay_matched_exponential_tau(
     k = int(k)
     beta_leak = float(beta_leak)
     coincidence_dur = float(coincidence_dur)
+    if gate_model not in {PRIMARY_MODEL_ID, LINEAR_MODEL_ID}:
+        raise ValueError(f"unknown gate model {gate_model!r}")
     fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
     if (not np.isfinite(tau_leak) or tau_leak <= 0 or k < 1
             or not np.isfinite(fitted_tau_r) or fitted_tau_r <= 0
@@ -221,11 +317,15 @@ def decay_matched_exponential_tau(
             or not np.isfinite(coincidence_dur) or coincidence_dur <= 0):
         raise ValueError("matching parameters must be finite and positive")
 
-    # alpha=k/tau_r bounds the asymptotic decay even for a stretched-leak hazard.
     # A fixed dense grid makes the matching rule independent of each task's solver dt.
-    horizon = max(5.0 * coincidence_dur, 16.0 * fitted_tau_r)
+    horizon = max(5.0 * coincidence_dur, 16.0 * fitted_tau_r, 8.0 * tau_leak)
     t_grid = np.linspace(0.0, horizon, 12001)
-    gate = CascadeEligibilityGate(
+    gate_class = (
+        CascadeEligibilityGate
+        if gate_model == PRIMARY_MODEL_ID
+        else LinearErlangEligibilityGate
+    )
+    gate = gate_class(
         V=V, tau_leak=tau_leak, k=k, dt=float(t_grid[1]),
         tau_r_override=fitted_tau_r, beta_leak=beta_leak,
     )

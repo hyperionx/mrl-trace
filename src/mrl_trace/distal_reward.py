@@ -23,8 +23,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .device import (CascadeEligibilityGate, decay_matched_exponential_tau,
-                     tau_r, K_STAGES)
+from .device import (CascadeEligibilityGate, LinearErlangEligibilityGate,
+                     decay_matched_exponential_tau, tau_r, K_STAGES)
+from .model_specs import LINEAR_MODEL_ID, PRIMARY_MODEL_ID
 from .neurons import lif_step, TAU_M, V_TH
 from .learning import LTD_BIAS
 
@@ -43,7 +44,8 @@ DISTAL_METHOD_PROVENANCE = {
 
 __all__ = [
     "trace_kernel", "abstract_kernel", "train_trace_level",
-    "SpikingGateBank", "train_spiking", "cue_saturation", "W_INIT", "W_MAX",
+    "SpikingGateBank", "LinearErlangSpikingGateBank", "train_spiking",
+    "cue_saturation", "W_INIT", "W_MAX",
     "trace_ratio", "run_trace_window", "run_spiking_saturation",
     "DISTAL_METHOD_PROVENANCE",
 ]
@@ -55,12 +57,18 @@ W_INIT, W_MAX = 0.5, 1.0
 # Trace-level task (Fig 4): precomputed eligibility kernel + lag-based credit
 # ----------------------------------------------------------------------------
 def trace_kernel(t_grid, tau_leak, V=0.9, k=K_STAGES, tau_r_override=None,
-                 beta_leak=1.0):
+                 beta_leak=1.0, gate_model=PRIMARY_MODEL_ID):
     """Device eligibility kernel e(t) on ``t_grid`` for a coincidence at t=0."""
-    g = CascadeEligibilityGate(V=V, tau_leak=tau_leak, k=k,
-                      tau_r_override=tau_r_override,
-                      beta_leak=beta_leak,
-                      dt=float(t_grid[1] - t_grid[0]))
+    gate_class = (
+        CascadeEligibilityGate if gate_model == PRIMARY_MODEL_ID
+        else LinearErlangEligibilityGate if gate_model == LINEAR_MODEL_ID
+        else None
+    )
+    if gate_class is None:
+        raise ValueError(f"unknown gate model {gate_model!r}")
+    g = gate_class(V=V, tau_leak=tau_leak, k=k,
+                   tau_r_override=tau_r_override, beta_leak=beta_leak,
+                   dt=float(t_grid[1] - t_grid[0]))
     return g.trace(t_grid, coincidence_at=0.0, coincidence_dur=0.3)
 
 
@@ -71,7 +79,8 @@ def abstract_kernel(t_grid, tau):
 
 def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
                       eta=0.05, seed=0, abstract=False, no_trace=False, V=0.9,
-                      k=K_STAGES, tau_r_override=None, beta_leak=1.0):
+                      k=K_STAGES, tau_r_override=None, beta_leak=1.0,
+                      gate_model=PRIMARY_MODEL_ID):
     """One seed of the trace-level distal-reward task; returns final weights ``w``
     (``w[0]`` cue, ``w[1:]`` distractors).
 
@@ -88,13 +97,13 @@ def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
     elif abstract:
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=V, k=k, tau_r_override=tau_r_override,
-            beta_leak=beta_leak,
+            beta_leak=beta_leak, gate_model=gate_model,
         )
         kern = abstract_kernel(t, matched_tau)
     else:
         kern = trace_kernel(t, tau_leak, V=V, k=k,
                             tau_r_override=tau_r_override,
-                            beta_leak=beta_leak)
+                            beta_leak=beta_leak, gate_model=gate_model)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):
@@ -121,11 +130,68 @@ def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
 # Spiking task (Fig 5): online per-synapse device gate + LIF output neuron
 # ----------------------------------------------------------------------------
 class SpikingGateBank:
-    """``N`` independent device gates (the Fig-5 per-synapse eligibility bank).
+    """Primary nonlinear headroom gate over ``N`` synapses."""
 
-    Equivalent to a vectorised :class:`CascadeEligibilityGate` over an ``(N,)``
+    model_id = PRIMARY_MODEL_ID
+
+    def __init__(self, N, V=0.9, tau_leak=5.0, k=K_STAGES, dt=1e-3,
+                 Vnmax=1.0, tau_r_override=None, beta_leak=1.0):
+        self.N, self.k, self.dt, self.Vnmax = int(N), int(k), float(dt), float(Vnmax)
+        fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
+        self.alpha = self.k / fitted_tau_r
+        self.beta_leak = float(beta_leak)
+        tl = np.asarray(tau_leak, dtype=float)
+        if (self.beta_leak <= 0 or not np.isfinite(self.beta_leak)
+                or not np.all(np.isfinite(tl)) or np.any(tl <= 0)
+                or self.Vnmax <= 0):
+            raise ValueError("gate scales and leakage parameters must be positive")
+        if tl.ndim == 0:
+            self.tau_leak = tl
+        elif tl.shape == (N,):
+            self.tau_leak = tl[:, None]
+        else:
+            raise ValueError("tau_leak must be scalar or have shape (N,)")
+        self._t_since = np.full((N, 1), dt) if beta_leak != 1.0 else None
+        self.vn = np.zeros((N, self.k))
+
+    def reset(self):
+        self.vn[:] = 0.0
+        if self._t_since is not None:
+            self._t_since[:] = self.dt
+
+    def step(self, drive):
+        drive = np.asarray(drive, dtype=float)
+        if drive.shape != (self.N,):
+            raise ValueError(f"drive must have shape ({self.N},)")
+        previous_fraction = np.empty_like(self.vn)
+        previous_fraction[:, 0] = drive
+        previous_fraction[:, 1:] = self.vn[:, :-1] / self.Vnmax
+        if self.beta_leak == 1.0:
+            leak_rate = 1.0 / self.tau_leak
+        else:
+            self._t_since = np.where(
+                np.abs(drive)[:, None] > 1e-9, self.dt, self._t_since + self.dt
+            )
+            tau = self.tau_leak
+            leak_rate = (self.beta_leak / tau) * np.power(
+                np.clip(self._t_since / tau, 1e-6, None), self.beta_leak - 1.0
+            )
+        new = self.vn + self.dt * (
+            self.alpha * previous_fraction * (self.Vnmax - np.abs(self.vn))
+            - self.vn * leak_rate
+        )
+        self.vn = np.clip(new, -self.Vnmax, self.Vnmax)
+        return self.vn[:, -1] / self.Vnmax
+
+
+class LinearErlangSpikingGateBank:
+    """Linear Erlang-exact sensitivity over ``N`` synapses.
+
+    Equivalent to a vectorised :class:`LinearErlangEligibilityGate` over an ``(N,)``
     grid: the same linear Erlang cascade, signed/leak-dominant drive,
     age-dependent leakage option and ``[-Vnmax, Vnmax]`` bound."""
+
+    model_id = LINEAR_MODEL_ID
 
     def __init__(self, N, V=0.9, tau_leak=5.0, k=K_STAGES, dt=1e-3, Vnmax=1.0,
                  tau_r_override=None, beta_leak=1.0):
@@ -201,12 +267,19 @@ def _spiking_trial(bank, w, rewarded, D, *, dt=1e-3, cue_rate=200.0, dist_rate=4
 
 
 def train_spiking(tau_leak, D, *, N=8, trials=400, dt=1e-3, seed=0, eta=0.2,
-                  V=0.9, k=K_STAGES, tau_r_override=None, beta_leak=1.0):
+                  V=0.9, k=K_STAGES, tau_r_override=None, beta_leak=1.0,
+                  gate_model=PRIMARY_MODEL_ID):
     """One seed of the full-spiking distal-reward task; returns final weights ``w``
     (``w[0]`` cue saturation toward the bound is the success measure)."""
     rng = np.random.default_rng(seed)
-    bank = SpikingGateBank(N, tau_leak=tau_leak, dt=dt, V=V, k=k,
-                           tau_r_override=tau_r_override, beta_leak=beta_leak)
+    bank_cls = {
+        PRIMARY_MODEL_ID: SpikingGateBank,
+        LINEAR_MODEL_ID: LinearErlangSpikingGateBank,
+    }.get(gate_model)
+    if bank_cls is None:
+        raise ValueError(f"unknown gate_model: {gate_model!r}")
+    bank = bank_cls(N, tau_leak=tau_leak, dt=dt, V=V, k=k,
+                    tau_r_override=tau_r_override, beta_leak=beta_leak)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):

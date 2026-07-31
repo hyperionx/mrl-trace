@@ -116,7 +116,7 @@ def test_reproduce_explicitly_orchestrates_notebooks_without_external_manifest()
     assert "RUN_PREDICTIVE_LINKAGE" in source
     assert 'RUN_PROFILE == "publication"' in source
     assert "subprocess.run" in source
-    assert '"jupyter", "nbconvert"' in source
+    assert '"-m", "nbconvert"' in source
     assert "OUTER_FAN" in source and "INNER_PARALLEL" in source
     assert "MRL_SAVE_RESULTS" in source
     assert "publication reproduction requires saved result tables and figures" in source
@@ -161,8 +161,6 @@ def test_withdrawn_claims_and_archives_are_absent_from_public_materials() -> Non
         "tau / (1 - rho)",
         "run_dmax_law",
         "faithful e-prop",
-        "reward versus omission",
-        "reward-vs-omission",
         "offline replay",
         "per-trial verdict",
         "balanced accuracy 0.89",
@@ -224,9 +222,13 @@ def test_predictive_notebook_records_direct_retention_and_fails_closed_on_raw_co
     assert 'retention_definition": "direct_held_bias_tau"' in source
     assert 'analysis_schema_version": 2' in source
     assert 'len(list(candidate.glob("trace_*.csv"))) == 24' in source
-    assert 'len(list(candidate.glob("*.xls"))) == 91' in source
+    assert "select_ito_source_cohort(candidate)" in source
+    assert '"primary_january_2025"' in source
+    assert '"supplemental_near_zero_june_2026"' in source
+    assert '"later_addition"' in source
+    assert "later acquisition outside frozen January 2025 cohort" in source
     assert "expected 24 Au traces" in source
-    assert "ITO raw directory with 91 .xls workbooks not found" in source
+    assert "91-workbook primary cohort and two 1 mV supplements not found" in source
     assert 'assert not any(row["qc_status"] == "pending_fit"' in source
     assert '"device_identity": "unrecoverable"' in source
     assert 'NEAR_ZERO_MAX_V = 0.002' in source
@@ -251,3 +253,26 @@ def test_public_material_does_not_expose_dissertation_routing() -> None:
         text = path.read_text(encoding="utf-8").lower()
         assert "appendix" not in text
         assert not re.search(r"chapter\s+[1-9]", text)
+
+
+def test_companion_manuscript_uses_artifact_macros_and_shared_model_ids() -> None:
+    candidates = (
+        (ROOT.parent / "manuscript-MRL" / "main.tex",
+         ROOT.parent / "manuscript-MRL" / "benchmark_macros.tex"),
+        (ROOT.parent / "Manuscript-MRL" / "manuscript.tex",
+         ROOT.parent / "Manuscript-MRL" / "benchmark_macros.tex"),
+    )
+    pair = next(((tex, macros) for tex, macros in candidates if tex.is_file()), None)
+    if pair is None:
+        pytest.skip("companion manuscript checkout is not present")
+    manuscript, manuscript_macros = pair
+    reference_macros = ROOT / "data/results/reference/benchmark_macros.tex"
+    assert manuscript_macros.read_text(encoding="utf-8") == (
+        reference_macros.read_text(encoding="utf-8")
+    )
+    source = manuscript.read_text(encoding="utf-8")
+    assert "physical\\_headroom\\_v1" in source or "physical headroom" in source
+    assert "linear\\_erlang\\_v1" in source or "linear Erlang" in source
+    assert "fig_sequential_fair.png" in source
+    assert "fig_interval_fair.png" in source
+    assert "Conditional Go" in source

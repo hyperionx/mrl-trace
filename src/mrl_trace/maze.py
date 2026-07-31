@@ -23,10 +23,15 @@ import warnings
 
 import numpy as np
 
-from .bandit import GateBankBatched, AbstractTrace, W_INIT, W_MAX
+from .bandit import (
+    GateBankBatched, LinearErlangGateBankBatched, AbstractTrace, W_INIT, W_MAX,
+)
 from .device import K_STAGES, decay_matched_exponential_tau
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
+from .model_specs import (
+    PRIMARY_MODEL_ID, LINEAR_MODEL_ID, device_model_spec,
+)
 
 __all__ = [
     "LinearTrack", "ActionSequenceTrack", "DelayedCuedChoice", "TMaze",
@@ -84,6 +89,12 @@ METHOD_PROVENANCE = {
         "Repository-specific signed coincidence filtered by an approximate cascade gate.",
         "A computational device-trace condition, not an exact cited R-STDP rule or a "
         "microscopically identified trap cascade.",
+    ),
+    "linear_device": _provenance(
+        "adapted",
+        ["linear Erlang cascade", "three-factor reward modulation"],
+        "Linear Erlang-exact sensitivity using the same signed coincidence drive.",
+        "Computational sensitivity only; it omits nonlinear physical headroom.",
     ),
     "exponential": _provenance(
         "adapted",
@@ -447,7 +458,8 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
                      weight_fault=None, seed0=0,
                      return_weights=False, device_k=K_STAGES, tau_r_override=None,
                      coincidence_mode="signed", eligibility_normalizer=1.0,
-                     forced_actions=None, return_diagnostics=False):
+                     forced_actions=None, return_diagnostics=False,
+                     gate_model=PRIMARY_MODEL_ID):
     """Train the sequential policy on ``env`` for ``B`` parallel seeds.
 
     The network is a state x action grid of device synapses ``w[state, action]``.
@@ -503,13 +515,19 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     elif abstract:
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=V, k=device_k, tau_r_override=tau_r_override,
-            beta_leak=beta_leak,
+            beta_leak=beta_leak, gate_model=gate_model,
         )
         bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, V=V,
-                               beta_leak=beta_leak, k=device_k,
-                               tau_r_override=tau_r_override)
+        bank_cls = {
+            PRIMARY_MODEL_ID: GateBankBatched,
+            LINEAR_MODEL_ID: LinearErlangGateBankBatched,
+        }.get(gate_model)
+        if bank_cls is None:
+            raise ValueError(f"unknown gate_model: {gate_model!r}")
+        bank = bank_cls(B, S, A, tau_leak=tau_leak, dt=dt, V=V,
+                        beta_leak=beta_leak, k=device_k,
+                        tau_r_override=tau_r_override)
     w = np.full((B, S, A), W_INIT)
     baseline = np.full(B, 1.0 / A)
     bidx = np.arange(B)
@@ -724,6 +742,7 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
             "eligibility_normalizer": eligibility_normalizer,
             "normalized_effective_update_rms": raw_rms / eligibility_normalizer,
             "coincidence_mode": coincidence_mode,
+            "gate_model": gate_model if not (eprop or rstdp or no_trace) else None,
             "matched_exponential_tau_s": (
                 None if matched_tau is None else float(matched_tau)
             ),
@@ -836,8 +855,9 @@ def _copy_provenance(record):
 
 def _comparator_conditions(include_rule_ablations=True):
     conditions = {
-        "device": {},
-        "exponential": {"abstract": True},
+        "device": {"gate_model": PRIMARY_MODEL_ID},
+        "linear_device": {"gate_model": LINEAR_MODEL_ID},
+        "exponential": {"abstract": True, "gate_model": PRIMARY_MODEL_ID},
         "conventional_rstdp": {"rstdp": True},
         "shallow_eprop": {"eprop": True},
         "no_trace": {"no_trace": True},
@@ -880,7 +900,7 @@ def _balanced_calibration_actions(env, trajectories, max_steps):
 
 
 def calibrate_comparator_scales(*, trajectories=CALIBRATION_TRAJECTORIES,
-                                tau_leak=10.0, D=4.0, V=1.5, dt=5e-3,
+                                tau_leak=10.0, D=12.0, V=1.5, dt=5e-3,
                                 step_dur=0.4, seed=271828,
                                 include_rule_ablations=True, device_k=K_STAGES,
                                 tau_r_override=None, beta_leak=1.0):
@@ -933,6 +953,10 @@ def calibrate_comparator_scales(*, trajectories=CALIBRATION_TRAJECTORIES,
         "seed": int(seed),
         "tau_leak_s": float(tau_leak),
         "beta_leak": float(beta_leak),
+        "model_specifications": {
+            model_id: device_model_spec(model_id)
+            for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID)
+        },
         "records": records,
         "method_provenance": _provenance(
             "adapted",
@@ -954,8 +978,10 @@ def _action_tuning_job(job):
         device_k=device_k, tau_r_override=tau_r_override,
         beta_leak=beta_leak, **kwargs,
     )
-    final = float(reward_rate(rewards, min(100, episodes))[0])
-    return name, float(eta), int(seed), final
+    curve = np.asarray(rewards[0], dtype=float)
+    final = float(reward_rate(curve, min(100, episodes)))
+    aulc = float(curve.mean())
+    return name, float(eta), int(seed), aulc, final
 
 
 def _action_evaluation_job(job):
@@ -985,89 +1011,143 @@ def _map_spawn_safe(function, jobs, *, workers=1, pool=None):
         return own_pool.map(function, jobs, chunksize=chunksize)
 
 
-def tune_comparator_learning_rates(*, calibration, episodes=400,
+def tune_comparator_learning_rates(*, calibration, episodes=300,
                                    learning_rates=LEARNING_RATE_GRID,
                                    tuning_seeds=TUNING_SEEDS, tau_leak=10.0,
-                                   D=4.0, V=1.5, dt=5e-3, step_dur=0.4,
+                                   D=12.0, V=1.5, dt=5e-3, step_dur=0.4,
                                    include_rule_ablations=True,
                                    device_k=K_STAGES, tau_r_override=None,
-                                   beta_leak=1.0, workers=1, pool=None):
-    """Select each condition's rate on the declared tuning seeds only.
+                                   beta_leak=1.0, workers=1, pool=None,
+                                   max_boundary_expansions=3):
+    """Select each condition's rate by mean unsmoothed AULC on pilot seeds.
 
-    Ties are resolved toward the smaller rate.  The no-trace necessity control has
-    no effective update and is assigned rate zero rather than spuriously "tuned".
+    The logarithmic grid is shared by all learned conditions.  If any optimum is
+    on an edge, that edge is expanded by one decade and *pilot seeds only* are run
+    there.  Ties are resolved toward the smaller rate.  The no-trace necessity
+    control is assigned ``eta=0``.
     """
-    rates = tuple(float(x) for x in learning_rates)
+    rates = sorted(set(float(x) for x in learning_rates))
     seeds = tuple(int(x) for x in tuning_seeds)
     if not rates or any((not np.isfinite(x) or x <= 0) for x in rates):
         raise ValueError("learning_rates must be finite positive values")
     if not seeds:
         raise ValueError("tuning_seeds must not be empty")
     conditions = _comparator_conditions(include_rule_ablations)
-    jobs = []
-    for name, kwargs in conditions.items():
-        if name == "no_trace":
-            continue
-        normalizer = calibration["records"][name]["eligibility_normalizer"]
-        for eta in rates:
-            for seed in seeds:
-                jobs.append((
-                    name, kwargs, int(episodes), eta, seed, float(tau_leak),
-                    float(D), float(V), float(dt), float(step_dur),
-                    float(normalizer), int(device_k), tau_r_override,
-                    float(beta_leak),
-                ))
-    mapped = _map_spawn_safe(
-        _action_tuning_job, jobs, workers=workers, pool=pool
-    ) if jobs else []
-    raw = {
-        name: {eta: {} for eta in rates}
-        for name in conditions if name != "no_trace"
-    }
-    for name, eta, seed, final in mapped:
-        raw[name][eta][seed] = final
+    learned = tuple(name for name in conditions if name != "no_trace")
+    raw = {name: {} for name in learned}
+    expansion_log = []
+
+    def evaluate_missing(candidate_rates):
+        jobs = []
+        for name in learned:
+            kwargs = conditions[name]
+            normalizer = calibration["records"][name]["eligibility_normalizer"]
+            for eta in candidate_rates:
+                if eta in raw[name]:
+                    continue
+                for seed in seeds:
+                    jobs.append((
+                        name, kwargs, int(episodes), eta, seed, float(tau_leak),
+                        float(D), float(V), float(dt), float(step_dur),
+                        float(normalizer), int(device_k), tau_r_override,
+                        float(beta_leak),
+                    ))
+                raw[name][eta] = {}
+        mapped = _map_spawn_safe(
+            _action_tuning_job, jobs, workers=workers, pool=pool
+        ) if jobs else []
+        for name, eta, seed, aulc, final in mapped:
+            raw[name][eta][seed] = {"aulc": aulc, "final_reward": final}
+
+    evaluate_missing(rates)
+    for _ in range(int(max_boundary_expansions)):
+        boundary = set()
+        for name in learned:
+            selected = min(
+                rates,
+                key=lambda eta: (
+                    -np.mean([raw[name][eta][seed]["aulc"] for seed in seeds]),
+                    eta,
+                ),
+            )
+            if selected == rates[0]:
+                boundary.add(rates[0] / 10.0)
+            if selected == rates[-1]:
+                boundary.add(rates[-1] * 10.0)
+        new_rates = sorted(boundary.difference(rates))
+        if not new_rates:
+            break
+        expansion_log.append({
+            "reason": "pilot_optimum_on_boundary",
+            "added_rates": list(new_rates),
+        })
+        rates = sorted(set(rates).union(new_rates))
+        evaluate_missing(new_rates)
+
     tuning = {}
     for name in conditions:
         if name == "no_trace":
-            tuning[name] = {"selected_eta": 0.0, "scores": {0.0: None}}
+            tuning[name] = {
+                "selected_eta": 0.0,
+                "scores": {0.0: None},
+                "boundary_after_expansion": False,
+            }
             continue
         scores = {}
         for eta in rates:
-            finals = np.asarray([raw[name][eta][seed] for seed in seeds], dtype=float)
+            aulcs = np.asarray(
+                [raw[name][eta][seed]["aulc"] for seed in seeds], dtype=float
+            )
+            finals = np.asarray(
+                [raw[name][eta][seed]["final_reward"] for seed in seeds],
+                dtype=float,
+            )
             scores[eta] = {
+                "mean_aulc": float(aulcs.mean()),
                 "mean_final_reward": float(finals.mean()),
-                "per_seed": finals,
+                "per_seed_aulc": aulcs,
+                "per_seed_final_reward": finals,
             }
-        selected = min(rates, key=lambda x: (-scores[x]["mean_final_reward"], x))
-        tuning[name] = {"selected_eta": float(selected), "scores": scores}
+        selected = min(rates, key=lambda x: (-scores[x]["mean_aulc"], x))
+        tuning[name] = {
+            "selected_eta": float(selected),
+            "scores": scores,
+            "boundary_after_expansion": selected in {rates[0], rates[-1]},
+        }
     return {
         "learning_rate_grid": list(rates),
+        "initial_learning_rate_grid": sorted(set(float(x) for x in learning_rates)),
+        "grid_expansions": expansion_log,
+        "max_boundary_expansions": int(max_boundary_expansions),
         "tuning_seeds": list(seeds),
         "episodes": int(episodes),
         "beta_leak": float(beta_leak),
         "workers": int(workers),
-        "selection_rule": "highest_mean_final_reward_then_smallest_eta",
+        "selection_rule": "highest_mean_unsmoothed_per_seed_aulc_then_smallest_eta",
+        "evaluation_data_used": False,
         "conditions": tuning,
         "method_provenance": _provenance(
             "adapted",
             ["held-out hyperparameter selection"],
-            "Learning rates are selected on declared tuning seeds after scale calibration.",
+            "Learning rates are selected by pilot-seed AULC after scale calibration.",
             "Selected rates apply only to these repository implementations and task budgets.",
         ),
     }
 
 
-def run_action_sequence(*, episodes=800, tuning_episodes=400,
+def run_action_sequence(*, episodes=300, tuning_episodes=300,
                         calibration_trajectories=CALIBRATION_TRAJECTORIES,
                         learning_rates=LEARNING_RATE_GRID,
                         tuning_seeds=TUNING_SEEDS,
                         evaluation_seeds=EVALUATION_SEEDS,
-                        tau_leak=10.0, D=4.0, V=1.5, dt=5e-3,
+                        tau_leak=10.0, D=12.0, V=1.5, dt=5e-3,
                         step_dur=0.4, include_rule_ablations=True,
                         device_k=K_STAGES, tau_r_override=None,
                         beta_leak=1.0,
                         retention_definition="deliberately_swept",
-                        workers=1, pool=None):
+                        workers=1, pool=None, criterion=0.8,
+                        bootstrap_resamples=10000,
+                        max_boundary_expansions=3):
     """Controlled multi-decision benchmark with calibration, tuning and evaluation.
 
     Calibration uses fixed balanced trajectories; learning rates use only seeds
@@ -1116,6 +1196,7 @@ def run_action_sequence(*, episodes=800, tuning_episodes=400,
             beta_leak=beta_leak,
             workers=workers,
             pool=pool,
+            max_boundary_expansions=max_boundary_expansions,
         )
         conditions = _comparator_conditions(include_rule_ablations)
         jobs = []
@@ -1147,6 +1228,40 @@ def run_action_sequence(*, episodes=800, tuning_episodes=400,
         name: reward_rate(values, min(100, int(episodes)))
         for name, values in curves.items()
     }
+    from .stats import bootstrap_ci
+    per_seed_metrics = {}
+    for name, values in curves.items():
+        criterion_raw = [
+            trials_to_criterion(row, float(criterion), window=min(100, int(episodes)))
+            for row in values
+        ]
+        per_seed_metrics[name] = {
+            "aulc": values.mean(axis=1),
+            "final_reward": finals[name],
+            "criterion_time": np.asarray([
+                int(episodes) + 1 if value is None else int(value)
+                for value in criterion_raw
+            ], dtype=int),
+            "right_censored": np.asarray(
+                [value is None for value in criterion_raw], dtype=bool
+            ),
+        }
+    paired_bootstrap = {}
+    device_aulc = per_seed_metrics["device"]["aulc"]
+    for index, name in enumerate(conditions):
+        if name == "device":
+            continue
+        difference = device_aulc - per_seed_metrics[name]["aulc"]
+        lo, hi = bootstrap_ci(
+            difference, n_boot=int(bootstrap_resamples), seed=314159 + index
+        )
+        paired_bootstrap[name] = {
+            "metric": "device_minus_comparator_aulc",
+            "mean": float(difference.mean()),
+            "ci95": [lo, hi],
+            "n_resamples": int(bootstrap_resamples),
+            "verdict": "device_advantage" if lo > 0 else "unresolved",
+        }
     comparator_diagnostics = {}
     for name in _comparator_conditions(include_rule_ablations):
         calibrated = calibration["records"][name]
@@ -1169,6 +1284,8 @@ def run_action_sequence(*, episodes=800, tuning_episodes=400,
         "required_actions": list(calibration["required_actions"]),
         "curves": curves,
         "finals": finals,
+        "per_seed_metrics": per_seed_metrics,
+        "paired_bootstrap": paired_bootstrap,
         "calibration": calibration,
         "tuning": tuning,
         "comparator_diagnostics": comparator_diagnostics,
@@ -1184,6 +1301,11 @@ def run_action_sequence(*, episodes=800, tuning_episodes=400,
         "retention_definition": retention_definition,
         "workers": int(workers),
         "delay": float(D),
+        "criterion": float(criterion),
+        "model_specifications": {
+            model_id: device_model_spec(model_id)
+            for model_id in (PRIMARY_MODEL_ID, LINEAR_MODEL_ID)
+        },
         "method_provenance": _provenance(
             "proposed",
             ["multi-decision reinforcement-learning evaluation"],

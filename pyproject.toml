@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -82,11 +82,15 @@ Repository = "https://github.com/hyperionx/mrl-trace"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+mrl_trace = ["dandi001340_assets.csv"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
     "external: requires explicitly enabled external data",
     "gpu: requires a supported accelerator",
     "integration: exercises notebook or package integration",
+    "publication: requires complete, source-verified publication inputs",
     "slow: runs a non-smoke scientific workload",
 ]

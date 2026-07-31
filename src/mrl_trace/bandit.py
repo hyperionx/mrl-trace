@@ -26,11 +26,14 @@ from __future__ import annotations
 import numpy as np
 
 from .device import decay_matched_exponential_tau, tau_r, K_STAGES
+from .model_specs import LINEAR_MODEL_ID, PRIMARY_MODEL_ID
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import (LTD_BIAS, coincidence_drive, SIGNED_RULE_PROVENANCE,
                        THREE_FACTOR_PROVENANCE)
 
-__all__ = ["GateBankBatched", "AbstractTrace", "train", "reward_rate",
+__all__ = ["GateBankBatched", "LinearErlangGateBankBatched", "gate_bank_class",
+           "AbstractTrace",
+           "train", "reward_rate",
            "trials_to_criterion", "W_INIT", "W_MAX", "run_signed_rule_ablations",
            "run_reversal", "run_reversal_grid", "calibrate_reversal_scales",
            "reversal_phase_final", "reversal_recriterion",
@@ -58,15 +61,75 @@ BANDIT_METHOD_PROVENANCE = {
 
 
 class GateBankBatched:
-    """Device eligibility gates for ``B`` parallel ``(S, A)`` synapse grids.
+    """Primary nonlinear headroom gate over ``B x S x A`` synapses."""
 
-    Vectorised form of :class:`mrl_trace.device.CascadeEligibilityGate`: ``k``
+    model_id = PRIMARY_MODEL_ID
+
+    def __init__(self, B, S, A, tau_leak=10.0, V=0.9, k=K_STAGES, dt=5e-3,
+                 Vnmax=1.0, beta_leak=1.0, tau_r_override=None):
+        tl = np.asarray(tau_leak, dtype=float)
+        if (not np.isfinite(beta_leak) or beta_leak <= 0
+                or not np.all(np.isfinite(tl)) or np.any(tl <= 0)
+                or not np.isfinite(Vnmax) or Vnmax <= 0 or int(k) < 1):
+            raise ValueError("gate scales, depth and leakage parameters must be positive")
+        self.B, self.S, self.A = int(B), int(S), int(A)
+        self.k, self.dt, self.Vnmax = int(k), float(dt), float(Vnmax)
+        fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
+        self.alpha = self.k / fitted_tau_r
+        self.beta_leak = float(beta_leak)
+        self.tau_leak = tl.reshape(1, S, A, 1) if tl.ndim == 2 else tl
+        self._t_since = (
+            np.full((B, S, A, 1), self.dt) if beta_leak != 1.0 else None
+        )
+        self.vn = np.zeros((B, S, A, self.k))
+
+    def reset(self):
+        self.vn[:] = 0.0
+        if self._t_since is not None:
+            self._t_since[:] = self.dt
+
+    def step(self, drive):
+        drive = np.asarray(drive, dtype=float)
+        if drive.shape != (self.B, self.S, self.A):
+            raise ValueError(
+                f"drive must have shape {(self.B, self.S, self.A)}, got {drive.shape}"
+            )
+        vn = self.vn
+        previous_fraction = np.empty_like(vn)
+        previous_fraction[..., 0] = drive
+        previous_fraction[..., 1:] = vn[..., :-1] / self.Vnmax
+        if self.beta_leak == 1.0:
+            leak_rate = 1.0 / self.tau_leak
+        else:
+            self._t_since = np.where(
+                np.abs(drive)[..., None] > 1e-9,
+                self.dt,
+                self._t_since + self.dt,
+            )
+            tau = self.tau_leak
+            leak_rate = (self.beta_leak / tau) * np.power(
+                np.clip(self._t_since / tau, 1e-6, None), self.beta_leak - 1.0
+            )
+        new = vn + self.dt * (
+            self.alpha * previous_fraction * (self.Vnmax - np.abs(vn))
+            - vn * leak_rate
+        )
+        self.vn = np.clip(new, -self.Vnmax, self.Vnmax)
+        return self.vn[..., -1] / self.Vnmax
+
+
+class LinearErlangGateBankBatched:
+    """Linear Erlang-exact sensitivity over ``B x S x A`` synapses.
+
+    Vectorised form of :class:`mrl_trace.device.LinearErlangEligibilityGate`: ``k``
     linear low-pass nodes with signed leak-dominant drive, bounded in
     ``[-Vnmax, Vnmax]``.  Without leakage, its unit-step response is the Erlang
     candidate used by model identification (up to forward-Euler error). It is a
     computational surrogate, not the complete product-current model used to fit the
     measured Au transient.
     """
+
+    model_id = LINEAR_MODEL_ID
 
     def __init__(self, B, S, A, tau_leak=10.0, V=0.9, k=K_STAGES, dt=5e-3, Vnmax=1.0,
                  beta_leak=1.0, tau_r_override=None):
@@ -137,6 +200,15 @@ class GateBankBatched:
         return new[..., -1] / Vm
 
 
+def gate_bank_class(gate_model=PRIMARY_MODEL_ID):
+    """Resolve a frozen model identity to its batched gate implementation."""
+    if gate_model == PRIMARY_MODEL_ID:
+        return GateBankBatched
+    if gate_model == LINEAR_MODEL_ID:
+        return LinearErlangGateBankBatched
+    raise ValueError(f"unknown gate model {gate_model!r}")
+
+
 class AbstractTrace:
     """Control: an abstract exponential eligibility trace (the hand-set kernel of
     prior algorithmic work). Publication comparators supply the time constant from
@@ -160,8 +232,9 @@ class AbstractTrace:
 def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
           eta=0.2, in_rate=200.0, ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH,
           sigma0=0.15, sigma1=None, abstract=False, no_trace=False, seed0=0,
-          reward_pools=None, device_k=K_STAGES, tau_r_override=None,
-          coincidence_mode="signed", beta_leak=1.0):
+          device_k=K_STAGES, tau_r_override=None,
+          coincidence_mode="signed", beta_leak=1.0,
+          gate_model=PRIMARY_MODEL_ID):
     """Train the contextual bandit on ``B`` parallel seeds; return rewards ``(B, trials)``.
 
     Parameters mirror the manuscript's experiments:
@@ -173,29 +246,21 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
       ``no_trace``  zero the eligibility every step (device-necessity control).
       ``coincidence_mode`` selects the proposed signed drive or an unsigned/no-negative
                     ablation; it is not attributed to the cited R-STDP algorithms.
-      ``reward_pools`` biosignal reward: if given, a dict {1: array, 0: array} of
-                    per-trial reward VALUES decoded from real EEG (out-of-fold
-                    predictions, keyed by the TRUE outcome valence). On each trial the
-                    reward actually delivered to the three-factor rule is sampled from
-                    the pool matching the true outcome, so R is a real, noisy,
-                    biologically-measured reward-prediction-error rather than the clean
-                    synthetic {0,1}. The reported reward rate still uses the TRUE outcome
-                    (task performance), not the noisy gate. Default None = synthetic.
 
-    Two reward streams are tracked: ``r_true`` (did the action match the rewarded
-    action -- task performance, what is RETURNED) and ``r_gate`` (what actually drives
-    the weight update -- synthetic = r_true, or the EEG-decoded value when
-    ``reward_pools`` is given).
+    This is a wholly synthetic closed-loop task. Recorded biosignals are evaluated
+    separately by the state-free logged-replay workflow in
+    :mod:`mrl_trace.dopamine_replay`; outcome-keyed resampling is intentionally not
+    supported.
     """
     rng = np.random.default_rng(seed0)
     if abstract:
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=0.9, k=device_k, tau_r_override=tau_r_override,
-            beta_leak=beta_leak,
+            beta_leak=beta_leak, gate_model=gate_model,
         )
         bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
-        bank = GateBankBatched(
+        bank = gate_bank_class(gate_model)(
             B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
             tau_r_override=tau_r_override, beta_leak=beta_leak,
         )
@@ -235,19 +300,9 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
         chosen = np.argmax(spk, axis=1)
         chosen[tie] = rng.integers(A, size=tie.sum())
         r_true = (chosen == correct[state]).astype(float)   # task performance (returned)
-        if reward_pools is None:
-            r_gate = r_true                                  # synthetic clean reward
-        else:
-            # biosignal reward: for each seed, draw a decoded reward VALUE from the EEG
-            # pool matching the TRUE outcome valence -- a real, noisy reward-prediction-
-            # error gates the update, while r_true still measures task performance.
-            r_gate = np.empty(B)
-            for b in range(B):
-                pool = reward_pools[int(r_true[b])]
-                r_gate[b] = pool[rng.integers(len(pool))]
-        adv = eta * (r_gate - baseline)                # signed three-factor update
+        adv = eta * (r_true - baseline)                # signed three-factor update
         w = np.clip(w + adv[:, None, None] * e_rew, 0.0, W_MAX)
-        baseline += 0.02 * (r_gate - baseline)
+        baseline += 0.02 * (r_true - baseline)
         rewards[:, tr] = r_true                         # report TRUE performance
     return rewards
 
@@ -326,7 +381,8 @@ def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
                  n_phases=2, dt=5e-3, cue_dur=1.0, eta=0.2, in_rate=200.0,
                  ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0,
                  device_k=K_STAGES, tau_r_override=None, beta_leak=1.0,
-                 eligibility_normalizer=1.0, return_diagnostics=False):
+                 eligibility_normalizer=1.0, return_diagnostics=False,
+                 gate_model=PRIMARY_MODEL_ID):
     """Reversal sensitivity with a trial-local eligibility state.
 
     The rewarded mapping is
@@ -355,13 +411,14 @@ def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
     if cond == "abstract":
         matched_tau = decay_matched_exponential_tau(
             tau_leak, V=0.9, k=device_k, tau_r_override=tau_r_override,
-            beta_leak=beta_leak,
+            beta_leak=beta_leak, gate_model=gate_model,
         )
         bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
-        bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
-                               tau_r_override=tau_r_override,
-                               beta_leak=beta_leak)
+        bank = gate_bank_class(gate_model)(
+            B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
+            tau_r_override=tau_r_override, beta_leak=beta_leak,
+        )
     no_trace = (cond == "no_trace")
 
     w = np.full((B, S, A), W_INIT)

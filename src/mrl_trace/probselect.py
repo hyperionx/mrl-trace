@@ -94,7 +94,7 @@ def train_pst(*, mode="dfa_homeo", B=20, H=16, n_bits=4, tau_leak=10.0, D=5.0,
               trials=4000, dt=5e-3, cue_dur=1.0, eta=0.2, eta_hidden=3.0, in_rate=200.0,
               ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, V=1.5, sigma0=0.15, sigma1=0.05,
               fb_scale=2.0, w_scale1=0.6, w_scale2=0.35, w_max=W_MAX, bias_o=0.3,
-              homeo=0.1, homeo_target=0.35, homeo_tau=200.0, reward_pools=None,
+              homeo=0.1, homeo_target=0.35, homeo_tau=200.0,
               seed0=0, return_test=False):
     """Train the PST policy. ``mode`` in {shallow, dfa, dfa_homeo, no_trace}; semantics as
     in :func:`mrl_trace.deep.train_deep`. Device eligibility on every plastic layer.
@@ -187,11 +187,7 @@ def train_pst(*, mode="dfa_homeo", B=20, H=16, n_bits=4, tau_leak=10.0, D=5.0,
         p_chosen = probs[chosen_stim]
         R_true = (chosen == better).astype(float)                # chose higher-prob stim
         outcome = (rng.random(B) < p_chosen).astype(int)         # actual stochastic reward
-        if reward_pools is None:
-            R = outcome.astype(float)
-        else:
-            R = np.array([reward_pools[int(outcome[b])][
-                rng.integers(len(reward_pools[int(outcome[b])]))] for b in range(B)])
+        R = outcome.astype(float)
 
         if not no_trace:
             stride = 10 if reward_lag > 200 else 1
@@ -292,7 +288,7 @@ PST_CHANCE = 0.5
 PST_CRIT = 0.75
 
 
-def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf=None,
+def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS,
                    hp=None, homeo=PST_HOMEO, seed0=0):
     """One independent Arm-F cell: train the PST for a single condition ``cond`` on a
     vectorised ``seeds``-seed batch and return its behavioural summary as a plain dict.
@@ -303,10 +299,6 @@ def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf
       ``dfa``              deep, DFA feedback, no homeostasis;
       ``dfa_homeo``        deep, DFA feedback + homeostatic stabiliser (the device agent);
       ``no_trace``         eligibility zeroed (device-necessity control);
-      ``dfa_homeo_eeg``    ``dfa_homeo`` gated by the subjects' OWN decoded real-EEG
-                           reward (requires ``pools``; the human non-invasive RPE);
-      ``dfa_homeo_shuf``   ``dfa_homeo`` gated by the shuffled-reward control
-                           (requires ``shuf``).
 
     The test phase (choose-A / avoid-B) is run only for the conditions the Frank
     figure reports (``shallow``, ``dfa``, ``dfa_homeo``).  Returns
@@ -316,15 +308,12 @@ def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf
     test-phase Frank measures per seed (``None`` for the non-test conditions).
     """
     hp = PST_HP if hp is None else hp
-    rp = None
+    if cond not in {"shallow", "dfa", "dfa_homeo", "no_trace"}:
+        raise ValueError(f"unknown synthetic probabilistic-selection condition: {cond}")
     mode = cond
-    if cond == "dfa_homeo_eeg":
-        mode, rp = "dfa_homeo", {0: pools[0], 1: pools[1]}
-    elif cond == "dfa_homeo_shuf":
-        mode, rp = "dfa_homeo", shuf
     want_test = cond in ("dfa_homeo", "shallow", "dfa")
     out = train_pst(mode=mode, B=seeds, trials=trials, seed0=seed0, homeo=homeo,
-                    reward_pools=rp, return_test=want_test, **hp)
+                    return_test=want_test, **hp)
     if want_test:
         rew, cA, aB = out
     else:
@@ -338,38 +327,17 @@ def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf
             "method_provenance": PST_METHOD_PROVENANCE,
             "hyperparameter_provenance": "pilot_tuned_then_frozen"}
 
-
-def _load_eeg_pools(cache="/tmp/eeg_pools.npy", seed=0):
-    """Load the cached EEG out-of-fold reward pools (built by the EEG-capstone driver
-    from ds003474) and derive the shuffled-reward control, degrading gracefully.
-
-    Returns ``(pools, shuf, meta)``; ``(None, None, {})`` when the cache is absent (the
-    subjects' raw EEG is not bundled), so the EEG conditions are skipped exactly as the
-    original Arm-F driver does when ``pools`` is ``None``."""
-    import os
-    if not os.path.exists(cache):
-        return None, None, {}
-    pools = np.load(cache, allow_pickle=True).item()
-    meta = pools.get("_meta", {})
-    rng = np.random.default_rng(seed)
-    allv = np.concatenate([pools[1], pools[0]])
-    shuf = {1: rng.permutation(allv), 0: rng.permutation(allv)}
-    return pools, shuf, meta
-
-
 def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
                           chance=PST_CHANCE, crit=PST_CRIT):
     """Package the per-condition :func:`run_probselect` output into the saved grid dict
     (the exact schema the Arm-F driver wrote to ``exp10_probselect.npy``) plus the
-    retrospective criteria F1--F5.
+    retrospective synthetic criteria F1--F4.
 
     Criteria recorded retrospectively in legacy analysis notes:
       F1  device learns the train phase             (dfa_homeo mean >= ``crit``);
       F2  depth is needed                            (homeo CI lower > shallow CI upper);
       F3  eligibility is necessary                   (no-trace mean <= 0.60);
       F4  both reported test metrics exceed chance  (choose-A and avoid-B CI lower > 0.5);
-      F5  the real-EEG loop beats its shuffled control (EEG CI lower > shuf CI upper) --
-          only evaluated when the EEG pools are available.
     """
     from .stats import bootstrap_ci
     finals = {c: res_by_cond[c]["finals"] for c in conds}
@@ -386,9 +354,6 @@ def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
         "F3": bool(finals["no_trace"].mean() <= 0.60),
         "F4": bool(bootstrap_ci(cA)[0] > 0.5 and bootstrap_ci(aB)[0] > 0.5),
     }
-    if "dfa_homeo_eeg" in finals and "dfa_homeo_shuf" in finals:
-        criteria["F5"] = bool(ci["dfa_homeo_eeg"][0] > ci["dfa_homeo_shuf"][1])
-
     return {
         "finals": finals, "curves": curves,
         "tests": {k: {"chooseA": v[0], "avoidB": v[1]} for k, v in tests.items()},
@@ -402,16 +367,12 @@ def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
 
 def main(argv=None):
     """Full-scale reproduction CLI for the probabilistic-selection grid (Experiment 10,
-    Arm F): the Frank PST -- the SAME task the ds003474 EEG subjects performed --
-    learned by the deep all-local device-trace agent, lifting the RL result off the XOR toy.
+    Arm F): the synthetic Frank PST learned by the deep all-local device-trace agent.
 
     ``python -m mrl_trace.probselect [--probselect] [--full|--quick]``
     ``--full`` = 20 seeds x 5000 trials (published); ``--quick`` = 6 seeds x 1000 trials.
-    Each condition (mode/reward source) is an independent cell run across a process Pool.
-    The synthetic conditions always run; the two real-EEG conditions run only when the
-    cached EEG reward pools (``/tmp/eeg_pools.npy``, built by the EEG-capstone driver from
-    ds003474) are present -- absent, they are skipped with a printed note, exactly as the
-    original Arm-F driver degrades.  Writes ``exp10_probselect.npy`` under ``data/results``.
+    Each synthetic condition is an independent cell run across a process Pool. Writes
+    ``exp10_probselect.npy`` under ``data/results``.
     """
     import argparse
     import os
@@ -430,18 +391,13 @@ def main(argv=None):
     seeds = 6 if a.quick else PST_SEEDS
     trials = 1000 if a.quick else PST_TRIALS
 
-    pools, shuf, meta = _load_eeg_pools()
+    meta = {"scope": "synthetic Frank-style probabilistic selection"}
     conds = ["shallow", "dfa", "dfa_homeo", "no_trace"]
-    if pools is not None:
-        conds += ["dfa_homeo_eeg", "dfa_homeo_shuf"]
-    else:
-        print("  (no EEG reward pools at /tmp/eeg_pools.npy -- skipping the real-EEG "
-              "conditions; run the EEG-capstone driver first to include them)")
 
     print(f"Probabilistic-selection task | {seeds} seeds, {trials} trials, "
           f"H={PST_HP['H']}, n_bits={PST_HP['n_bits']}")
 
-    worker = partial(run_probselect, trials=trials, seeds=seeds, pools=pools, shuf=shuf)
+    worker = partial(run_probselect, trials=trials, seeds=seeds)
     with Pool(processes=min(len(conds), (os.cpu_count() or 4) - 1)) as pool:
         res = pool.map(worker, conds)
     res_by_cond = {r["cond"]: r for r in res}

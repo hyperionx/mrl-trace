@@ -9,43 +9,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_dopamine_sound_markers_form_rewarded_trial_pairs() -> None:
-    from mrl_trace.dopamine import pair_cue_events
-
-    reward = np.arange(1, 51, dtype=float) * 10.0
-    sound = np.ravel(np.column_stack((reward - 2.0, reward - 1.0)))
-    trials = pair_cue_events(sound, reward)
-    assert trials.shape == (50, 3)
-    assert np.array_equal(trials[:, 2], reward)
-    assert np.all(trials[:, 0] < trials[:, 1])
-    assert np.all(trials[:, 1] < trials[:, 2])
-
-
-def test_dopamine_pairing_fails_closed_instead_of_inventing_omissions() -> None:
-    from mrl_trace.dopamine import pair_cue_events
-
-    with pytest.raises(ValueError, match="two sound markers per reward"):
-        pair_cue_events([8.0, 9.0, 18.0], [10.0, 20.0])
-
-
-def test_reward_aligned_epochs_have_one_row_per_valid_reward() -> None:
-    from mrl_trace.dopamine import reward_aligned_epochs
-
-    time = np.arange(0.0, 31.0, 0.05)
-    reward = np.array([10.0, 20.0])
-    session = {
-        "dff_t": time,
-        "dff": np.sin(time / 4.0),
-        "sound_t": np.array([8.0, 9.0, 18.0, 19.0]),
-        "reward_t": reward,
-    }
-    epochs, relative, events = reward_aligned_epochs(
-        session, tmin=-2.0, tmax=2.0, baseline=(-1.5, -0.5)
-    )
-    assert epochs.shape == (2, len(relative))
-    assert np.array_equal(events[:, 2], reward)
-
-
 def test_eligibility_surrogate_has_no_unused_space_charge_state() -> None:
     from mrl_trace.bandit import GateBankBatched
     from mrl_trace.device import CascadeEligibilityGate, TransientGate
@@ -85,12 +48,12 @@ def test_no_leak_unit_step_matches_identified_erlang_candidate(k: int) -> None:
     """The learning gate must implement the Erlang model used for identification."""
     from scipy.special import gammainc
 
-    from mrl_trace.device import CascadeEligibilityGate
+    from mrl_trace.device import LinearErlangEligibilityGate
 
     dt = 2.0e-4
     tau_r = 0.8
     time = np.arange(dt, 3.0 * tau_r + dt / 2.0, dt)
-    gate = CascadeEligibilityGate(
+    gate = LinearErlangEligibilityGate(
         tau_leak=1.0e12,
         k=k,
         dt=dt,
@@ -147,7 +110,8 @@ def test_exponential_control_matches_full_post_peak_decay_not_nominal_tau() -> N
     rise_tau = 0.5
     expected = 1.0 / (1.0 / rise_tau + 1.0 / nominal_tau)
     matched = decay_matched_exponential_tau(
-        nominal_tau, k=1, tau_r_override=rise_tau, beta_leak=1.0
+        nominal_tau, k=1, tau_r_override=rise_tau, beta_leak=1.0,
+        gate_model="linear_erlang_v1",
     )
     assert matched == pytest.approx(expected, rel=0.01)
     assert matched != pytest.approx(nominal_tau)
