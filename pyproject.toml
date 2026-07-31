@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mrl-trace"
 version = "0.1.0"
-description = "Memristive device transients as hardware eligibility traces for local reinforcement learning"
+description = "Measured memristive transients and approximate eligibility surrogates for local reinforcement learning"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

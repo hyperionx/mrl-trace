@@ -1,18 +1,18 @@
-"""Frank probabilistic-selection task (PST) -- a canonical RL paradigm for the device trace.
+"""Frank-style probabilistic-selection task (PST).
 
 The XOR bandit of :mod:`mrl_trace.deep` is the minimal test of depth, but a toy.
-This module replaces it with the probabilistic-selection task of Frank, Seeberger &
-O'Reilly (2004) -- the SAME task the ds003474 EEG subjects performed -- so the device-trace
-agent learns a real, canonical reinforcement-learning paradigm whose behaviour can be
-compared to human data from the same dataset.
+This module adapts the probabilistic-selection task of Frank, Seeberger & O'Reilly
+(2004) for the repository's spiking policy. Choose-A and avoid-B are task metrics;
+exceeding chance on both is not by itself a biological signature or evidence that the
+model is a dopaminergic learner.
 
 Task. Six stimuli A--F in three TRAIN pairs with fixed reinforcement probabilities
   AB: A 80% / B 20%;  CD: C 70% / D 30%;  EF: E 60% / F 40%.
 Each trial shows one pair (the two stimuli in randomised left/right slots); the agent picks
 a slot; the chosen slot's stimulus is rewarded stochastically at its probability. Learning
 the better stimulus of each pair requires integrating reward OVER TRIALS -- the regime an
-eligibility trace exists for. After training, a no-feedback TEST phase shows novel
-recombinations; the two canonical Frank measures are
+eligibility trace exists for. After training, a no-feedback test phase shows novel
+recombinations; the two reported task measures are
   choose-A : tendency to pick A (the most-positive stimulus) against C,D,E,F -- learning
              from POSITIVE feedback;
   avoid-B  : tendency to avoid B (the most-negative stimulus) against C,D,E,F -- learning
@@ -35,7 +35,21 @@ from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 from .deep import _relax_gate
 
-__all__ = ["PST_PROBS", "make_codes", "train_pst", "reward_rate"]
+__all__ = ["PST_PROBS", "make_codes", "train_pst", "reward_rate",
+           "PST_METHOD_PROVENANCE"]
+
+PST_METHOD_PROVENANCE = {
+    "status": "adapted",
+    "established_basis": ["Frank probabilistic-selection task"],
+    "repository_adaptation": (
+        "The task is encoded for a spiking policy trained with the repository's "
+        "proposed local update."
+    ),
+    "claim_limit": (
+        "Choose-A and avoid-B are behavioural task metrics, not a sufficient "
+        "dopaminergic or biological signature."
+    ),
+}
 
 #: Reinforcement probability of each stimulus (Frank PST).
 PST_PROBS = {"A": 0.8, "B": 0.2, "C": 0.7, "D": 0.3, "E": 0.6, "F": 0.4}
@@ -261,7 +275,7 @@ def reward_rate(rewards, window=200):
 # Pool over conditions, computes bootstrap CIs + the retrospective F1--F5 criteria,
 # and writes ``exp10_probselect.npy`` under ``data/results/`` for full-cache mode.
 # Provenance: experiments/05_biological_grounding/probabilistic_selection.py
-# (Arm F), retrospective criteria F1--F5 in the associated protocol file.
+# (Arm F), with retrospective criteria F1--F5 from legacy analysis notes.
 # =============================================================================
 
 #: Fixed hyper-parameters of the published Arm-F grid (H, code width, retention,
@@ -285,7 +299,7 @@ def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf
 
     ``cond`` selects mode + reward source (semantics as in the Arm-F driver):
       ``shallow``          one trained device-synapse layer (the linearly-separable
-                           control; solves the task -- headline Frank signature);
+                           control; solves this Frank-style task implementation);
       ``dfa``              deep, DFA feedback, no homeostasis;
       ``dfa_homeo``        deep, DFA feedback + homeostatic stabiliser (the device agent);
       ``no_trace``         eligibility zeroed (device-necessity control);
@@ -319,7 +333,10 @@ def run_probselect(cond, *, trials=PST_TRIALS, seeds=PST_SEEDS, pools=None, shuf
     win = 200
     csum = np.cumsum(rew, axis=1)
     curve = ((csum[:, win:] - csum[:, :-win]) / win).mean(0)
-    return {"cond": cond, "finals": finals, "curve": curve, "chooseA": cA, "avoidB": aB}
+    return {"cond": cond, "finals": finals, "curve": curve, "chooseA": cA,
+            "avoidB": aB, "retention_definition": "deliberately_swept",
+            "method_provenance": PST_METHOD_PROVENANCE,
+            "hyperparameter_provenance": "pilot_tuned_then_frozen"}
 
 
 def _load_eeg_pools(cache="/tmp/eeg_pools.npy", seed=0):
@@ -346,11 +363,11 @@ def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
     (the exact schema the Arm-F driver wrote to ``exp10_probselect.npy``) plus the
     retrospective criteria F1--F5.
 
-    Retrospectively recorded criteria (from the associated protocol file):
+    Criteria recorded retrospectively in legacy analysis notes:
       F1  device learns the train phase             (dfa_homeo mean >= ``crit``);
       F2  depth is needed                            (homeo CI lower > shallow CI upper);
       F3  eligibility is necessary                   (no-trace mean <= 0.60);
-      F4  Frank asymmetry present                    (choose-A and avoid-B CI lower > 0.5);
+      F4  both reported test metrics exceed chance  (choose-A and avoid-B CI lower > 0.5);
       F5  the real-EEG loop beats its shuffled control (EEG CI lower > shuf CI upper) --
           only evaluated when the EEG pools are available.
     """
@@ -377,7 +394,9 @@ def _summarize_probselect(res_by_cond, conds, *, seeds, trials, meta, hp,
         "tests": {k: {"chooseA": v[0], "avoidB": v[1]} for k, v in tests.items()},
         "ci": {k: ci[k] for k in ci}, "meta": meta, "HP": hp,
         "seeds": seeds, "trials": trials, "chance": chance, "crit": crit,
-        "criteria": criteria,
+        "retention_definition": "deliberately_swept",
+        "criteria": criteria, "method_provenance": PST_METHOD_PROVENANCE,
+        "hyperparameter_provenance": "pilot_tuned_then_frozen",
     }
 
 
@@ -435,7 +454,7 @@ def main(argv=None):
         lo, hi = grid["ci"][c]
         print(f"  {c:22s} {grid['finals'][c].mean():.3f} [{lo:.3f}, {hi:.3f}]")
 
-    print("\n=== test-phase Frank signature (choose-A / avoid-B) ===")
+    print("\n=== Frank-style test-phase metrics (choose-A / avoid-B) ===")
     for c, t in grid["tests"].items():
         cA, aB = t["chooseA"], t["avoidB"]
         clo, chi = bootstrap_ci(cA); alo, ahi = bootstrap_ci(aB)

@@ -173,8 +173,6 @@ cython_debug/
 # External/raw datasets and ad-hoc simulation caches are local by default.
 data/*
 !data/SiO_x-multistate-data.mat
-!data/publication/
-!data/publication/**
 !data/device_model/
 data/device_model/*
 !data/device_model/README.md
@@ -186,8 +184,8 @@ data/device_model/gold_export/*.mat
 !data/device_model/ito_relaxation_measurements.npz
 !data/device_model/kww_final.json
 
-# Curated publication archives above are intentionally tracked. Large external
-# recordings and mutable result caches remain ignored.
+# Small measured fixtures may be tracked explicitly; full raw recordings, generated
+# publication arrays and mutable result caches remain ignored.
 data/results/
 data/raw/
 data/dandi/

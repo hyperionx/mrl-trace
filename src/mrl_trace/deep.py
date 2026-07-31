@@ -1,7 +1,7 @@
 """Deep (two-layer) all-local spiking RL with a physical eligibility trace -- Arm D.
 
-The bandit (:mod:`mrl_trace.bandit`) and the sequential T-maze
-(:mod:`mrl_trace.maze`) both train a SINGLE layer of device synapses with a
+The bandit (:mod:`mrl_trace.bandit`) and the shallow delayed-reward tasks
+(:mod:`mrl_trace.maze`) train a SINGLE layer of device synapses with a
 single global reward scalar ``(R - b)``. That is enough when the policy is linearly
 separable in the state lines, but it has two known limits:
 
@@ -26,25 +26,27 @@ SPATIAL-credit pathway varies, so the comparison isolates structural credit:
 - ``dfa``     : deep, BOTH layers trained by DIRECT FEEDBACK ALIGNMENT -- a per-neuron
                 learning signal broadcast to the hidden layer through a FIXED RANDOM
                 feedback matrix (no W2 transpose, no gradient transport). All-local.
-- ``no_trace``: deep DFA with the eligibility zeroed (device-necessity control).
+- ``no_trace``: deep DFA with eligibility zeroed; homeostasis is an independent
+  argument and must be held fixed for a trace-only necessity control.
 
 Every condition uses the same :class:`GateBankBatched` device physics for eligibility,
 the same signed leak-dominant coincidence drive, and ``dw = eta * L * e`` updates,
-where ``L`` is the (global or per-layer) learning signal. See
-the legacy deep-local protocol file for the retrospective analysis criteria.
+where ``L`` is the (global or per-layer) learning signal. The criteria retained in
+legacy analysis notes were retrospective protocol records.
 """
 from __future__ import annotations
 
 import numpy as np
 
 from .bandit import GateBankBatched, W_INIT, W_MAX
-from .device import K_STAGES
+from .device import K_STAGES, decay_matched_exponential_tau
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 
 __all__ = ["xor_inputs", "train_deep", "reward_rate",
            "run_dms", "final_rate", "run_dms_all",
-           "run_deep_local", "run_deep_dms", "run_array_scale", "main"]
+           "run_deep_local", "run_deep_dms", "run_array_scale", "main",
+           "DEEP_METHOD_PROVENANCE"]
 
 
 def _relax_gate(bank, n_relax, stride, rem):
@@ -442,12 +444,30 @@ def reward_rate(rewards, window=100):
 # rather than in the selectivity module.
 # =============================================================================
 
-# Frozen operating points (pilot-tuned; see the retrospective protocol docs). Kept at
+# Frozen operating points (pilot-tuned, then frozen). Kept at
 # module scope so both the ``run_*`` cores and ``main()`` share one source of truth.
 DEEP_LOCAL_HP = dict(H=32, tau_leak=10.0, D=5.0, eta=0.2, eta_hidden=3.0,
                      fb_scale=2.0, bias_o=0.3, V=1.5, sigma0=0.15, sigma1=0.05)
 DEEP_LOCAL_HOMEO = 0.1                 # frozen homeostatic strength (pilot-tuned)
-DEEP_LOCAL_MODES = ["shallow", "elm", "global", "dfa", "no_trace", "dfa_homeo"]
+DEEP_LOCAL_MODES = [
+    "shallow", "elm", "global", "dfa", "no_trace", "no_trace_homeo", "dfa_homeo",
+]
+
+DEEP_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": [
+        "direct feedback alignment", "firing-rate homeostasis",
+        "three-factor reward modulation",
+    ],
+    "repository_adaptation": (
+        "Fixed random feedback, the cascade eligibility surrogate and multiplicative "
+        "homeostasis are combined in one local reinforcement-learning update."
+    ),
+    "claim_limit": (
+        "The cited component methods do not establish this composite update; "
+        "homeostasis parameters were pilot-tuned and then frozen."
+    ),
+}
 
 # Experiment 13 operating point at the VERIFIED homeostasis regime (H=32 clean:
 # homeo=0.1 -> 1.00 [1.00,1.00] vs homeo=0 -> 0.58 [0.47,0.69], gap +0.42, disjoint;
@@ -462,6 +482,7 @@ DEEP_DMS_CONDS = [
     ("dfa_homeo_nodist", "dfa", DEEP_DMS_HOMEO, False),
     ("dfa_homeo_dist",   "dfa", DEEP_DMS_HOMEO, True),
     ("dfa_dist",         "dfa", 0.0,   True),
+    ("no_trace_homeo_dist", "no_trace", DEEP_DMS_HOMEO, True),
     ("no_trace_dist",    "no_trace", 0.0, True),
 ]
 
@@ -487,8 +508,8 @@ ARRAY_SCALE_EARLY_STOP = {
 # The device band-pass trace (sigmoidal rise + tau_leak decay) is peaked at a
 # non-zero lag, so with tau_leak tuned to the sample->reward interval it credits the
 # sample over the later distractor -- the closed-loop, standard-task form of the
-# interval-selectivity result (manuscript S=3.96 vs 0.48). The abstract single-
-# exponential trace (matched tau) is monotone/recency-weighted (the informative
+# interval-selectivity construction. The abstract single-exponential trace
+# (matched tau) is monotone/recency-weighted (the informative
 # comparison); the no-trace control must fail.
 # ----------------------------------------------------------------------------
 def _relax(bank, n_steps, dt, stride=10):
@@ -531,8 +552,9 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
     The eligibility gate integrates continuously across the whole trial; the surviving
     trace at the reward instant (``t=G``) is what the three-factor rule commits.
 
-    ``cond`` is ``"device"`` (trap-discharge :class:`GateBankBatched`), ``"abstract"``
-    (matched-tau single exponential :class:`AbstractTrace`, the recency-trace baseline)
+    ``cond`` is ``"device"`` (historical single-rate cascade
+    :class:`GateBankBatched`) or ``"abstract"`` (post-peak decay-matched single
+    exponential :class:`AbstractTrace`, the recency-trace baseline)
     or ``"no_trace"`` (eligibility zeroed, the necessity control).
 
     Optimised by stepping the LIF + gate only during the two ACTIVE windows (sample,
@@ -545,7 +567,10 @@ def run_dms(cond, *, B=20, tau_leak=1.5, G=5.0, t_distract=4.0, trials=2500,
     S, A = 3, 2                       # [sample0, sample1, distractor] x {A, B}
     DIST_LINE = 2
     if cond == "abstract":
-        bank = AbstractTrace(B, S, A, tau_elig=tau_leak, dt=dt)
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=V, k=device_k, tau_r_override=tau_r_override,
+        )
+        bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
         bank = GateBankBatched(B, S, A, tau_leak=tau_leak, V=V, dt=dt,
                                k=device_k, tau_r_override=tau_r_override)
@@ -644,6 +669,9 @@ def _summarize_dms(raw, conds, *, trials, chance, crit, tau_leak=1.5, G=5.0,
             "finals": {k: v for k, v in finals.items()},
             "ci": ci, "seeds": B, "trials": trials, "chance": chance, "crit": crit,
             "tau_leak": tau_leak, "G": G, "t_distract": t_distract,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": DEEP_METHOD_PROVENANCE,
+            "hyperparameter_provenance": "pilot_tuned_then_frozen",
             "criteria": {"H1": h1, "H2": h2, "H3": h3, "K1": k1}}
 
 
@@ -681,18 +709,18 @@ def run_dms_all(*, seeds=20, trials=2500, conds=("device", "abstract", "no_trace
 # ----------------------------------------------------------------------------
 # Experiment 7: deep all-local RL with a physical eligibility trace (XOR).
 #
-# Five conditions isolate the SPATIAL-credit pathway (the device trace is the
-# temporal factor in all of them); "dfa_homeo" adds the local homeostatic activity
-# regulator (the diagnosed fix for the DFA policy-collapse bimodality). See
-# The legacy deep-local protocol records the operating point and criteria.
+# Conditions isolate the spatial-credit pathway and include both a trace-only ablation
+# (``no_trace_homeo`` keeps homeostasis fixed) and the historical double ablation
+# (``no_trace`` also omits homeostasis). ``dfa_homeo`` adds the local homeostatic
+# regulator. Legacy criteria were recorded retrospectively.
 # ----------------------------------------------------------------------------
 def _deep_local_one(mode, *, seeds, trials, hp, homeo):
     """Run one deep-local condition over all seeds. Returns (mode, finals[seeds],
-    curve[trials-100]). "dfa_homeo" is the dfa rule plus the homeostatic regulator."""
+    curve[trials-100]). The ``*_homeo`` modes keep the same frozen regulator."""
     kw = dict(hp)
     train_mode = mode
-    if mode == "dfa_homeo":                           # dfa rule + homeostatic regulator
-        train_mode = "dfa"
+    if mode in {"dfa_homeo", "no_trace_homeo"}:
+        train_mode = "dfa" if mode == "dfa_homeo" else "no_trace"
         kw["homeo"] = homeo
     rew = train_deep(mode=train_mode, B=seeds, trials=trials, seed0=0, **kw)
     finals = reward_rate(rew, window=200)             # per-seed final reward rate
@@ -710,7 +738,7 @@ def _summarize_deep_local(res, *, seeds, trials, hp, homeo, chance, crit,
     bootstrap CIs and the retrospective criteria C1-C4/C6/K4.
 
     C1 shallow fails (<= chance+0.10) -> depth is genuinely required
-    C2 no-trace fails                 -> eligibility necessity
+    C2 no-trace-with-homeostasis fails -> eligibility necessity
     C3 DFA learns (>= crit)
     C4 DFA > global (CIs disjoint)    -> per-neuron credit beats the global scalar
     C6 homeostasis fix (>= crit and DFA+homeo CI-above DFA)
@@ -723,13 +751,16 @@ def _summarize_deep_local(res, *, seeds, trials, hp, homeo, chance, crit,
     ci = {m: bootstrap_ci(finals[m]) for m in modes}
     dfa, homeo_f = finals["dfa"], finals["dfa_homeo"]
     c1 = bool(finals["shallow"].mean() <= chance + 0.10)
-    c2 = bool(finals["no_trace"].mean() <= chance + 0.10)
+    c2 = bool(finals["no_trace_homeo"].mean() <= chance + 0.10)
     c3 = bool(dfa.mean() >= crit)
     c4 = bool(ci["dfa"][0] > ci["global"][1])            # CI gap excludes 0
     k4 = bool(finals["elm"].mean() >= crit)              # ELM shortcut solves it?
     c6 = bool(homeo_f.mean() >= crit and ci["dfa_homeo"][0] > ci["dfa"][1])
     return {"finals": finals, "curves": curves, "ci": ci, "HP": hp, "homeo": homeo,
             "seeds": seeds, "trials": trials, "chance": chance, "crit": crit,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": DEEP_METHOD_PROVENANCE,
+            "hyperparameter_provenance": "pilot_tuned_then_frozen",
             "criteria": {"C1": c1, "C2": c2, "C3": c3, "C4": c4, "C6": c6, "K4": k4}}
 
 
@@ -791,7 +822,7 @@ def _summarize_deep_dms(raw, conds, *, seeds, trials, hp, homeo, t_distract,
     CIs, seeds-solved robustness, and the retrospective H1-H3/K1.
 
     H1 full stack survives the distractor:   dfa_homeo+dist >= crit
-    H2 eligibility necessary:                no_trace+dist <= chance + 0.10
+    H2 eligibility necessary:                no_trace+homeostasis+dist <= chance + 0.10
     H3 homeostasis still helps under interference: dfa_homeo+dist > dfa+dist (CIs)
     K1 (kill) dfa_homeo+dist collapses to chance -> the convergence claim fails
     """
@@ -805,7 +836,7 @@ def _summarize_deep_dms(raw, conds, *, seeds, trials, hp, homeo, t_distract,
         curves[label] = rw.mean(0)                      # seed-mean per trial
         seeds_solved[label] = int((f >= crit).sum())    # per-seed robustness
     fh = finals["dfa_homeo_dist"].mean()
-    nt = finals["no_trace_dist"].mean()
+    nt = finals["no_trace_homeo_dist"].mean()
     h1 = bool(fh >= crit)
     h2 = bool(nt <= chance + 0.10)
     h3 = bool(ci["dfa_homeo_dist"][0] > ci["dfa_dist"][1])   # homeostasis helps (CIs disjoint)
@@ -814,6 +845,9 @@ def _summarize_deep_dms(raw, conds, *, seeds, trials, hp, homeo, t_distract,
             "curves": curves, "seeds_solved": seeds_solved,
             "HP": hp, "homeo": homeo, "seeds": seeds, "trials": trials,
             "t_distract": t_distract, "chance": chance, "crit": crit,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": DEEP_METHOD_PROVENANCE,
+            "hyperparameter_provenance": "pilot_tuned_then_frozen",
             "criteria": {"H1": h1, "H2": h2, "H3": h3, "K1": k1}}
 
 
@@ -855,12 +889,12 @@ def run_deep_dms(*, seeds=20, trials=3000, hp=None, homeo=DEEP_DMS_HOMEO,
 
 
 # ----------------------------------------------------------------------------
-# Experiment 14: array-scale feasibility of the all-local rule under measured faults.
+# Experiment 14: array-scale feasibility under specified simulated nonidealities.
 #
 # Does the device-eligibility three-factor rule (DFA + homeostasis, the deep all-local
-# stack) keep learning as the network grows (hidden width H) AND as the synaptic array
-# is corrupted by the SAME measured SiO_x non-idealities (stuck-off + lognormal D2D +
-# optionally the Poole-Frenkel I-V nonlinearity)? PASS = beats its own no-trace control
+# stack) keep learning as the network grows (hidden width H) AND under the specified
+# SiO_x-inspired stress models (stuck-off + lognormal D2D + optionally the
+# Poole-Frenkel I-V nonlinearity)? PASS = beats its own no-trace control
 # with disjoint CIs AND > 0.75. KILL: K1 large-H fails at p=0 (no width composition);
 # K2 high-p collapses everywhere; K3 control learns (artefact).
 #
@@ -913,8 +947,20 @@ def _array_scale_reduce(results, H_grid, p_grid, *, seeds, sigma_g, sigma_g_on,
     else:
         faults = ("stuck-off + D2D({:g},{:g}) [PF excluded: read-path nonideality]"
                   .format(sigma_g_on if sigma_g_on is not None else sigma_g, sigma_g))
+    included = ["stuck_off", "sampled_device_to_device_lognormal"]
+    if pf_on:
+        included.append("poole_frenkel_iv_nonlinearity")
     return {"H": list(H_grid), "p": list(p_grid), "grid": grid, "ctrl": cgrid,
-            "faults": faults, "seeds": seeds, "trials": trials, "passes": passes}
+            "faults": faults, "seeds": seeds, "trials": trials, "passes": passes,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": DEEP_METHOD_PROVENANCE,
+            "fault_scope": {
+                "status": "adapted",
+                "included_nonidealities": included,
+                "excluded_nonidealities": ["line_resistance", "read_noise",
+                    "temporal_noise", "drift", "programming_update_noise"],
+                "claim_limit": "Simulation stress model, not a comprehensive measured fault prior.",
+            }}
 
 
 def run_array_scale(*, H_grid=(8, 32, 128, 512), p_grid=(0.0, 0.05, 0.20, 0.50),

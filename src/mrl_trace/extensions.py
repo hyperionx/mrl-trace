@@ -1,81 +1,52 @@
-r"""Chapter-8 cross-cutting studies: how the two slow device primitives (the
-eligibility trace and eligibility-magnitude homeostasis) compose, and how far the
-device-native reinforcement-learning story stretches.
+r"""Chapter-8 exploratory simulations of retention-dependent learning.
 
-Four experiments live here, all built on the validated ``GateBankBatched`` cascade
-gate (Section 5.3.2 physics) and the sequential ``LinearTrack``/``TMaze`` MDPs -- none
-re-derives a primitive, each COMPOSES the ones already in :mod:`mrl_trace.bandit`,
-:mod:`mrl_trace.maze`, :mod:`mrl_trace.neurons` and
-:mod:`mrl_trace.learning`:
+The studies here compose the repository's ``GateBankBatched`` cascade surrogate with
+``LinearTrack`` or the historical ``DelayedCuedChoice`` task.  They do not identify
+additional device physics:
 
-- **Experiment 19 -- multi-timescale credit from the MEASURED retention spread**
-  (:func:`run_multitimescale`).  A real ITO array does not have one ``tau_leak``, it has
-  a DISTRIBUTION of them (the n=53 measured trap-discharge fits, median ~1.3 s, range
-  0.56--7.7 s).  A mixed-delay task needs more than one credit horizon, so the measured
-  retention POPULATION is the resource, not the defect.  NAIVELY the spread fails (the
-  cascade readout magnitude scales ~linearly with ``tau_leak``, so a shared learning rate
-  starves the short-tau synapses); a LOCAL, activity-driven, tau-BLIND eligibility-
-  magnitude homeostasis -- the same CLASS of set-point negative feedback used for
-  firing-rate stability -- equalises the gain and recovers full multi-timescale credit,
-  matching a tau-aware oracle.  One material, two slow primitives interacting.
+- Experiment 19 asks whether direct held-bias retention fits can span a constructed
+  two-horizon task after a proposed local eligibility-magnitude normalisation.
+- Experiment 21 varies the simulated leak-shape exponent.  Its threshold crossings
+  are internally generated retention--delay sensitivities, not physical laws or
+  independent empirical holdouts.
+- Experiment 22 explores whether one simulated trace state can be read for both
+  working-memory and eligibility roles.  It does not establish a hardware requirement.
+- Experiment 23 explores a proposed trace-coupled actor--critic construction.  Its
+  discount is deliberately tied to the swept retention constant; that identification
+  is a modelling choice, not a measured material relation.
 
-- **Experiment 21 -- beta_leak sensitivity of the load-bearing results**
-  (:func:`run_beta_sensitivity`).  Every learning result integrates a SINGLE-RATE
-  (mono-exponential, ``beta_leak=1``) leak; the device measures a DISPERSIVE
-  (stretched-exponential) discharge, ``beta_leak ~ 0.85`` field-free (~0.54 held-bias).
-  This re-runs the two load-bearing results -- the ``D_max ~= k*tau_leak`` law and the
-  exp19 multi-timescale coupling -- at the measured ``beta_leak`` and checks they survive,
-  closing the "measured 0.85 but simulated 1.0" gap.
-
-- **Experiment 22 -- WM and STC on one device: a null on the two-site hypothesis**
-  (:func:`run_wm_stc`, :func:`wm_isolated`).  Working memory (inference-time cue hold) and
-  STC/eligibility (learning-time credit) occupy different brain sites.  Does a device
-  circuit therefore NEED two co-fabricated traces, or can one serve both?  A DMS task with
-  a stimulus-free WM delay and a distractor-bearing reward gap shows a SINGLE shared trace
-  does not collapse (97.6% at 6 s, 100% at 10 s -- the retention the rule already runs at),
-  so two devices are NOT needed; the credit role, not the hold, sets the required retention.
-
-- **Experiment 23 -- a device-native temporal-difference / actor-critic rule**
-  (:func:`run_device_td`).  REINFORCE-with-baseline (``dw = eta (R-b) e``) is extended to a
-  value-based learner that BOOTSTRAPS.  Two device-native identifications make it native:
-  the discount ``gamma = exp(-step_dur/tau_leak)`` is the trap-discharge decay over one
-  step (one material constant sets both trace lifetime and RL horizon), and the critic
-  ``V(s)`` is a second on-device weight bank read by the same crossbar product.  The TD
-  error then gates the same signed three-factor write, ``dw = eta delta e``.
-
-Every ``run_*`` core is SERIAL, import-light and returns plain arrays/dicts with no file
-I/O -- notebooks call them in-kernel at a small seed/trial count.  The module-level
-:func:`main` is the full-scale driver: it may parallelise the coarse axis with a
-``multiprocessing.Pool`` (it runs as ``python -m``), computes the bootstrap CIs and the
-retrospectively recorded criteria, and writes each grid via :func:`mrl_trace.paths.save_result`.
-NOTE: reversal learning (Experiment 18) is a ``train`` variant and lives in
-:mod:`mrl_trace.bandit`, not here.
+Every ``run_*`` core is serial, import-light and returns plain arrays/dicts with no file
+I/O.  :func:`main` is the full-grid driver and records bootstrap intervals plus
+descriptive thresholds.  Reversal learning lives in :mod:`mrl_trace.bandit`.
 """
 from __future__ import annotations
 
 import math
+import warnings
 from functools import partial
 
 import numpy as np
 
 from .bandit import GateBankBatched, W_INIT, W_MAX
-from .maze import LinearTrack, TMaze, train_sequential, reward_rate
+from .maze import DelayedCuedChoice, LinearTrack, train_sequential, reward_rate
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 from .stats import bootstrap_ci
 
 __all__ = [
-    # exp19 -- multi-timescale credit from the measured retention spread
+    # exp19 -- multi-timescale credit using direct held-bias retention fits
     "load_measured_tau",
     "run_multitimescale",
     # exp22 -- WM + STC on one device (null on two-site hypothesis)
     "run_wm_stc",
     "wm_isolated",
-    # exp23 -- device-native TD / actor-critic
+    # exp23 -- proposed trace-coupled TD / actor-critic
     "run_device_td",
-    # exp21 -- beta_leak sensitivity of the load-bearing results
+    # exp21 -- beta_leak sensitivity of simulated retention effects
     "dmax_law",
     "run_beta_sensitivity",
+    "EXTENSIONS_METHOD_PROVENANCE",
+    "RETENTION_DELAY_METHOD_PROVENANCE",
     # shared constants
     "CHANCE",
     "CRIT",
@@ -92,32 +63,56 @@ __all__ = [
 CHANCE = 0.5
 CRIT = 0.75
 
-#: exp22 measured ITO retention band (s), swept in the WM/STC study.
+#: exp22 physically motivated retention grid (s), deliberately swept in WM/STC.
+#: Some values bracket rather than reproduce the direct held-bias fit population.
 TAU_BAND = [0.8, 1.3, 2.0, 3.6, 6.0, 10.0]
 
-#: exp21 dispersion exponents: single-rate / field-free operating / held-bias stress.
+#: exp21 illustrative dispersion exponents: single-rate / near-zero-field / held-bias fits.
 BETAS = [1.0, 0.85, 0.54]
 
-#: exp23 on-device critic value store: one scalar V per state (a second weight bank).
+EXTENSIONS_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": ["three-factor reward modulation", "eligibility traces"],
+    "repository_adaptation": (
+        "Exploratory task constructions combining the cascade eligibility surrogate "
+        "with retention sweeps and local normalisation."
+    ),
+    "claim_limit": (
+        "Simulation evidence only; it does not identify new device physics or establish "
+        "algorithmic superiority."
+    ),
+}
+
+RETENTION_DELAY_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": ["eligibility-trace decay"],
+    "repository_adaptation": (
+        "Threshold crossings generated by sweeping the same retention parameter that "
+        "controls the simulated eligibility decay."
+    ),
+    "claim_limit": (
+        "An internally generated task-specific design curve, not a physical law or an "
+        "independent validation against empirical retention values."
+    ),
+}
+
+#: exp23 simulated critic value store: one scalar V per state.
 V_INIT = 0.0
 V_MAX = 1.0
 ETA_V = 0.1                    # critic learning rate (value TD update)
 
 
 # =============================================================================
-# Experiment 19 -- multi-timescale credit from the MEASURED trap-discharge spread
+# Experiment 19 -- multi-timescale credit using direct held-bias retention fits
 #
-# The scaling/fault studies (exp14) treat device-to-device spread in retention as a
-# NON-IDEALITY to tolerate. This inverts that: the measured retention DISTRIBUTION is
-# the resource for a mixed-delay task, not the defect. No competitor can claim this --
-# a single-time-constant cell (Ming 2026) has one horizon; an engineered cascade of
-# traces (Ralambomihanta 2025) DESIGNS the spread; here the spread is MEASURED, drawn
-# from the device population itself.
+# This constructed mixed-delay task tests how a fitted retention distribution behaves
+# inside the surrogate.  It does not demonstrate array programming or device-level
+# replication, and it is not a controlled comparison with other hardware.
 # =============================================================================
 
 
-def load_measured_tau(*, allow_proxy=False):
-    """The n=53 measured ITO trap-discharge time constants (s), from the device population.
+def load_measured_tau(*, allow_proxy=False, archive=None):
+    """Direct held-bias ITO trap-discharge fits (s), with schema validation.
 
     Reads ``data/device_model/ito_decay_data.npz`` (the measured trap-discharge fits;
     resolved through :func:`mrl_trace.paths.device_model_dir` so it works from any
@@ -125,27 +120,43 @@ def load_measured_tau(*, allow_proxy=False):
     explicit ``allow_proxy`` escape hatch exists only for exploratory development and
     is forbidden by publication-scale notebook execution.
     """
+    from pathlib import Path
     from . import paths
+    archive_path = (paths.device_model_dir() / "ito_decay_data.npz"
+                    if archive is None else Path(archive))
     try:
-        d = np.load(paths.device_model_dir() / "ito_decay_data.npz")
-        raw = np.asarray(d["tau"], float)
-        # The curated fit archive also retains failed/unconstrained optimisations.
-        # Keep only the documented measured discharge population used by the study;
-        # otherwise two runaway fits (10^3--10^15 s) dominate the assignment/grid.
-        valid = np.isfinite(raw) & (raw >= 0.56) & (raw <= 7.72)
-        tau = raw[valid]
-        if tau.size >= 10:
-            rejected = int(raw.size - tau.size)
-            return tau, ("measured (ito_decay_data.npz, valid n=%d, rejected fits=%d)"
-                         % (tau.size, rejected))
-    except Exception as exc:                                  # noqa: BLE001
+        d = np.load(archive_path)
+    except (FileNotFoundError, OSError) as exc:
         if not allow_proxy:
             raise FileNotFoundError(
                 "measured ITO retention archive unavailable; run "
                 "`experiments/06_nmi_predictive_linkage.ipynb` with measured ITO data"
             ) from exc
+    else:
+        with d:
+            definition = str(np.asarray(d.get("retention_definition", "")).item())
+            schema = int(np.asarray(d.get("analysis_schema_version", 0)).item())
+            if definition != "direct_held_bias_tau" or schema < 2:
+                raise ValueError(
+                    "ITO retention archive is legacy or transformed; expected "
+                    "analysis_schema_version>=2 and direct_held_bias_tau"
+                )
+            if "tau" not in d:
+                raise ValueError("ITO retention archive has no direct tau array")
+            raw = np.asarray(d["tau"], float)
+        # The curated fit archive also retains failed/unconstrained optimisations.
+        # Keep only the documented measured discharge population used by the study;
+        # otherwise runaway fits dominate the assignment grid.
+        valid = np.isfinite(raw) & (raw >= 0.56) & (raw <= 7.72)
+        tau = raw[valid]
+        if tau.size >= 10:
+            rejected = int(raw.size - tau.size)
+            return tau, ("direct held-bias fits (ito_decay_data.npz, valid n=%d, rejected fits=%d)"
+                         % (tau.size, rejected))
+        if not allow_proxy:
+            raise ValueError("measured ITO retention archive contains fewer than 10 valid fits")
     if not allow_proxy:
-        raise ValueError("measured ITO retention archive contains fewer than 10 valid fits")
+        raise FileNotFoundError("measured ITO retention archive is unavailable")
     # Explicit development-only proxy; publication mode never calls this branch.
     rng = np.random.default_rng(0)
     tau = np.clip(np.exp(rng.normal(np.log(1.34), 0.6, 53)), 0.56, 7.72)
@@ -176,8 +187,8 @@ def _assign_tau(kind, S, A, tau_pool, short_states, long_states, rng):
     hetero_measured : draw from the measured pool, then route the LONGER draws to the
                       long-delay states and the SHORTER draws to the short-delay states
                       (a programmed array can place a device of the right retention at the
-                      right crosspoint; the claim under test is that the measured spread
-                      SPANS both horizons).
+        right crosspoint in this simulated assignment; the question is whether the
+        fitted spread spans both modelled horizons).
     best_single     : a single homogeneous tau (value passed in tau_pool as a scalar).
     mean_tau        : homogeneous mean of the pool.
     """
@@ -215,11 +226,11 @@ def run_multitimescale(kind, *, S=4, A=2, B=20, tau_arg=None, D_short=2.0, D_lon
         sits a long lag before reward, beyond a short trace's reach (survival diagnostic), so
         a too-SHORT tau has no surviving eligibility at reward. -> short tau FAILS.
 
-    No single homogeneous tau serves both: short tau loses the long group (reach), long tau
-    loses the short group (distractor). A heterogeneous population -- short-tau synapses on the
-    short-group states, long-tau synapses on the long-group states -- serves both, which is
-    exactly what the measured ITO retention SPREAD supplies. The reward-prediction-error gate
-    and signed rule are unchanged from the base bandit.
+    The construction is intended to make one homogeneous tau insufficient: short tau can lose
+    the long group, whereas long tau can lose the distractor-bearing short group.  A simulated
+    heterogeneous assignment is then evaluated using the direct held-bias fit distribution.
+    This is a task-specific model test, not a demonstration of a fabricated routed array.  The
+    reward-prediction-error gate and custom signed rule are unchanged from the base bandit.
 
     ``kind`` selects the tau assignment ("hetero_measured", "best_single", "mean_tau",
     "no_trace"); ``elig_norm`` selects the eligibility-magnitude normalisation
@@ -395,17 +406,19 @@ def run_wm_stc(tau_wm, tau_stc, *, B=20, trials=2500, dt=5e-3, D_wm=3.0, D_stc=3
                cue_dur=0.3, distract_dur=0.3, in_rate=200.0, eta=0.2, V=1.5,
                sigma=0.15, ltd=LTD_BIAS, seed0=0, shared_device=False):
     """DMS with a WM delay before the decision (Experiment 22). SERIAL. Returns per-seed
-    reward ``(B, trials)``.
+    reward ``(B, trials)``.  ``stc`` is retained as a historical variable/API label for
+    the seconds-scale eligibility state; it is not an implementation of biological
+    synaptic tagging and capture.
 
     Two-device (default): a dedicated cue-hold device (tau_wm, positive drive) supplies the
     WM readout, and a separate eligibility device (tau_stc, exp12 loop) supplies STC credit.
 
-    shared_device=True -- the GENUINE one-device collapse test: a SINGLE trace bank per
-    (sample,action) synapse must serve BOTH roles. It receives ONE drive (the STC pre*post
-    coincidence, LTD-biased, as physics dictates -- a synapse's trace is set by its own
-    plasticity), and the WM decision must read cue identity off that SAME trace. There is
-    no separate positive cue-hold trace, because one device is one physical state. tau_wm is
-    ignored (only tau_stc, the single device's retention, applies)."""
+    ``shared_device=True`` is the repository's one-state construction: one trace bank per
+    (sample, action) synapse receives the custom signed STC coincidence, and the WM decision
+    reads cue identity from that same simulated state. There is no separate positive cue-hold
+    trace. ``tau_wm`` is ignored; only deliberately swept ``tau_stc`` applies. This tests the
+    implemented readout and is not a general statement about physical one-device circuits.
+    """
     rng = np.random.default_rng(seed0)
     S, A = 3, 2; DIST = 2
     stc = GateBankBatched(B, S, A, tau_leak=tau_stc, V=V, dt=dt)   # eligibility device
@@ -505,7 +518,7 @@ def _wm_fmt(vec):
 
 
 # =============================================================================
-# Experiment 23 -- a device-native temporal-difference / actor-critic rule
+# Experiment 23 -- a proposed trace-coupled temporal-difference / actor-critic rule
 # =============================================================================
 
 
@@ -537,12 +550,11 @@ def run_device_td(scheme, *, L=5, B=20, episodes=2000, dt=5e-3, D=2.0, step_dur=
     forward/back; the eligibility gate is snapshotted per decision so each step carries
     its own trace. REINFORCE gates every step's write by the whole-episode return minus a
     scalar baseline; TD gates step ``t`` by the bootstrapped error
-    ``delta_t = r_t + gamma V(s_{t+1}) - V(s_t)`` with an on-device critic ``V(s)``. The
-    device-native discount ``gamma = exp(-step_dur / tau_leak)`` is the trap-discharge decay
-    over one decision step -- the SAME tau_leak that sets the eligibility trace, so one
-    material constant sets both the trace lifetime and the RL horizon. ``td_no_homeo`` is the
-    same TD rule with the eligibility-magnitude homeostasis of exp19 removed (the deadly-triad
-    check); ``no_trace`` zeroes eligibility (device-necessity control, anchors chance).
+    ``delta_t = r_t + gamma V(s_{t+1}) - V(s_t)`` with a simulated critic ``V(s)``. The
+    repository-specific discount ``gamma = exp(-step_dur / tau_leak)`` deliberately ties the
+    actor--critic horizon to the same swept parameter used by the eligibility surrogate.  This
+    is a modelling construction rather than a measured material relationship. ``td_no_homeo``
+    removes the exp19 eligibility-magnitude homeostasis; ``no_trace`` zeroes eligibility.
     """
     rng = np.random.default_rng(seed0)
     env = LinearTrack(L=L)
@@ -550,10 +562,10 @@ def run_device_td(scheme, *, L=5, B=20, episodes=2000, dt=5e-3, D=2.0, step_dur=
     bidx = np.arange(B)
     bank = GateBankBatched(B, S, A, tau_leak=tau_leak, V=V, dt=dt)
     w = np.full((B, S, A), W_INIT)                 # policy weights (actor)
-    Vval = np.full((B, S), V_INIT)                 # on-device critic V(s), per state
+    Vval = np.full((B, S), V_INIT)                 # simulated critic V(s), per state
     baseline = np.full(B, 1.0 / A)                 # scalar baseline (reinforce only)
     ghom = np.ones((B, S, A))                      # eligibility-magnitude homeostasis EMA
-    # device-native discount: the trap-discharge decay over one decision step
+    # Proposed modelling tie: use the swept trace constant for the discount too.
     gamma = math.exp(-step_dur / tau_leak)
     n_cue = int(round(0.3 / dt))
     reward_lag = int(round(D / dt))
@@ -614,10 +626,10 @@ def run_device_td(scheme, *, L=5, B=20, episodes=2000, dt=5e-3, D=2.0, step_dur=
             w = np.clip(w + adv[:, None, None] * e_rew, 0.0, W_MAX)
             baseline += 0.02 * (R - baseline)
         else:
-            # device-native TD(lambda) / actor-critic, swept along the trajectory. r_t = R
+            # Repository-specific TD(lambda) / actor-critic, swept along the trajectory. r_t = R
             # only on the terminal (goal) step, 0 otherwise; V(s_{t+1}) bootstraps (0 past
-            # the terminal step). The SAME tau_leak sets both the trace and the discount
-            # gamma. delta_t gates the per-decision write, masked to that decision's state.
+            # the terminal step). The implementation deliberately uses tau_leak for both
+            # trace and discount; delta_t gates the per-decision write by state.
             if scheme == "td_actor_critic":
                 ghom += (np.abs(e_rew) - ghom) / tau_homeo
                 e_use = e_rew / np.maximum(ghom, 1e-3)
@@ -656,18 +668,22 @@ def _td_worker(spec):
 
 
 # =============================================================================
-# Experiment 21 -- beta_leak sensitivity of the two load-bearing learning results
+# Experiment 21 -- beta_leak sensitivity of two simulated learning results
 #
-# All learning results integrate a SINGLE-RATE (mono-exponential, beta_leak=1) leak; the
-# device measures a DISPERSIVE (stretched-exponential) discharge, beta_leak ~ 0.85 field-free
-# (~0.54 held-bias). Re-run the D_max ~= k*tau law (A) and the exp19 coupling (B) at the
-# measured beta_leak and check they survive -- closing the "measured 0.85 but simulated 1.0" gap.
+# This varies beta_leak in (A) an internally generated retention--delay threshold curve
+# and (B) the exp19 coupling.  The tau axis controls the simulated decay by construction,
+# so the fitted slope is descriptive and must not be interpreted as a physical law or
+# independent empirical validation.
 # =============================================================================
 
 
 def _dmax_one(job):
-    """One (tau, beta) cell: D_max = largest delay whose reward rate >= criterion.
-    Top-level so it pickles for the Pool."""
+    """One simulation cell: largest tested delay whose reward rate meets criterion.
+
+    The historical ``D_max`` key is retained for archive compatibility.  The task is
+    :class:`DelayedCuedChoice`, a one-choice delayed contextual decision rather than
+    trajectory-level sequential credit assignment.  Top-level so it pickles for the Pool.
+    """
     if len(job) == 5:
         tau, beta, seeds, episodes, delays = job
         dt = 5e-3
@@ -676,7 +692,7 @@ def _dmax_one(job):
     crit = 0.75
     dmax = 0.0
     for D in delays:
-        env = TMaze(L=3, A_goal=2)
+        env = DelayedCuedChoice(L=3, A_goal=2)
         r = train_sequential(env, B=seeds, tau_leak=tau, D=D, episodes=episodes,
                              beta_leak=beta, seed0=0, dt=dt)
         if reward_rate(r, window=100).mean() >= crit:
@@ -687,12 +703,22 @@ def _dmax_one(job):
 
 
 def dmax_law(betas, seeds, episodes, pool=None):
-    """(A) The D_max ~= k*tau_leak scaling law re-fit at each beta_leak (Experiment 21).
+    """Historical API for a simulated retention--delay threshold sensitivity.
 
-    For each beta, sweep the retention taus x delays, take D_max = largest delay whose reward
-    rate reaches criterion, and origin-fit D_max = k*tau (report k, R^2, monotonicity). A
-    ``multiprocessing.Pool`` may be passed to parallelise the (tau, beta) cells; otherwise the
-    cells run serially. Returns a dict keyed by beta."""
+    For each beta, sweep retention and delay on :class:`DelayedCuedChoice`, take the
+    largest tested delay whose reward rate reaches criterion, and retain the historical
+    origin-fit slope, R-squared and monotonicity fields for archive compatibility.  Since
+    tau directly controls decay in the same simulation, these are descriptive design-curve
+    summaries, not a physical law or a held-out test.  A ``multiprocessing.Pool`` may
+    parallelise cells. Returns a dict keyed by beta.
+    """
+    warnings.warn(
+        "dmax_law is a deprecated historical delayed-choice sensitivity, not a "
+        "physical law; use mrl_trace.maze.run_retention_delay_curve for the "
+        "multi-decision simulation design curve.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     taus = [1.0, 2.0, 5.0, 10.0, 20.0]
     delays = [2, 5, 10, 20, 40, 80, 160]
     jobs = [(tau, b, seeds, episodes, delays) for b in betas for tau in taus]
@@ -703,12 +729,20 @@ def dmax_law(betas, seeds, episodes, pool=None):
     out = {}
     for b in betas:
         d = np.array([res[(t, b)] for t in taus]); t = np.array(taus)
-        # origin fit D_max = k*tau
+        # Historical origin-fit summary; descriptive only, not a physical-law fit.
         k = float(np.sum(t * d) / np.sum(t * t)) if np.sum(t * t) > 0 else float("nan")
         pred = k * t
         ss = 1 - np.sum((d - pred) ** 2) / max(np.sum((d - d.mean()) ** 2), 1e-9)
         mono = bool(np.all(np.diff(d) >= -1e-9))
-        out[b] = {"taus": taus, "dmax": d.tolist(), "k": k, "r2": float(ss), "monotone": mono}
+        out[b] = {
+            "taus": taus,
+            "dmax": d.tolist(),
+            "k": k,
+            "r2": float(ss),
+            "monotone": mono,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": dict(RETENTION_DELAY_METHOD_PROVENANCE),
+        }
     return out
 
 
@@ -736,25 +770,26 @@ def _exp19_at_beta(job):
 
 
 def run_beta_sensitivity(*, betas=BETAS, seeds=12, episodes=2000, trials=3000, pool=None):
-    """The full beta_leak sensitivity study (Experiment 21): (A) the D_max law and (B) the
-    exp19 multi-timescale coupling, each re-run at every ``beta`` in ``betas``, plus the
-    retrospective S1/S2 criteria evaluated at the field-free operating beta=0.85. SERIAL by
-    default; pass a ``multiprocessing.Pool`` to parallelise the coarse cells (main() does).
+    """Leak-shape sensitivity study for two repository simulations (Experiment 21).
 
-    RECORDED ANALYSIS CRITERIA (retrospective; reported as-is):
-      S1  D_max law SURVIVES at beta=0.85: still monotone D_max(tau), origin-fit R^2 >= 0.90,
-          and the slope k within ~30% of the beta=1 value (the law is not a single-rate artefact).
+    Part A is the internally generated retention--delay threshold curve and part B is
+    the exp19 multi-timescale construction.  Descriptive S1/S2 thresholds are evaluated
+    at beta=0.85; this value is not treated here as a validated field-free operating
+    point.  Serial by default; a ``multiprocessing.Pool`` can parallelise coarse cells.
+
+    DESCRIPTIVE ANALYSIS THRESHOLDS:
+      S1  The threshold curve remains monotone at beta=0.85, with origin-fit R^2 >= 0.90
+          and the diagnostic slope within ~30% of the beta=1 value.
       S2  exp19 coupling SURVIVES at beta=0.85: hetero+homeo still >= 0.75 AND still
           disjoint-above naive hetero (the multi-timescale homeostasis is not a single-rate
           artefact).
-      S3  (DESCRIPTIVE) report the same at the strongly-dispersive held-bias beta=0.54 -- the
-          stress point, expected to degrade (that regime is NOT the operating point).
+      S3  Report the same at beta=0.54 as an additional sensitivity point.
 
-    Returns the grid dict (dmax law per beta, exp19 per beta, betas, seeds, tau_source, S1/S2).
+    Returns the grid dict using historical ``dmax`` field names for compatibility.
     """
     tau_pool, src = load_measured_tau()
 
-    # (A) D_max ~= k*tau at each beta_leak
+    # (A) internally generated retention--delay curve at each beta_leak
     dmax = dmax_law(betas, seeds, episodes, pool=pool)
 
     # (B) exp19 multi-timescale + homeostasis at each beta_leak. Rank the best single tau
@@ -770,7 +805,7 @@ def run_beta_sensitivity(*, betas=BETAS, seeds=12, episodes=2000, trials=3000, p
     else:
         e19res = dict(_exp19_at_beta(j) for j in jobs)
 
-    # criteria at the OPERATING beta=0.85 (present only if 0.85 is in the sweep)
+    # Descriptive thresholds at beta=0.85 (present only if included in the sweep).
     s1 = s2 = None
     if 1.0 in dmax and 0.85 in dmax:
         k1, k085 = dmax[1.0]["k"], dmax[0.85]["k"]
@@ -783,7 +818,12 @@ def run_beta_sensitivity(*, betas=BETAS, seeds=12, episodes=2000, trials=3000, p
     return {"dmax": dmax, "exp19": {str(b): e19res[b] for b in betas},
             "betas": list(betas), "seeds": seeds, "tau_source": src,
             "best_tau": best_tau,
-            "criteria": {"S1": s1, "S2": s2}}
+            "criteria": {"S1": s1, "S2": s2},
+            "retention_definition": {
+                "dmax": "deliberately_swept",
+                "exp19": "direct_held_bias_tau",
+            },
+            "method_provenance": dict(RETENTION_DELAY_METHOD_PROVENANCE)}
 
 
 # =============================================================================
@@ -795,8 +835,8 @@ def main(argv=None):
     """Full-scale reproduction CLI for the Chapter-8 extension grids (writes ``data/results``).
 
     ``python -m mrl_trace.extensions [--exp19] [--exp21] [--exp22] [--exp23] [--quick|--full]``
-    With no experiment flag, runs all four. ``--full`` = published seed count; ``--quick`` =
-    a fast few-seed smoke run. Each writes its published grid filename via
+    With no experiment flag, runs all four. ``--full`` uses the full configured seed count;
+    ``--quick`` is a fast few-seed smoke run. Each writes its established archive filename via
     :func:`mrl_trace.paths.save_result`:
       exp19 -> exp19_multitimescale.npy   exp21 -> exp21_beta_sensitivity.npy
       exp22 -> exp22_wm_stc.npy           exp23 -> exp23_device_td.npy
@@ -811,13 +851,13 @@ def main(argv=None):
     ap.add_argument("--exp19", action="store_true",
                     help="multi-timescale credit from measured spread -> exp19_multitimescale.npy")
     ap.add_argument("--exp21", action="store_true",
-                    help="beta_leak sensitivity of load-bearing results -> exp21_beta_sensitivity.npy")
+                    help="beta_leak sensitivity of simulated results -> exp21_beta_sensitivity.npy")
     ap.add_argument("--exp22", action="store_true",
                     help="WM+STC one-vs-two-device null test -> exp22_wm_stc.npy")
     ap.add_argument("--exp23", action="store_true",
-                    help="device-native TD/actor-critic -> exp23_device_td.npy")
+                    help="proposed trace-coupled TD/actor-critic -> exp23_device_td.npy")
     ap.add_argument("--quick", action="store_true", help="fast few-seed smoke run")
-    ap.add_argument("--full", action="store_true", help="published seed count (default)")
+    ap.add_argument("--full", action="store_true", help="full configured seed count (default)")
     a = ap.parse_args(argv)
     run_all = not (a.exp19 or a.exp21 or a.exp22 or a.exp23)
     quick = a.quick
@@ -838,10 +878,10 @@ def main(argv=None):
         print(f"  tau source = {src}; median={np.median(tau_pool):.2f}s mean={mean_tau:.2f}s "
               f"range=[{tau_pool.min():.2f},{tau_pool.max():.2f}]s")
         print(f"  mixed-delay bandit: S={S} (half D_short={D_short}s, half D_long={D_long}s), A={A}")
-        print(f"  {B} seeds, {trials} trials; chance={CHANCE} crit={CRIT}; retrospective H1-H5/K1\n")
+        print(f"  {B} seeds, {trials} trials; chance={CHANCE} crit={CRIT}; descriptive H1-H5/K1\n")
         # (label, kind, elig_norm). Headline: hetero_raw (naive spread, fails) vs hetero_homeo
         # (spread + eligibility-magnitude homeostasis, recovers) vs hetero_oracle (tau-aware
-        # upper bound). best_single is the strongest single-horizon device; no_trace the control.
+        # upper bound). best_single is selected from the stated homogeneous-tau grid.
         conds = [
             ("hetero_raw",    "hetero_measured", "none"),
             ("hetero_homeo",  "hetero_measured", "homeo"),
@@ -879,28 +919,27 @@ def main(argv=None):
         h2 = (hom_m >= CRIT) and (ci["hetero_homeo"][0] > ci["hetero_raw"][1])
         # H3: tau-blind homeostasis matches OR exceeds the tau-aware oracle (within a small margin).
         h3 = ci["hetero_homeo"][0] >= ci["hetero_oracle"][0] - 0.05
-        # H4: the homeostasis-equipped spread beats the best single tau (the multi-timescale payoff).
+        # H4: descriptive disjoint-interval comparison with the best grid-searched single tau.
         h4 = ci["hetero_homeo"][0] > ci["best_single"][1]
         # H5: trace necessary.
         h5 = nt_m <= CHANCE + 0.10
         k1c = hom_m <= raw_m                                 # kill: homeostasis fails to help
-        print("\n  === retrospective criteria ===")
+        print("\n  === descriptive simulation thresholds ===")
         print(f"  H1 naive measured spread fails the two-horizon task (< {CRIT}): "
               f"{'PASS' if h1 else 'FAIL'} ({raw_m:.3f})")
         print(f"  H2 eligibility HOMEOSTASIS recovers it (>= {CRIT}, disjoint > naive): "
               f"{'PASS' if h2 else 'FAIL'} ({hom_m:.3f} vs naive {raw_m:.3f})")
         print(f"  H3 tau-blind homeostasis matches tau-aware oracle (CIs overlap): "
               f"{'PASS' if h3 else 'FAIL'} ({hom_m:.3f} vs oracle {ora_m:.3f})")
-        print(f"  H4 homeostasis-spread beats best single tau (disjoint): "
+        print(f"  H4 homeostasis-spread is higher than best single tau (disjoint intervals): "
               f"{'PASS' if h4 else 'FAIL'} ({hom_m:.3f} vs best {bst_m:.3f})")
         print(f"  H5 no-trace fails (<= {CHANCE+0.10:.2f}): {'PASS' if h5 else 'FAIL'} ({nt_m:.3f})")
         print(f"  K1 homeostasis does NOT help (homeo <= naive): {'KILL' if k1c else 'ok'} "
               f"({hom_m:.3f} vs {raw_m:.3f})")
-        print("\n  HEADLINE: the measured tau spread is unusable raw (the tau-dependent eligibility")
-        print("  gain starves the short-tau synapses), but a LOCAL, ACTIVITY-DRIVEN eligibility-")
-        print("  magnitude homeostasis -- the same CLASS of set-point negative feedback used for")
-        print("  firing-rate stability, here on eligibility amplitude and BLIND to tau -- equalises")
-        print("  the gain and recovers full multi-timescale credit, matching the tau-aware oracle.")
+        print("\n  INTERPRETATION: within this constructed simulation, the direct-fit tau sample")
+        print("  performs differently with and without the proposed local eligibility-amplitude")
+        print("  normalisation. The oracle is an internal tau-aware reference, not a hardware")
+        print("  implementation or a general algorithmic comparison.")
 
         paths.save_result("exp19_multitimescale.npy",
                           {"finals": {k: finals[k] for k in labels}, "ci": ci, "grp": grp,
@@ -908,6 +947,8 @@ def main(argv=None):
                            "mean_tau": mean_tau, "S": S, "A": A, "D_short": D_short,
                            "D_long": D_long, "seeds": B, "trials": trials, "chance": CHANCE,
                            "crit": CRIT,
+                           "retention_definition": "direct_held_bias_tau",
+                           "method_provenance": dict(EXTENSIONS_METHOD_PROVENANCE),
                            "criteria": {"H1": bool(h1), "H2": bool(h2), "H3": bool(h3),
                                         "H4": bool(h4), "H5": bool(h5), "K1": bool(k1c)}})
         print("\n  wrote exp19_multitimescale.npy")
@@ -918,16 +959,17 @@ def main(argv=None):
         episodes = 1200 if quick else 2000
         trials = 1500 if quick else 3000
         betas = [1.0, 0.85] if quick else BETAS
-        print("\nExperiment 21: beta_leak sensitivity of the load-bearing learning results")
-        print(f"  betas={betas}; D_max law + exp19 coupling; {seeds} seeds\n")
+        print("\nExperiment 21: beta_leak sensitivity of two simulated results")
+        print(f"  betas={betas}; retention-delay curve + exp19 coupling; {seeds} seeds\n")
         with Pool(nproc) as pool:
-            print("  (A) D_max ~= k*tau at each beta_leak ...")
+            print("  (A) internally generated retention-delay threshold curve ...")
             grid = run_beta_sensitivity(betas=betas, seeds=seeds, episodes=episodes,
                                         trials=trials, pool=pool)
         dmax = grid["dmax"]
         for b in betas:
             r = dmax[b]
-            print(f"    beta={b:.2f}: D_max={r['dmax']}  k={r['k']:.1f}  R2={r['r2']:.3f}  "
+            print(f"    beta={b:.2f}: threshold-delays={r['dmax']}  diagnostic-k={r['k']:.1f}  "
+                  f"R2={r['r2']:.3f}  "
                   f"monotone={r['monotone']}")
         print(f"\n  best_single tau = {grid['best_tau']}s")
         print("  (B) exp19 multi-timescale + homeostasis at each beta_leak ...")
@@ -937,37 +979,41 @@ def main(argv=None):
                   f"hetero_homeo={r['hetero_homeo'][0]:.3f} {r['hetero_homeo'][1]}  "
                   f"best_single={r['best_single'][0]:.3f}")
         s1, s2 = grid["criteria"]["S1"], grid["criteria"]["S2"]
-        print("\n  === retrospective criteria (at the field-free operating beta=0.85) ===")
+        print("\n  === descriptive thresholds (beta=0.85 sensitivity point) ===")
         if s1 is not None:
             k1v, k085 = dmax[1.0]["k"], dmax[0.85]["k"]
-            print(f"  S1 D_max law survives (monotone, R2>=0.90, k within 30% of beta=1): "
+            print(f"  S1 threshold curve remains monotone (R2>=0.90, k within 30% of beta=1): "
                   f"{'PASS' if s1 else 'FAIL'} (k {k1v:.1f}->{k085:.1f}, R2={dmax[0.85]['r2']:.3f})")
         if s2 is not None:
             h = grid["exp19"]["0.85"]
-            print(f"  S2 exp19 coupling survives (homeo>=0.75 & disjoint above naive): "
+            print(f"  S2 exp19 coupling meets threshold (homeo>=0.75 & disjoint above naive): "
                   f"{'PASS' if s2 else 'FAIL'} (homeo {h['hetero_homeo'][0]:.3f} vs naive "
                   f"{h['hetero_raw'][0]:.3f})")
-        print(f"  S3 (descriptive) held-bias beta=0.54 reported above as the stress point.")
+        print(f"  S3 beta=0.54 is reported above as an additional sensitivity point.")
         # store beta keys as strings for the dmax dict too (npy pickle round-trips fine either way)
         paths.save_result("exp21_beta_sensitivity.npy",
                           {"dmax": grid["dmax"], "exp19": grid["exp19"],
                            "betas": grid["betas"], "seeds": grid["seeds"],
                            "tau_source": grid["tau_source"],
+                           "retention_definition": grid["retention_definition"],
+                           "method_provenance": grid["method_provenance"],
                            "criteria": {"S1": bool(s1) if s1 is not None else None,
                                         "S2": bool(s2) if s2 is not None else None}})
         print("\n  wrote exp21_beta_sensitivity.npy")
-        print("  HEADLINE: if S1+S2 PASS, the single-rate (beta=1) idealisation is SAFE at the")
-        print("  measured field-free beta~0.85 -- the learning results are not artefacts of assuming")
-        print("  a mono-exponential discharge, closing the 'measured 0.85 but simulated 1.0' gap.")
+        print("  INTERPRETATION: these cells quantify sensitivity to beta_leak inside the model.")
+        print("  They do not validate field-free operation or turn the retention-delay curve into")
+        print("  an independently established physical relationship.")
 
     # ---------------- Experiment 22 ----------------
     if a.exp22 or run_all:
         B = 8 if quick else 20
         trials = 800 if quick else 2500
         t0 = time.time()
-        print(f"\n=== exp22: WM + STC on the device trace -- one-vs-two-device NULL test, DMS "
+        print(f"\n=== exp22: WM + STC on the cascade surrogate -- one-vs-two-state test, DMS "
               f"chance 50% | B={B}, trials={trials}, bootstrap 95% CI ===")
         res = {"B": B, "trials": trials, "tau_band": TAU_BAND, "chance": 0.5,
+               "retention_definition": "deliberately_swept",
+               "method_provenance": dict(EXTENSIONS_METHOD_PROVENANCE),
                "wm": {}, "stc": {}, "two_cotuned": {}, "one_shared": {}, "two_device": {}}
 
         print("\n[diag 1] WM isolated (weights frozen correct) -- perf vs tau_wm:")
@@ -1012,17 +1058,17 @@ def main(argv=None):
         t0 = time.time()
         # LinearTrack corridor: reward = goal reached. The credit-assignment difficulty grows
         # with corridor length L, since the goal reward must propagate back across L forward/back
-        # decisions. Retrospectively recorded question: does the bootstrapped device-native TD rule
-        # overtake the whole-episode-return REINFORCE baseline once L is long enough that the
-        # scalar baseline fails, and is that crossover monotone in L? A no-trace control anchors
-        # the chance (random-walk goal-reach) level at each L.
+        # decisions. The descriptive question is whether the proposed trace-coupled TD rule
+        # differs from the whole-episode-return REINFORCE baseline as L changes. A no-trace
+        # control gives the random-walk goal-reach level at each L. Results are descriptive
+        # comparisons between repository-specific implementations.
         L_GRID = [5, 10, 15, 20]
         crit = 0.75
         schemes = ["no_trace", "reinforce", "td_actor_critic", "td_no_homeo"]
-        print(f"\n=== exp23 device-native TD/actor-critic vs REINFORCE | LinearTrack L-sweep "
+        print(f"\n=== exp23 trace-coupled TD/actor-critic vs REINFORCE | LinearTrack L-sweep "
               f"{L_GRID} | B={B}, {episodes} ep ===")
-        print(f"    device-native discount gamma = exp(-step_dur/tau_leak); critic V(s) "
-              f"on-device; delta gates the three-factor write. Reward = goal reached.")
+        print(f"    proposed discount tie gamma = exp(-step_dur/tau_leak); simulated critic V(s); "
+              f"delta gates the three-factor write. Reward = goal reached.")
         # every (scheme, L) cell is independent and seed-deterministic -> dispatch across a Pool
         specs = [(sc, L, B, episodes) for L in L_GRID for sc in schemes]
         n_proc = min(len(specs), max(1, (os.cpu_count() or 4) - 2))
@@ -1032,7 +1078,9 @@ def main(argv=None):
         cells = {key: (fin, curve, V) for key, fin, curve, V in out}
 
         res = {"B": B, "episodes": episodes, "L_grid": L_GRID, "crit": crit,
-               "tau_leak": 10.0, "final": {}, "curve": {}}
+               "tau_leak": 10.0, "retention_definition": "deliberately_swept",
+               "method_provenance": dict(EXTENSIONS_METHOD_PROVENANCE),
+               "final": {}, "curve": {}}
         for (sc, L), (fin, curve, V) in cells.items():
             res["final"][(sc, L)] = fin
             res["curve"][(sc, L)] = curve
@@ -1056,11 +1104,11 @@ def main(argv=None):
                 cross = L; break
         print("\n  === verdict ===")
         if cross is not None:
-            print(f"  device-native TD overtakes REINFORCE (disjoint CIs) at L>={cross}: "
-                  f"bootstrapping helps once credit must bridge that many decisions.")
+            print(f"  trace-coupled TD has higher observed performance with disjoint bootstrap "
+                  f"intervals at L>={cross} on this exact simulation grid.")
         else:
-            print(f"  no crossover in L{L_GRID}: device-native TD machinery runs and is stable "
-                  f"but does not beat the return-baseline REINFORCE on this task/range (honest negative).")
+            print(f"  no disjoint-interval crossover in L{L_GRID}; this exact grid provides no "
+                  f"evidence of a performance difference favouring trace-coupled TD.")
 
         paths.save_result("exp23_device_td.npy", res)
         print(f"\n  wrote exp23_device_td.npy  (total {time.time()-t0:.0f}s)")

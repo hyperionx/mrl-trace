@@ -1,4 +1,4 @@
-r"""Device non-idealities for array-scale feasibility studies.
+r"""Specified device-nonideality stress models for array-scale feasibility.
 
 A faithful NumPy port of the fault catalogue in the nonideality-aware-mnn-training
 package (``awarememristor.crossbar.nonidealities``), the engine the SiO_x
@@ -6,7 +6,9 @@ inference/homeostasis work trains against. We port the *semantics* rather than i
 the package, because that package is TensorFlow and this learning rule is pure NumPy
 (running a TF op inside the per-timestep spiking loop would be both a heavy dependency
 and prohibitively slow). The fault definitions below mirror those classes exactly, so
-the device-fault prior is shared with the inference work while the learning stays here.
+the selected parameterisations are shared with the inference work.  They are not a
+complete measured fault prior: line resistance, read/temporal noise, drift and
+programming-update noise are not simulated here.
 
 Two physical classes (after Joksas et al.):
 
@@ -199,9 +201,22 @@ class FaultStack:
     Linearity-preserving faults are applied first (they set the conductance), then the
     PF nonlinearity maps that conductance through the device I--V law.
     """
-    def __init__(self, faults, seed=0):
+    def __init__(self, faults, seed=0, *, included=()):
         self.faults = faults
         self.rng = np.random.default_rng(seed)
+        self.included = tuple(included)
+
+    def describe(self):
+        """Return the exact scope of this stress model."""
+        return {
+            "status": "adapted",
+            "included_nonidealities": list(self.included),
+            "excluded_nonidealities": [
+                "line_resistance", "read_noise", "temporal_noise", "drift",
+                "programming_update_noise",
+            ],
+            "claim_limit": "Simulation stress model, not a comprehensive measured fault prior.",
+        }
 
     def __call__(self, W):
         G = W
@@ -251,7 +266,14 @@ def siox_fault_stack(p_stuck=0.0, sigma_g=0.5, sigma_g_on=None, pf_on=False,
         faults.append(IVNonlinearityPF(SIOX_PF["slopes"], SIOX_PF["intercepts"],
                                        SIOX_PF["res_cov"], k_V=SIOX_PF["k_V"], V_read=0.25,
                                        G_on=G_on, G_off=G_off))
-    return FaultStack(faults, seed=seed)
+    included = []
+    if p_stuck > 0:
+        included.append(f"stuck_{stuck_kind}")
+    if sigma_g > 0 or s_on > 0:
+        included.append("sampled_device_to_device_lognormal")
+    if pf_on:
+        included.append("poole_frenkel_iv_nonlinearity")
+    return FaultStack(faults, seed=seed, included=included)
 
 
 class _MazeFaultStack:
@@ -289,6 +311,20 @@ class _MazeFaultStack:
         self.pf = pf
         self.w_max, self.G_off, self.G_on = w_max, G_off, G_on
         self.rng = np.random.default_rng(seed)
+
+    def describe(self):
+        included = [type(f).__name__ for f in self.gc_faults]
+        if self.pf is not None:
+            included.append(type(self.pf).__name__)
+        return {
+            "status": "adapted",
+            "included_nonidealities": included,
+            "excluded_nonidealities": [
+                "line_resistance", "read_noise", "temporal_noise", "drift",
+                "programming_update_noise",
+            ],
+            "claim_limit": "Simulation stress model, not a comprehensive measured fault prior.",
+        }
 
     def __call__(self, W):
         # Map the non-negative maze weight into the SiO_x conductance window, apply ALL faults

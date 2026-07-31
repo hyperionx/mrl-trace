@@ -1,61 +1,125 @@
-"""Sequential distal-reward navigation -- a multi-step MDP credit-assignment task.
+"""Delayed-reward tasks and explicitly scoped comparator adaptations.
 
-The contextual bandit of :mod:`mrl_trace.bandit` is *one step*: a single
-state, a single action, an immediate (delayed) reward. That isolates the
-credit-assignment mechanism but invites the criticism that it is an
-association lookup rather than reinforcement learning of a *policy over a
-trajectory*. This module adds the missing piece: a sequential Markov decision
-process in which an action must be chosen at each of several states, reward is
-delivered only at the goal after the whole trajectory, and credit must propagate
-back across the intermediate steps. That backward propagation across a trajectory
-is exactly what an eligibility trace exists for, so it is the natural task on which
-to test a device-supplied trace and to benchmark it against an algorithmic one.
+The primary environment in this module is :class:`ActionSequenceTrack`: four
+observable states require the action sequence ``(0, 1, 1, 0)`` and reward is
+delivered only after every decision is correct.  Thus every transition is a learned
+decision and a constant-action policy cannot solve the task.
 
-Two environments, sharing one training harness:
+The historical ``TMaze`` implementation is retained as
+:class:`DelayedCuedChoice`.  Its stem advances automatically and only its junction
+choice is learned, so it is a delayed contextual decision, not trajectory-level
+policy learning.  ``TMaze`` remains a deprecated compatibility name.
 
-- :class:`LinearTrack` -- an ``L``-state corridor; at each state the agent chooses
-  FORWARD (towards the goal) or BACK. Only a sustained forward run reaches the goal
-  and is rewarded, after an action--reward delay ``D`` measured from the goal-entry
-  action. A greedy one-step rule cannot short-circuit it: every step must carry the
-  right action, so the policy spans the trajectory.
-- :class:`TMaze` -- an ``L``-state stem leading to a junction with ``A_goal`` arms,
-  exactly one rewarded. The agent advances along the stem, then selects an arm; the
-  reward (after delay ``D``) is contingent on the arm matching the rewarded arm for
-  the episode's cue. This makes the learned object a state->action *policy* whose
-  final decision sits a whole trajectory away from the reward.
-
-DESIGN NOTE (anti-"relabelled bandit"). The eligibility trace is accumulated
-*online across the steps of an episode* on the synapses actually used at each state,
-and a single delayed goal reward gates the surviving trace into all of them at once.
-Because the device relaxes over seconds while steps are taken over the same
-timescale, the trace from EARLY (distal) steps has decayed more than from LATE steps
-when the reward lands -- so bridging the full trajectory genuinely requires a
-retention long enough to span it. Short retention learns only the steps near the
-goal; this is the sequential analogue of the bandit's delay window and the lever the
-benchmark and the D_max-vs-tau prediction both exercise.
-
-Conventions follow the rest of the package: ``B`` seeds run as a vectorised batch,
-device gate via :class:`GateBankBatched` (``abstract=True`` swaps the exponential
-R-STDP kernel, ``no_trace=True`` zeroes eligibility), signed leak-dominant
-coincidence, three-factor update ``dw = eta (R - b) e``, ``dt = 5e-3`` s.
+The device and exponential conditions use this repository's proposed signed
+coincidence drive.  :class:`ShallowEpropPolicyTrace` is a custom feed-forward
+policy-gradient adaptation containing an e-prop-style eligibility term; it is not a
+reproduction of the complete recurrent e-prop algorithm.  Result dictionaries carry
+method-provenance and calibration metadata so component citations are not presented
+as validation of these repository-specific combinations.
 """
 from __future__ import annotations
+
+import warnings
 
 import numpy as np
 
 from .bandit import GateBankBatched, AbstractTrace, W_INIT, W_MAX
-from .device import K_STAGES
+from .device import K_STAGES, decay_matched_exponential_tau
 from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 
 __all__ = [
-    "LinearTrack", "TMaze", "train_sequential",
+    "LinearTrack", "ActionSequenceTrack", "DelayedCuedChoice", "TMaze",
+    "ConventionalRstdpTrace", "ShallowEpropPolicyTrace", "EpropTrace",
+    "train_sequential",
     "reward_rate", "trials_to_criterion", "policy_correct",
-    # experiment cores (composed of TMaze + train_sequential)
-    "run_sequential", "run_dmax_law", "run_long_horizon", "run_long_horizon_faults",
+    "calibrate_comparator_scales", "tune_comparator_learning_rates",
+    "run_action_sequence", "run_delayed_cued_choice", "run_sequential",
+    "run_retention_delay_curve", "run_dmax_law",
+    "run_retention_delay_curve_adaptive", "run_dmax_adaptive",
+    "run_long_horizon", "run_long_horizon_faults",
     # analysis helpers
     "running_rate", "interp_dmax",
 ]
+
+
+PROVENANCE_STATUS = frozenset(
+    {"established", "adapted", "proposed", "empirical_fit", "extrapolated"}
+)
+RETENTION_DEFINITIONS = frozenset({
+    "measured_held_bias",
+    "measured_held_bias_quantiles",
+    "measured_near_zero_field",
+    "extrapolated",
+    "deliberately_swept",
+})
+
+
+def _provenance(status, established_basis, repository_adaptation, claim_limit):
+    """Return a fresh, schema-stable method-provenance record."""
+    if status not in PROVENANCE_STATUS:
+        raise ValueError(f"unknown provenance status: {status!r}")
+    return {
+        "status": status,
+        "established_basis": list(established_basis),
+        "repository_adaptation": str(repository_adaptation),
+        "claim_limit": str(claim_limit),
+    }
+
+
+def _retention_definition(value):
+    value = str(value)
+    if value not in RETENTION_DEFINITIONS:
+        raise ValueError(
+            f"retention_definition must be one of {sorted(RETENTION_DEFINITIONS)}, "
+            f"got {value!r}"
+        )
+    return value
+
+
+METHOD_PROVENANCE = {
+    "device": _provenance(
+        "proposed",
+        ["three-factor reward modulation", "local eligibility traces"],
+        "Repository-specific signed coincidence filtered by an approximate cascade gate.",
+        "A computational device-trace condition, not an exact cited R-STDP rule or a "
+        "microscopically identified trap cascade.",
+    ),
+    "exponential": _provenance(
+        "adapted",
+        ["exponential eligibility traces", "three-factor reward modulation"],
+        "The same repository-specific signed coincidence drive with an exponential filter.",
+        "Its single time constant is fitted to the cascade surrogate's predefined "
+        "post-peak decay band; it is not a verbatim reproduction of a cited R-STDP "
+        "method and cannot reproduce the full stretched discharge shape.",
+    ),
+    "shallow_eprop": _provenance(
+        "adapted",
+        ["e-prop-style per-synapse eligibility", "policy-gradient learning signal"],
+        "Feed-forward action layer with a custom reward-modulated policy-gradient readout.",
+        "Does not reproduce recurrent e-prop, its full learning-signal machinery, or its benchmarks.",
+    ),
+    "conventional_rstdp": _provenance(
+        "adapted",
+        ["pair-based STDP", "exponential eligibility", "reward modulation"],
+        "Conventional pre/post pair traces feed a decaying eligibility that is gated by reward.",
+        "Reference three-factor R-STDP implementation; not a reproduction of every "
+        "network or protocol detail in any one cited paper.",
+    ),
+    "no_trace": _provenance(
+        "established",
+        ["necessity ablation"],
+        "Eligibility is set identically to zero in the shared task harness.",
+        "Tests dependence on a trace only; it is not a competitive learning algorithm.",
+    ),
+    "signed_coincidence": _provenance(
+        "proposed",
+        ["local pre/post coincidence", "reward-modulated plasticity"],
+        "Depression-biased signed drive: coincident postsynaptic spikes are positive and "
+        "presynaptic-only events are negative.",
+        "Custom Eq. 6 rule; the component literature does not establish this exact update.",
+    ),
+}
 
 
 # ----------------------------------------------------------------------------
@@ -76,7 +140,7 @@ class LinearTrack:
         self.n_actions = 2
         self.goal_action = 0          # forward at the last state reaches the goal
 
-    def start(self, B):
+    def start(self, B, rng=None):
         return np.zeros(B, dtype=int)     # all seeds start at state 0
 
     def step(self, pos, action):
@@ -96,14 +160,69 @@ class LinearTrack:
         return np.zeros_like(pos)
 
 
-class TMaze:
-    """``L``-state stem then a ``A_goal``-arm junction; one arm rewarded per cue.
+class ActionSequenceTrack:
+    """Multi-decision track with terminal reward after a required action sequence.
+
+    By default the four observable states require actions ``(0, 1, 1, 0)``.  A
+    correct action advances one state; any wrong action terminates the episode
+    unrewarded.  The final correct action reaches the goal, after which the shared
+    harness applies the configured action--reward delay.  Since both actions occur
+    in the target sequence, neither constant policy can solve the default task.
+    """
+
+    def __init__(self, required_actions=(0, 1, 1, 0), n_actions=None):
+        actions = tuple(int(a) for a in required_actions)
+        if not actions:
+            raise ValueError("required_actions must contain at least one action")
+        if min(actions) < 0:
+            raise ValueError("required actions must be non-negative integers")
+        if len(set(actions)) < 2:
+            raise ValueError("the action sequence must require at least two actions")
+        self.required_actions = actions
+        self.L = len(actions)
+        self.n_states = self.L
+        minimum_actions = max(2, max(actions) + 1)
+        self.n_actions = minimum_actions if n_actions is None else int(n_actions)
+        if self.n_actions < minimum_actions:
+            raise ValueError(
+                f"n_actions must be at least {minimum_actions} for this sequence"
+            )
+        self.goal_action = actions[-1]
+
+    def start(self, B, rng=None):
+        return np.zeros(B, dtype=int)
+
+    def step(self, pos, action):
+        pos = np.asarray(pos, dtype=int)
+        action = np.asarray(action, dtype=int)
+        if pos.shape != action.shape:
+            raise ValueError("pos and action must have matching shapes")
+        expected = np.asarray(self.required_actions, dtype=int)[pos]
+        correct = action == expected
+        final = pos == self.L - 1
+        reached = correct & final
+        done = (~correct) | reached
+        nxt = np.where(correct & ~final, pos + 1, pos)
+        return nxt, reached, done
+
+    def correct_action(self, pos):
+        pos = np.asarray(pos, dtype=int)
+        return np.asarray(self.required_actions, dtype=int)[pos]
+
+    def correct_action_for_state(self, state):
+        return self.required_actions[int(state)]
+
+
+class DelayedCuedChoice:
+    """Auto-advanced stem followed by one learned, cue-dependent junction choice.
 
     States ``0..L-1`` are the stem (advance with action 0). At the junction state
     ``L-1`` the agent's action selects an arm ``0..A_goal-1``; reward is contingent on
     the arm matching the episode's rewarded arm (set by a cue presented at the start).
     ``n_actions = max(2, A_goal)`` so the same action neurons serve stem-advance and
-    arm-choice.
+    arm-choice.  Stem actions do not affect transitions and the cue is exposed only
+    in the junction-state encoding.  This is therefore a delayed contextual choice,
+    not a multi-decision T-maze navigation task.
     """
 
     def __init__(self, L=3, A_goal=2):
@@ -139,12 +258,30 @@ class TMaze:
         at_junction = pos >= self.L - 1
         return np.where(at_junction, self.cue, 0)
 
+    def correct_action_for_state(self, state):
+        state = int(state)
+        return 0 if state < self.L else state - self.L
+
+
+class TMaze(DelayedCuedChoice):
+    """Deprecated compatibility name for :class:`DelayedCuedChoice`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "TMaze was a one-choice delayed contextual task, not a sequential "
+            "T-maze. Use DelayedCuedChoice for the historical control or "
+            "ActionSequenceTrack for multi-decision credit assignment.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
 
 # ----------------------------------------------------------------------------
-# Training harness (shared across device / R-STDP / no-trace)
+# Training harness shared across device and explicit comparator implementations.
 # ----------------------------------------------------------------------------
-class EpropTrace:
-    """Reward-based e-prop eligibility (Bellec et al. 2020), the third benchmark.
+class ShallowEpropPolicyTrace:
+    """Custom shallow policy trace containing an e-prop-style eligibility term.
 
     Unlike the device gate (a physical relaxation of a signed coincidence) and R-STDP
     (a hand-set exponential filter of that coincidence), e-prop *computes* its
@@ -160,9 +297,9 @@ class EpropTrace:
     by ``tau_leak`` so the three methods are compared at a matched retention). The signed
     LEARNING SIGNAL (R - b) supplies credit/blame at reward; e-prop does NOT use a signed
     coincidence (that is the R-STDP/device mechanism), so its drive is the unsigned
-    product psi*zbar. This is the shallow, single-decision-layer reduction of reward-based
-    e-prop: faithful to the per-synapse eligibility, but it does not exercise e-prop's
-    recurrent-credit machinery (a property of the feedforward task, stated plainly).
+    product psi*zbar. This repository-specific feed-forward adaptation does not
+    reproduce the recurrent network, learning-signal machinery, or complete method of
+    Bellec et al.; it is therefore an e-prop-style comparator rather than "e-prop".
     """
 
     def __init__(self, B, S, A, tau_leak=10.0, dt=5e-3, tau_m=TAU_M, v_th=V_TH,
@@ -200,6 +337,76 @@ class EpropTrace:
         self.vn[..., 0] = self.elig
 
 
+class EpropTrace(ShallowEpropPolicyTrace):
+    """Deprecated compatibility name for :class:`ShallowEpropPolicyTrace`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "EpropTrace is a custom shallow policy-gradient adaptation, not the "
+            "complete e-prop method; use ShallowEpropPolicyTrace.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class ConventionalRstdpTrace:
+    """Pair-based reward-modulated STDP eligibility with exponential decay.
+
+    Presynaptic events depress in proportion to the recent postsynaptic trace and
+    postsynaptic events potentiate in proportion to the recent presynaptic trace.
+    The resulting signed pair term feeds a slower eligibility trace.  Reward gates
+    that trace in :func:`train_sequential`.  This supplies a conventional comparator
+    distinct from the repository's proposed signed-coincidence construction.
+    """
+
+    def __init__(self, B, S, A, tau_leak=10.0, dt=5e-3, tau_pair=20e-3,
+                 a_plus=1.0, a_minus=1.05):
+        if tau_leak <= 0 or tau_pair <= 0:
+            raise ValueError("trace time constants must be positive")
+        self.B, self.S, self.A, self.dt = B, S, A, float(dt)
+        self.tau = float(tau_leak)
+        self.tau_pair = float(tau_pair)
+        self.a_plus, self.a_minus = float(a_plus), float(a_minus)
+        self.pre_trace = np.zeros((B, S))
+        self.post_trace = np.zeros((B, A))
+        self.elig = np.zeros((B, S, A))
+        self.vn = np.zeros((B, S, A, 1))
+        self.Vnmax = 1.0
+
+    def reset(self):
+        self.pre_trace[:] = 0.0
+        self.post_trace[:] = 0.0
+        self.elig[:] = 0.0
+        self.vn[:] = 0.0
+
+    def step_rstdp(self, pre, post, active):
+        pair_decay = np.exp(-self.dt / self.tau_pair)
+        elig_decay = np.exp(-self.dt / self.tau)
+        self.pre_trace *= pair_decay
+        self.post_trace *= pair_decay
+        # Use traces from preceding events for the pair terms, then register the
+        # current events. Simultaneous events therefore do not self-pair.
+        pair = (
+            self.a_plus * self.pre_trace[:, :, None] * post[:, None, :]
+            - self.a_minus * pre[:, :, None] * self.post_trace[:, None, :]
+        )
+        self.pre_trace += pre
+        self.post_trace += post
+        self.elig = elig_decay * self.elig + pair
+        self.pre_trace *= active[:, None]
+        self.post_trace *= active[:, None]
+        self.elig *= active[:, None, None]
+        self.vn[..., 0] = self.elig
+
+    def relax(self, duration):
+        duration = max(0.0, float(duration))
+        self.pre_trace *= np.exp(-duration / self.tau_pair)
+        self.post_trace *= np.exp(-duration / self.tau_pair)
+        self.elig *= np.exp(-duration / self.tau)
+        self.vn[..., 0] = self.elig
+
+
 def _relax(bank, zero_drive, n, stride, abstract):
     """Advance an undriven gate for ``n`` blocks of ``stride`` dt-ticks each, using a
     temporarily coarsened timestep for speed. With zero drive the cascade/leaky
@@ -219,7 +426,8 @@ def _relax(bank, zero_drive, n, stride, abstract):
 
 def _relax_eprop(bank, B, S, A, n, stride):
     """Coarse-stepped zero-input relaxation of the e-prop eligibility filters (mirror
-    of :func:`_relax` for the EpropTrace, whose decay is equally smooth with no input)."""
+    of :func:`_relax` for :class:`ShallowEpropPolicyTrace`, whose decay is equally
+    smooth with no input)."""
     if n <= 0:
         return
     zp, zv, act = np.zeros((B, S)), np.zeros((B, A)), np.ones(B)
@@ -235,8 +443,11 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
                      max_steps=None, dt=5e-3, step_dur=0.4, eta=0.2, V=1.5,
                      in_rate=200.0, ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH,
                      sigma0=0.15, sigma1=None, abstract=False, no_trace=False,
-                     eprop=False, beta_pol=1.0, beta_leak=1.0, weight_fault=None, seed0=0,
-                     return_weights=False, device_k=K_STAGES, tau_r_override=None):
+                     eprop=False, rstdp=False, beta_pol=1.0, beta_leak=1.0,
+                     weight_fault=None, seed0=0,
+                     return_weights=False, device_k=K_STAGES, tau_r_override=None,
+                     coincidence_mode="signed", eligibility_normalizer=1.0,
+                     forced_actions=None, return_diagnostics=False):
     """Train the sequential policy on ``env`` for ``B`` parallel seeds.
 
     The network is a state x action grid of device synapses ``w[state, action]``.
@@ -249,7 +460,9 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     the goal-entry action, then gates the surviving trace into every synapse:
     ``dw = eta (R - b) e``. Returns rewards ``(B, episodes)``.
 
-    ``abstract`` swaps the device gate for the exponential R-STDP kernel;
+    ``abstract`` swaps the device gate for an exponential filter of the same custom
+    signed drive. ``rstdp`` instead uses conventional pre/post pair traces and a
+    decaying reward-gated eligibility, independently of the custom coincidence rule.
     ``no_trace`` zeroes eligibility (necessity control). ``weight_fault`` applies the
     device-fault prior at READ time (once per episode, since weights change only per
     episode): the array reads a faulted conductance while learning still targets the
@@ -260,15 +473,39 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     ``device_faults.maze_fault_stack``). ``step_dur`` is the wall-clock time the agent
     dwells in each state (so a trajectory of ``L`` steps spans
     ``L*step_dur`` seconds, against which ``tau_leak`` must be long enough).
+
+    ``coincidence_mode`` makes the custom-rule ablations explicit: ``"signed"`` is
+    the proposed depression-biased drive, ``"unsigned"`` takes its absolute value,
+    and ``"no_negative"`` retains positive pre/post coincidences only.
+    ``eligibility_normalizer`` is a frozen positive scale obtained from the separate
+    calibration batch; it is never estimated from evaluation trials.
     """
+    if coincidence_mode not in {"signed", "unsigned", "no_negative"}:
+        raise ValueError(
+            "coincidence_mode must be 'signed', 'unsigned', or 'no_negative'"
+        )
+    eligibility_normalizer = float(eligibility_normalizer)
+    if not np.isfinite(eligibility_normalizer) or eligibility_normalizer <= 0:
+        raise ValueError("eligibility_normalizer must be finite and positive")
+    if sum(bool(x) for x in (eprop, rstdp, abstract)) > 1:
+        raise ValueError("eprop, rstdp, and abstract are mutually exclusive")
     rng = np.random.default_rng(seed0)
     S, A = env.n_states, env.n_actions
+    matched_tau = None
     if max_steps is None:
         max_steps = 3 * env.L + 2
     if eprop:
-        bank = EpropTrace(B, S, A, tau_leak=tau_leak, dt=dt, tau_m=tau_m, v_th=v_th)
+        bank = ShallowEpropPolicyTrace(
+            B, S, A, tau_leak=tau_leak, dt=dt, tau_m=tau_m, v_th=v_th
+        )
+    elif rstdp:
+        bank = ConventionalRstdpTrace(B, S, A, tau_leak=tau_leak, dt=dt)
     elif abstract:
-        bank = AbstractTrace(B, S, A, tau_leak=tau_leak, dt=dt)
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=V, k=device_k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
         bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, V=V,
                                beta_leak=beta_leak, k=device_k,
@@ -279,6 +516,30 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
     steps_per_state = max(1, int(round(step_dur / dt)))
     reward_lag = int(round(D / dt))
     rewards = np.zeros((B, episodes))
+    if forced_actions is not None:
+        forced_actions = np.asarray(forced_actions, dtype=int)
+        if forced_actions.shape != (episodes, B, max_steps):
+            raise ValueError(
+                "forced_actions must have shape "
+                f"(episodes, B, max_steps)={(episodes, B, max_steps)}, got "
+                f"{forced_actions.shape}"
+            )
+        if np.any((forced_actions < 0) | (forced_actions >= A)):
+            raise ValueError("forced_actions contains an action outside the environment")
+    diag_peak = []
+    diag_area = []
+    diag_reward_rms = []
+
+    def _current_eligibility():
+        if no_trace:
+            return np.zeros((B, S, A))
+        if eprop:
+            return bank.vn[..., -1]
+        if rstdp:
+            return bank.elig
+        if abstract:
+            return bank.e
+        return bank.vn[..., -1] / bank.Vnmax
 
     for ep in range(episodes):
         sigma = sigma0 if sigma1 is None else sigma0 + (sigma1 - sigma0) * ep / episodes
@@ -287,21 +548,21 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
         # episode (not per dt-tick) is what keeps the run tractable.
         wr = weight_fault(w) if weight_fault is not None else w
         bank.reset()
-        if isinstance(env, TMaze):
-            pos = env.start(B, rng)
-        else:
-            pos = env.start(B)
+        pos = env.start(B, rng)
         v = np.zeros((B, A))
         done = np.zeros(B, dtype=bool)
         got_reward = np.zeros(B, dtype=bool)
         # accumulated eligibility snapshot, captured at each seed's reward instant
         e_rew = np.zeros((B, S, A))
         reward_due = np.full(B, -1)         # step index at which reward gates in
-        chosen_final = np.zeros(B, dtype=int)   # decision-point action per seed (e-prop)
-        pol_final = np.full((B, A), 1.0 / A)     # decision-point policy pi (e-prop)
+        # Per-state log-policy scores for the custom shallow e-prop-style comparator.
+        # Unlike the historical terminal-only implementation, every consequential
+        # decision contributes its own (1[a] - pi) factor.
+        policy_score = np.zeros((B, S, A))
+        trace_area = 0.0
         # --- run the trajectory ---
         for st in range(max_steps):
-            state = env.encode(pos) if isinstance(env, TMaze) else pos
+            state = env.encode(pos) if hasattr(env, "encode") else pos
             chosen = np.zeros(B, dtype=int)
             # dwell in this state for steps_per_state dt-ticks: integrate spikes + trace
             spk = np.zeros((B, A))
@@ -319,15 +580,25 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
                     # membrane (pseudo-derivative) and the presynaptic trace. No signed
                     # coincidence -- credit/blame comes from (R - b) at reward.
                     bank.step_eprop(pre, v_pre, active)
+                elif rstdp:
+                    bank.step_rstdp(pre, sp, active)
                 else:
                     # signed leak-dominant coincidence on the CURRENT state's lines
-                    # (device gate and R-STDP share this drive)
+                    # (device and exponential controls share this custom drive)
                     drive = np.zeros((B, S, A))
-                    drv = pre[bidx, state][:, None] * np.where(sp, 1.0, -ltd)
+                    if coincidence_mode == "signed":
+                        coincidence = np.where(sp, 1.0, -ltd)
+                    elif coincidence_mode == "unsigned":
+                        coincidence = np.where(sp, 1.0, ltd)
+                    else:  # remove the negative/depression term
+                        coincidence = sp.astype(float)
+                    drv = pre[bidx, state][:, None] * coincidence
                     drive[bidx, state, :] = drv * active[:, None]
                     if no_trace:
                         drive[:] = 0.0
                     bank.step(drive)
+                if return_diagnostics:
+                    trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt
             if eprop:
                 # Reward-based e-prop is a policy-gradient method: the action is SAMPLED
                 # from a softmax policy over the action-neuron spike counts (this sampling
@@ -336,24 +607,36 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
                 logits = beta_pol * (spk - spk.mean(1, keepdims=True))
                 pol_p = np.exp(logits - logits.max(1, keepdims=True))
                 pol_p /= pol_p.sum(1, keepdims=True)
-                cdf = np.cumsum(pol_p, axis=1)
-                u = rng.random((B, 1))
-                chosen = (u > cdf).sum(1)
-                chosen = np.clip(chosen, 0, A - 1)
+                if forced_actions is None:
+                    cdf = np.cumsum(pol_p, axis=1)
+                    u = rng.random((B, 1))
+                    chosen = (u > cdf).sum(1)
+                    chosen = np.clip(chosen, 0, A - 1)
+                else:
+                    # Fixed calibration actions are chosen before any comparator
+                    # runs. Do not consume policy-sampling draws and overwrite them,
+                    # because that would shift later stimulus/noise RNG draws.
+                    chosen = forced_actions[ep, :, st].copy()
             else:
-                # action = spiking winner over the dwell (ties -> random)
-                tie = spk.max(1) == spk.min(1)
-                chosen = np.argmax(spk, 1)
-                chosen[tie] = rng.integers(A, size=int(tie.sum()))
+                if forced_actions is None:
+                    # action = spiking winner over the dwell (ties -> random)
+                    tie = spk.max(1) == spk.min(1)
+                    chosen = np.argmax(spk, 1)
+                    chosen[tie] = rng.integers(A, size=int(tie.sum()))
+                else:
+                    # Likewise bypass random tie-breaking in calibration.
+                    chosen = forced_actions[ep, :, st].copy()
             chosen[done] = 0
+            if eprop:
+                active_decision = ~done
+                onehot_step = np.zeros((B, A))
+                onehot_step[bidx, chosen] = 1.0
+                policy_score[
+                    bidx[active_decision], state[active_decision], :
+                ] += (onehot_step - pol_p)[active_decision]
             nxt, reached, ep_done = env.step(pos, chosen)
             pos = np.where(done, pos, nxt)
             newly = (~done) & ep_done
-            # record the decision-point action and policy (the step that ended the
-            # episode) for the e-prop per-action learning signal (1[a=chosen] - pi_a)
-            chosen_final = np.where(newly, chosen, chosen_final)
-            if eprop:
-                pol_final = np.where(newly[:, None], pol_p, pol_final)
             got_reward |= (newly & reached)
             # schedule reward gating reward_lag ticks after goal entry (approx: capture
             # the trace reward_lag dt-ticks later by letting the gate relax that long)
@@ -375,40 +658,82 @@ def train_sequential(env, *, B=20, tau_leak=10.0, D=2.0, episodes=1500,
             # e-prop's slow output filter keeps decaying with no input; relax it the
             # same way (coarse-stepped), reading eligibility from vn[...,-1].
             _relax_eprop(bank, B, S, A, n_relax, stride)
+            if return_diagnostics and n_relax:
+                # Smooth decay is coarsened by ``stride`` exactly as in the state
+                # update; integrate the diagnostic using its elapsed wall time.
+                trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt * stride * n_relax
             for _ in range(rem):
                 bank.step_eprop(np.zeros((B, S)), np.zeros((B, A)), np.ones(B))
+                if return_diagnostics:
+                    trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt
             e_rew = bank.vn[..., -1]
+        elif rstdp:
+            bank.relax(reward_lag * dt)
+            if return_diagnostics:
+                trace_area += (
+                    float(np.mean(np.abs(_current_eligibility()))) * reward_lag * dt
+                )
+            e_rew = bank.elig
         elif no_trace:
             e_rew = np.zeros((B, S, A))
         elif abstract:
             for _ in range(reward_lag):
                 bank.step(zero)
+                if return_diagnostics:
+                    trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt
             e_rew = bank.e
         else:
             _relax(bank, zero, n_relax, stride, abstract)
+            if return_diagnostics and n_relax:
+                trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt * stride * n_relax
             for _ in range(rem):
                 bank.step(zero)
+                if return_diagnostics:
+                    trace_area += float(np.mean(np.abs(_current_eligibility()))) * dt
             e_rew = bank.vn[..., -1] / bank.Vnmax
         R = got_reward.astype(float)
-        adv = eta * (R - baseline)
         if eprop:
             # Reward-based e-prop = policy gradient with an e-prop eligibility. The
-            # per-action learning signal is the REINFORCE log-policy gradient
-            # L_j = (R - b) * (1[j = chosen] - pi_j), which supplies the arm selectivity
-            # that e-prop's unsigned eligibility lacks: the chosen action is pushed up by
-            # (1 - pi) and the others down by (-pi), scaled by the advantage. Delta w_ij
-            # = eta * (R-b) * (1[j=chosen]-pi_j) * e_ij. eta absorbs the small eligibility
-            # magnitude (e-prop eligibility ~1e-4 here; see eta scaling).
-            onehot = np.zeros((B, A))
-            onehot[bidx, chosen_final] = 1.0
-            Lsig = (R - baseline)[:, None] * (onehot - pol_final)     # (B, A)
-            w = np.clip(w + eta * Lsig[:, None, :] * e_rew, 0.0, W_MAX)
+            # The custom reward learning signal is the per-state REINFORCE
+            # log-policy score recorded at each decision. This is a repository
+            # adaptation, not Bellec et al.'s recurrent learning-signal machinery.
+            raw_update = (
+                (R - baseline)[:, None, None] * policy_score * e_rew
+            )
+            w = np.clip(
+                w + eta * raw_update / eligibility_normalizer, 0.0, W_MAX
+            )
         else:
-            w = np.clip(w + adv[:, None, None] * e_rew, 0.0, W_MAX)
+            raw_update = (R - baseline)[:, None, None] * e_rew
+            w = np.clip(
+                w + eta * raw_update / eligibility_normalizer, 0.0, W_MAX
+            )
+        if return_diagnostics:
+            diag_peak.append(float(np.max(np.abs(e_rew))))
+            diag_area.append(float(trace_area))
+            diag_reward_rms.append(float(np.sqrt(np.mean(raw_update ** 2))))
         baseline += 0.02 * (R - baseline)
         rewards[:, ep] = R
+    diagnostics = None
+    if return_diagnostics:
+        raw_rms = float(np.sqrt(np.mean(np.square(diag_reward_rms))))
+        diagnostics = {
+            "raw_trace_peak": float(np.mean(diag_peak)),
+            "raw_trace_area": float(np.mean(diag_area)),
+            "raw_effective_update_rms": raw_rms,
+            "eligibility_normalizer": eligibility_normalizer,
+            "normalized_effective_update_rms": raw_rms / eligibility_normalizer,
+            "coincidence_mode": coincidence_mode,
+            "matched_exponential_tau_s": (
+                None if matched_tau is None else float(matched_tau)
+            ),
+        }
+    if return_weights and return_diagnostics:
+        return rewards, w, diagnostics
     if return_weights:
         return rewards, w          # w: (B, S, A) final learned weights
+    if return_diagnostics:
+        return rewards, diagnostics
     return rewards
 
 
@@ -426,7 +751,7 @@ def trials_to_criterion(rew_1d, crit, window=100):
     rew_1d = np.asarray(rew_1d)
     if len(rew_1d) < window:
         return None
-    csum = np.cumsum(rew_1d)
+    csum = np.r_[0.0, np.cumsum(rew_1d)]
     rr = (csum[window:] - csum[:-window]) / window
     if not np.any(rr >= crit):
         return None
@@ -444,11 +769,8 @@ def policy_correct(env, w):
     correct = 0
     total = 0
     for s in range(S):
-        # correct action per state, derived directly from the state index (no episode
-        # state needed): stem states want FORWARD (action 0); a junction-context state
-        # s = L + arm wants that arm.
-        if isinstance(env, TMaze):
-            ca = 0 if s < env.L else (s - env.L)
+        if hasattr(env, "correct_action_for_state"):
+            ca = env.correct_action_for_state(s)
         else:
             ca = 0                          # LinearTrack: always forward
         if w[s].max() == w[s].min():
@@ -460,8 +782,7 @@ def policy_correct(env, w):
 
 
 # =============================================================================
-# Experiment cores (the sequential-MDP credit-assignment studies that compose
-# ``TMaze`` + ``train_sequential``)
+# Experiment cores for the corrected action-sequence task and historical controls.
 #
 # Each ``run_*`` returns the result grid as a plain dict -- no file I/O, no
 # plotting, no stdout.  Notebooks call these at a small (quick) seed/episode
@@ -469,32 +790,27 @@ def policy_correct(env, w):
 # published scale, parallelising the coarse axis over a process pool, and writes
 # each grid under ``data/results/`` via ``paths.save_result`` for full-cache mode.
 # The original driver scripts each computed one grid:
-#   * exp6_sequential.npy            -- sequential T-maze + R-STDP/e-prop/no-trace
-#                                       benchmark and the retention x delay grid;
-#   * exp8_dmax_law.npy              -- densely-sampled D_max(tau_leak) scaling law;
-#   * exp15_long_horizon.npy         -- longer-horizon (trajectory length L) credit
+#   * exp6_action_sequence.npy       -- calibrated multi-decision benchmark;
+#   * exp8_retention_delay_curve.npy -- simulated retention x delay design curve;
+#   * exp15_long_horizon.npy         -- longer-horizon action-sequence credit
 #                                       feasibility vs the established traces;
 #   * exp15_long_horizon_faults.npy  -- the same under the SiO_x device-fault prior.
 # =============================================================================
 
 
 # -----------------------------------------------------------------------------
-# Experiment 6 -- sequential distal-reward task + R-STDP / e-prop benchmark.
-#
-# Extends the one-step contextual bandit to a multi-step MDP (T-maze), where reward
-# is delivered only at the goal after a trajectory and credit must propagate back
-# across intermediate steps -- the regime an eligibility trace exists for. Four
-# conditions share ONE harness for a fair comparison:
+# Historical experiment 6 -- one-choice delayed contextual control. Four conditions
+# share one harness, but their old learning-rate scales were not calibrated:
 #   device   : the SiOx trap-cascade eligibility gate (this work);
-#   rstdp    : an abstract exponential eligibility trace at matched timescale
-#              (the hand-set kernel of Florian 2007 / Izhikevich 2007 / Legenstein 2008);
-#   eprop    : network-computed eligibility (reward-modulated policy gradient, Bellec 2020);
+#   exponential: exponential filter of the same custom signed drive;
+#   shallow_eprop: custom feed-forward policy trace with an e-prop-style term;
 #   no_trace : eligibility zeroed (device-necessity control).
-# Operating point V=1.5 (rise time tau_r=1.9 s) so the eligibility snapshot reflects
-# RETENTION (tau_leak), not the sigmoidal rise. Retrospective criteria C1-C4 / kill K1
-# are evaluated in the summary.
+# This historical runner is preserved only to reproduce the delayed-choice control.
+# Its comparator scales were not calibrated, so its between-method differences must
+# not be used as algorithm-superiority evidence.  ``run_action_sequence`` is the
+# corrected, calibrated multi-decision benchmark.
 # -----------------------------------------------------------------------------
-EPROP_ETA = 2000.0        # e-prop eligibility magnitude ~1e-4 << device/R-STDP; eta scaled up
+EPROP_ETA = 2000.0        # legacy uncalibrated value; retained for archive compatibility
 
 
 def running_rate(r1d, window=50):
@@ -503,15 +819,399 @@ def running_rate(r1d, window=50):
     return (c[window:] - c[:-window]) / window
 
 
-def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
-                   taus=(2.0, 5.0, 20.0), delays=(2, 4, 8, 16, 32, 64), seed0=0,
-                   workers=1, device_k=K_STAGES, tau_r_override=None):
-    """Experiment 6: sequential T-maze learning curves + retention x delay grid.
+LEARNING_RATE_GRID = (0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0)
+TUNING_SEEDS = tuple(range(1000, 1020))
+EVALUATION_SEEDS = tuple(range(2000, 2020))
+CALIBRATION_TRAJECTORIES = 256
 
-    Runs the four conditions (device / rstdp / eprop / no_trace) as learning curves
-    at the reference ``(D0, TAU0)`` operating point, a device policy-correctness probe
-    from the ACTUAL learned weights, and a ``taus x delays`` device reward-rate grid
-    from which ``D_max(tau_leak)`` (the prediction-arm datapoints) is read off.
+
+def _copy_provenance(record):
+    return {
+        "status": record["status"],
+        "established_basis": list(record["established_basis"]),
+        "repository_adaptation": record["repository_adaptation"],
+        "claim_limit": record["claim_limit"],
+    }
+
+
+def _comparator_conditions(include_rule_ablations=True):
+    conditions = {
+        "device": {},
+        "exponential": {"abstract": True},
+        "conventional_rstdp": {"rstdp": True},
+        "shallow_eprop": {"eprop": True},
+        "no_trace": {"no_trace": True},
+    }
+    if include_rule_ablations:
+        conditions.update({
+            "device_unsigned": {"coincidence_mode": "unsigned"},
+            "device_no_negative": {"coincidence_mode": "no_negative"},
+        })
+    return conditions
+
+
+def _condition_provenance(name):
+    name = {"rstdp": "exponential", "eprop": "shallow_eprop"}.get(name, name)
+    if name in {"device_unsigned", "device_no_negative"}:
+        mode = "absolute signed drive" if name.endswith("unsigned") else "positive coincidences only"
+        return _provenance(
+            "proposed",
+            ["local coincidence", "ablation analysis"],
+            f"Ablation of the custom signed rule using {mode}.",
+            "Attributes behaviour to the repository-specific negative term; not an established method.",
+        )
+    return _copy_provenance(METHOD_PROVENANCE[name])
+
+
+def _balanced_calibration_actions(env, trajectories, max_steps):
+    """Fixed 50/50 successful/unsuccessful action schedules for scale calibration."""
+    trajectories = int(trajectories)
+    if trajectories < 2 or trajectories % 2:
+        raise ValueError("calibration trajectories must be a positive even integer")
+    actions = np.zeros((1, trajectories, max_steps), dtype=int)
+    seq = np.asarray(env.required_actions, dtype=int)
+    actions[0, :, :len(seq)] = seq
+    # Every trajectory reaches the final state.  Half then take the other action,
+    # yielding a balanced reward signal without using evaluation outcomes.
+    actions[0, trajectories // 2:, len(seq) - 1] = (
+        seq[-1] + 1
+    ) % env.n_actions
+    return actions
+
+
+def calibrate_comparator_scales(*, trajectories=CALIBRATION_TRAJECTORIES,
+                                tau_leak=10.0, D=4.0, V=1.5, dt=5e-3,
+                                step_dur=0.4, seed=271828,
+                                include_rule_ablations=True, device_k=K_STAGES,
+                                tau_r_override=None, beta_leak=1.0):
+    """Measure frozen reward-time update scales on 256 balanced trajectories.
+
+    The action schedules are fixed before fitting: half complete ``(0,1,1,0)`` and
+    half differ only at the terminal decision.  Each comparator sees the same state
+    sequence, inputs, outcomes, delay and seed.  The returned RMS is used only as a
+    multiplicative normalizer; learning rates are selected later on disjoint tuning
+    seeds.  Evaluation trials never affect either value.
+    """
+    env = ActionSequenceTrack()
+    max_steps = env.L
+    forced = _balanced_calibration_actions(env, trajectories, max_steps)
+    records = {}
+    for name, kwargs in _comparator_conditions(include_rule_ablations).items():
+        _, diagnostics = train_sequential(
+            env,
+            B=int(trajectories),
+            tau_leak=tau_leak,
+            D=D,
+            episodes=1,
+            max_steps=max_steps,
+            dt=dt,
+            step_dur=step_dur,
+            eta=0.0,
+            V=V,
+            seed0=int(seed),
+            forced_actions=forced,
+            return_diagnostics=True,
+            device_k=device_k,
+            tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+            **kwargs,
+        )
+        raw = diagnostics["raw_effective_update_rms"]
+        normalizer = raw if np.isfinite(raw) and raw > np.finfo(float).eps else 1.0
+        records[name] = {
+            **diagnostics,
+            "eligibility_normalizer": float(normalizer),
+            "normalized_effective_update_rms": float(raw / normalizer),
+            "method_provenance": _condition_provenance(name),
+        }
+    return {
+        "protocol": "fixed_balanced_action_sequences",
+        "trajectories": int(trajectories),
+        "rewarded": int(trajectories) // 2,
+        "unrewarded": int(trajectories) // 2,
+        "required_actions": list(env.required_actions),
+        "seed": int(seed),
+        "tau_leak_s": float(tau_leak),
+        "beta_leak": float(beta_leak),
+        "records": records,
+        "method_provenance": _provenance(
+            "adapted",
+            ["effective-update scale calibration", "balanced experimental design"],
+            "All comparators are measured on the same fixed rewarded/unrewarded trajectories.",
+            "Calibration equalises update opportunity; it does not make the algorithms equivalent.",
+        ),
+    }
+
+
+def _action_tuning_job(job):
+    """One independent comparator/rate/tuning-seed cell (spawn-safe)."""
+    (name, kwargs, episodes, eta, seed, tau_leak, D, V, dt, step_dur,
+     normalizer, device_k, tau_r_override, beta_leak) = job
+    rewards = train_sequential(
+        ActionSequenceTrack(), B=1, tau_leak=tau_leak, D=D,
+        episodes=episodes, dt=dt, step_dur=step_dur, eta=eta, V=V,
+        seed0=seed, eligibility_normalizer=normalizer,
+        device_k=device_k, tau_r_override=tau_r_override,
+        beta_leak=beta_leak, **kwargs,
+    )
+    final = float(reward_rate(rewards, min(100, episodes))[0])
+    return name, float(eta), int(seed), final
+
+
+def _action_evaluation_job(job):
+    """One untouched evaluation-seed curve (spawn-safe)."""
+    (name, kwargs, episodes, eta, seed, tau_leak, D, V, dt, step_dur,
+     normalizer, device_k, tau_r_override, beta_leak) = job
+    curve = train_sequential(
+        ActionSequenceTrack(), B=1, tau_leak=tau_leak, D=D,
+        episodes=episodes, dt=dt, step_dur=step_dur, eta=eta, V=V,
+        seed0=seed, eligibility_normalizer=normalizer,
+        device_k=device_k, tau_r_override=tau_r_override,
+        beta_leak=beta_leak, **kwargs,
+    )[0]
+    return name, int(seed), np.asarray(curve, dtype=float)
+
+
+def _map_spawn_safe(function, jobs, *, workers=1, pool=None):
+    """Map independent deterministic jobs, owning a spawn pool only when needed."""
+    if pool is not None:
+        chunksize = max(1, len(jobs) // max(1, 4 * int(workers)))
+        return pool.map(function, jobs, chunksize=chunksize)
+    if int(workers) <= 1:
+        return list(map(function, jobs))
+    from multiprocessing import get_context
+    with get_context("spawn").Pool(min(int(workers), len(jobs))) as own_pool:
+        chunksize = max(1, len(jobs) // max(1, 4 * int(workers)))
+        return own_pool.map(function, jobs, chunksize=chunksize)
+
+
+def tune_comparator_learning_rates(*, calibration, episodes=400,
+                                   learning_rates=LEARNING_RATE_GRID,
+                                   tuning_seeds=TUNING_SEEDS, tau_leak=10.0,
+                                   D=4.0, V=1.5, dt=5e-3, step_dur=0.4,
+                                   include_rule_ablations=True,
+                                   device_k=K_STAGES, tau_r_override=None,
+                                   beta_leak=1.0, workers=1, pool=None):
+    """Select each condition's rate on the declared tuning seeds only.
+
+    Ties are resolved toward the smaller rate.  The no-trace necessity control has
+    no effective update and is assigned rate zero rather than spuriously "tuned".
+    """
+    rates = tuple(float(x) for x in learning_rates)
+    seeds = tuple(int(x) for x in tuning_seeds)
+    if not rates or any((not np.isfinite(x) or x <= 0) for x in rates):
+        raise ValueError("learning_rates must be finite positive values")
+    if not seeds:
+        raise ValueError("tuning_seeds must not be empty")
+    conditions = _comparator_conditions(include_rule_ablations)
+    jobs = []
+    for name, kwargs in conditions.items():
+        if name == "no_trace":
+            continue
+        normalizer = calibration["records"][name]["eligibility_normalizer"]
+        for eta in rates:
+            for seed in seeds:
+                jobs.append((
+                    name, kwargs, int(episodes), eta, seed, float(tau_leak),
+                    float(D), float(V), float(dt), float(step_dur),
+                    float(normalizer), int(device_k), tau_r_override,
+                    float(beta_leak),
+                ))
+    mapped = _map_spawn_safe(
+        _action_tuning_job, jobs, workers=workers, pool=pool
+    ) if jobs else []
+    raw = {
+        name: {eta: {} for eta in rates}
+        for name in conditions if name != "no_trace"
+    }
+    for name, eta, seed, final in mapped:
+        raw[name][eta][seed] = final
+    tuning = {}
+    for name in conditions:
+        if name == "no_trace":
+            tuning[name] = {"selected_eta": 0.0, "scores": {0.0: None}}
+            continue
+        scores = {}
+        for eta in rates:
+            finals = np.asarray([raw[name][eta][seed] for seed in seeds], dtype=float)
+            scores[eta] = {
+                "mean_final_reward": float(finals.mean()),
+                "per_seed": finals,
+            }
+        selected = min(rates, key=lambda x: (-scores[x]["mean_final_reward"], x))
+        tuning[name] = {"selected_eta": float(selected), "scores": scores}
+    return {
+        "learning_rate_grid": list(rates),
+        "tuning_seeds": list(seeds),
+        "episodes": int(episodes),
+        "beta_leak": float(beta_leak),
+        "workers": int(workers),
+        "selection_rule": "highest_mean_final_reward_then_smallest_eta",
+        "conditions": tuning,
+        "method_provenance": _provenance(
+            "adapted",
+            ["held-out hyperparameter selection"],
+            "Learning rates are selected on declared tuning seeds after scale calibration.",
+            "Selected rates apply only to these repository implementations and task budgets.",
+        ),
+    }
+
+
+def run_action_sequence(*, episodes=800, tuning_episodes=400,
+                        calibration_trajectories=CALIBRATION_TRAJECTORIES,
+                        learning_rates=LEARNING_RATE_GRID,
+                        tuning_seeds=TUNING_SEEDS,
+                        evaluation_seeds=EVALUATION_SEEDS,
+                        tau_leak=10.0, D=4.0, V=1.5, dt=5e-3,
+                        step_dur=0.4, include_rule_ablations=True,
+                        device_k=K_STAGES, tau_r_override=None,
+                        beta_leak=1.0,
+                        retention_definition="deliberately_swept",
+                        workers=1, pool=None):
+    """Controlled multi-decision benchmark with calibration, tuning and evaluation.
+
+    Calibration uses fixed balanced trajectories; learning rates use only seeds
+    1000--1019 by default; reported curves use untouched seeds 2000--2019.  Callers
+    may pass strict prefixes for smoke runs while preserving the disjoint blocks.
+    """
+    tune_seeds = tuple(int(x) for x in tuning_seeds)
+    eval_seeds = tuple(int(x) for x in evaluation_seeds)
+    if not eval_seeds:
+        raise ValueError("evaluation_seeds must not be empty")
+    overlap = set(tune_seeds).intersection(eval_seeds)
+    if overlap:
+        raise ValueError(f"tuning and evaluation seeds overlap: {sorted(overlap)}")
+    retention_definition = _retention_definition(retention_definition)
+    calibration = calibrate_comparator_scales(
+        trajectories=calibration_trajectories,
+        tau_leak=tau_leak,
+        D=D,
+        V=V,
+        dt=dt,
+        step_dur=step_dur,
+        include_rule_ablations=include_rule_ablations,
+        device_k=device_k,
+        tau_r_override=tau_r_override,
+        beta_leak=beta_leak,
+    )
+    own_pool = None
+    if pool is None and int(workers) > 1:
+        from multiprocessing import get_context
+        own_pool = get_context("spawn").Pool(int(workers))
+        pool = own_pool
+    try:
+        tuning = tune_comparator_learning_rates(
+            calibration=calibration,
+            episodes=tuning_episodes,
+            learning_rates=learning_rates,
+            tuning_seeds=tune_seeds,
+            tau_leak=tau_leak,
+            D=D,
+            V=V,
+            dt=dt,
+            step_dur=step_dur,
+            include_rule_ablations=include_rule_ablations,
+            device_k=device_k,
+            tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+            workers=workers,
+            pool=pool,
+        )
+        conditions = _comparator_conditions(include_rule_ablations)
+        jobs = []
+        for name, kwargs in conditions.items():
+            eta = tuning["conditions"][name]["selected_eta"]
+            normalizer = calibration["records"][name]["eligibility_normalizer"]
+            for seed in eval_seeds:
+                jobs.append((
+                    name, kwargs, int(episodes), eta, seed, float(tau_leak),
+                    float(D), float(V), float(dt), float(step_dur),
+                    float(normalizer), int(device_k), tau_r_override,
+                    float(beta_leak),
+                ))
+        mapped = _map_spawn_safe(
+            _action_evaluation_job, jobs, workers=workers, pool=pool
+        )
+    finally:
+        if own_pool is not None:
+            own_pool.close()
+            own_pool.join()
+    gathered = {name: {} for name in conditions}
+    for name, seed, curve in mapped:
+        gathered[name][seed] = curve
+    curves = {
+        name: np.asarray([gathered[name][seed] for seed in eval_seeds], dtype=float)
+        for name in conditions
+    }
+    finals = {
+        name: reward_rate(values, min(100, int(episodes)))
+        for name, values in curves.items()
+    }
+    comparator_diagnostics = {}
+    for name in _comparator_conditions(include_rule_ablations):
+        calibrated = calibration["records"][name]
+        comparator_diagnostics[name] = {
+            "raw_trace_peak": calibrated["raw_trace_peak"],
+            "raw_trace_area": calibrated["raw_trace_area"],
+            "eligibility_normalizer": calibrated["eligibility_normalizer"],
+            "selected_eta": tuning["conditions"][name]["selected_eta"],
+            "raw_effective_update_rms": calibrated["raw_effective_update_rms"],
+            "normalized_effective_update_rms": calibrated[
+                "normalized_effective_update_rms"
+            ],
+            "matched_exponential_tau_s": calibrated.get(
+                "matched_exponential_tau_s"
+            ),
+        }
+    return {
+        "task": "ActionSequenceTrack",
+        "task_classification": "multi_decision_terminal_reward",
+        "required_actions": list(calibration["required_actions"]),
+        "curves": curves,
+        "finals": finals,
+        "calibration": calibration,
+        "tuning": tuning,
+        "comparator_diagnostics": comparator_diagnostics,
+        "evaluation_seeds": list(eval_seeds),
+        "seed_partition": {
+            "tuning": list(tune_seeds),
+            "evaluation": list(eval_seeds),
+            "disjoint": True,
+        },
+        "episodes": int(episodes),
+        "tau_leak": float(tau_leak),
+        "beta_leak": float(beta_leak),
+        "retention_definition": retention_definition,
+        "workers": int(workers),
+        "delay": float(D),
+        "method_provenance": _provenance(
+            "proposed",
+            ["multi-decision reinforcement-learning evaluation"],
+            "Calibrated repository implementations are evaluated on ActionSequenceTrack.",
+            "Descriptive comparison only; not superiority over complete cited methods.",
+        ),
+        "condition_method_provenance": {
+            name: _condition_provenance(name)
+            for name in _comparator_conditions(include_rule_ablations)
+        },
+        "claim_limit": (
+            "Descriptive comparison of calibrated repository implementations; "
+            "not algorithmic superiority over complete cited methods."
+        ),
+    }
+
+
+def run_delayed_cued_choice(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
+                            taus=(2.0, 5.0, 20.0),
+                            delays=(2, 4, 8, 16, 32, 64), seed0=0,
+                            workers=1, device_k=K_STAGES,
+                            tau_r_override=None):
+    """Historical one-choice delayed-context curves and retention grid.
+
+    The stem auto-advances and only the cue-dependent junction decision is learned.
+    This function exists for archive compatibility and control analyses; it does not
+    provide trajectory-level policy evidence.  Its historical e-prop-style learning
+    rate is uncalibrated, so between-method rankings are not valid superiority tests.
 
     Every cell is an independent, seed-deterministic ``train_sequential`` call
     (``B=seeds``, ``seed0=0``), so the result is identical whether the cells are run
@@ -523,8 +1223,8 @@ def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
     """
     from functools import partial
     taus = list(taus); delays = list(delays)
-    conds = {"device": dict(), "rstdp": dict(abstract=True),
-             "eprop": dict(eprop=True, eta=EPROP_ETA),
+    conds = {"device": dict(), "exponential": dict(abstract=True),
+             "shallow_eprop": dict(eprop=True, eta=EPROP_ETA),
              "no_trace": dict(no_trace=True)}
     specs = []
     for name, kw in conds.items():
@@ -545,21 +1245,35 @@ def run_sequential(*, seeds=20, episodes=800, V=1.5, D0=4.0, TAU0=10.0,
     return _exp6_assemble(res, conds, taus, delays, seeds, episodes, V, D0, TAU0)
 
 
+def run_sequential(*args, **kwargs):
+    """Deprecated wrapper for :func:`run_delayed_cued_choice`."""
+    warnings.warn(
+        "run_sequential used a one-choice delayed contextual task. Use "
+        "run_action_sequence for the calibrated multi-decision benchmark or "
+        "run_delayed_cued_choice for the historical control.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    result = run_delayed_cued_choice(*args, **kwargs)
+    aliases = {"rstdp": "exponential", "eprop": "shallow_eprop"}
+    # Preserve the historical dictionary interface for one deprecation release.
+    # The explicit metadata prevents those labels from being mistaken for faithful
+    # reproductions of the cited complete methods.
+    for field in ("finals", "finals_ci", "curves"):
+        for legacy, corrected in aliases.items():
+            result[field][legacy] = result[field][corrected]
+    for legacy, corrected in aliases.items():
+        result["condition_method_provenance"][legacy] = (
+            result["condition_method_provenance"][corrected]
+        )
+    result["legacy_condition_aliases"] = aliases
+    return result
+
+
 # -----------------------------------------------------------------------------
-# Experiment 8 -- densely-sampled retention->delay scaling, D_max(tau_leak).
-#
-# Sharpens the D_max ~= k*tau relation from the 3-point version (exp6) to ~13 retention
-# values on a fine delay grid, so the FUNCTIONAL FORM can be read off rather than assumed:
-# is it linear in the trace-dominated regime, and where does it saturate (the inverted-U
-# the conditioning literature predicts)? D_max is interpolated as the largest delay whose
-# reward rate is >= criterion (threshold crossing), not just the coarsest passing grid
-# point. Device condition only (the law is a device-physics claim).
-#
-# HONEST SCOPE: this improves the resolution of the FORM. It does NOT remove the
-# in-simulation near-tautology (tau_leak sets the trace decay, which by construction
-# bounds the bridgeable delay). The non-tautological tests are the hardware tau_leak sweep
-# and the biological arm (future work). This is the "proposed scaling relation, sampled"
-# -- not a claim of a tested cross-domain law.
+# Retention--delay simulation sensitivity. ``tau_leak`` directly defines trace decay,
+# so threshold crossings, censoring and curvature are reported as a task-specific
+# design curve, not as an independently established physical law.
 # -----------------------------------------------------------------------------
 # Retention values spanning the measured band (~1-40 s). The trace-dominated regime
 # (tau<=8 s) is densified with interpolating points so the linear fit rests on 9 points
@@ -608,23 +1322,23 @@ def _dmax_origin_fit(taus, dvals, mask):
     return kk, (1 - float(np.sum(res ** 2)) / sst if sst > 0 else float("nan"))
 
 
-def _dmax_cell(spec, episodes, V, seeds, device_k=K_STAGES, tau_r_override=None):
+def _dmax_cell(spec, episodes, V, seeds, device_k=K_STAGES,
+               tau_r_override=None, beta_leak=1.0):
     """One device cell, retaining the per-seed final reward rates."""
     from .stats import bootstrap_ci
     tau, D = spec
-    env = TMaze(L=3, A_goal=2)
+    env = ActionSequenceTrack()
     r = train_sequential(env, B=seeds, tau_leak=tau, D=D, episodes=episodes, V=V,
                          seed0=0, device_k=device_k,
-                         tau_r_override=tau_r_override)
+                         tau_r_override=tau_r_override, beta_leak=beta_leak)
     f = reward_rate(r, 100)
     lo, hi = bootstrap_ci(f)
     return (tau, D, float(f.mean()), lo, hi, np.asarray(f, float))
 
 
-def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
-    """Package raw ``(tau, D, mean, lo, hi)`` cells into the exp8 grid dict (per-tau
-    reward-rate rows, interpolated ``D_max``, the origin-forced headline fit + the
-    asymptotic plateau slope, and the right-censoring flags)."""
+def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V,
+                   retention_definition="deliberately_swept", beta_leak=1.0):
+    """Package a simulated retention--delay threshold-crossing design curve."""
     grid = {tau: {} for tau in taus}
     seed_grid = {tau: {} for tau in taus}
     for tau, D, m, lo, hi, seed_values in results:
@@ -638,52 +1352,99 @@ def _dmax_assemble(results, taus, delays, crit, seeds, episodes, V):
     k, r2 = _dmax_origin_fit(taus_a, dvals, fitmask)                     # all resolved points
     platmask = fitmask & (taus_a >= DMAX_PLATEAU_TAU)
     k_plateau, r2_plateau = _dmax_origin_fit(taus_a, dvals, platmask)    # asymptotic slope
+    local_slope = np.full_like(dvals, np.nan, dtype=float)
+    local_curvature = np.full_like(dvals, np.nan, dtype=float)
+    resolved = np.flatnonzero(fitmask)
+    if len(resolved) >= 2:
+        rr = resolved
+        local_slope[rr] = np.gradient(dvals[rr], taus_a[rr])
+        if len(rr) >= 3:
+            local_curvature[rr] = np.gradient(local_slope[rr], taus_a[rr])
     return {"taus": list(taus), "delays": list(delays), "grid": grid,
             "seed_grid": seed_grid, "dmax": dmax,
             "k": k, "r2": r2, "k_plateau": k_plateau, "r2_plateau": r2_plateau,
             "plateau_tau": DMAX_PLATEAU_TAU, "crit": crit,
             "censored": censored.tolist(), "seeds": seeds, "episodes": episodes,
-            "V_op": V}
+            "V_op": V,
+            "beta_leak": float(beta_leak),
+            "retention_definition": _retention_definition(retention_definition),
+            "threshold_delay": dict(dmax),
+            "local_slope": local_slope.tolist(),
+            "local_curvature": local_curvature.tolist(),
+            "simulation_only": True,
+            "independent_physical_validation": False,
+            "interpretation": (
+                "Internally generated retention--delay sensitivity: tau_leak is the "
+                "simulated decay control, so this is not an independently tested physical law."
+            ),
+            "legacy_origin_fit": {"slope": k, "r2": r2},
+            "method_provenance": _provenance(
+                "proposed",
+                ["eligibility-trace decay", "threshold-crossing analysis"],
+                "Simulation sweep in which tau_leak directly controls trace decay.",
+                "A task-specific design curve, not literature-derived or independently validated physics.",
+            )}
 
 
-def run_dmax_law(*, seeds=20, episodes=800, V=1.5, taus=None, delays=None, crit=0.75,
-                 workers=1, device_k=K_STAGES, tau_r_override=None):
-    """Experiment 8: dense D_max(tau_leak) scaling law (device condition only).
+def run_retention_delay_curve(*, seeds=20, episodes=800, V=1.5, taus=None,
+                              delays=None, crit=0.75, workers=1,
+                              device_k=K_STAGES, tau_r_override=None,
+                              beta_leak=1.0,
+                              retention_definition="deliberately_swept"):
+    """Simulated retention--delay design curve for the action-sequence task.
 
-    Runs every ``(tau, D)`` device cell serially and reads off the interpolated
-    ``D_max`` per retention (threshold crossing of reward rate >= ``crit``), then
-    fits ``D_max = k*tau`` through the origin over the resolved (non-censored) points
-    and separately over the trace-dominated plateau (``tau >= DMAX_PLATEAU_TAU``).
-    Each cell is deterministic (``seed0=0``); serial here, pooled in ``main``. Returns
-    the result dict; no file I/O.
+    The threshold delay, censoring and local curvature are descriptive outputs.  Since
+    ``tau_leak`` directly defines the simulated decay, the curve is not an independent
+    physical-law test.  Legacy origin-fit fields remain nested for archive inspection,
+    not as a headline model.
     """
     from functools import partial
     taus = DMAX_TAUS if taus is None else list(taus)
     delays = DMAX_DELAYS if delays is None else list(delays)
     specs = [(tau, D) for tau in taus for D in delays]
     worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds,
-                     device_k=device_k, tau_r_override=tau_r_override)
+                     device_k=device_k, tau_r_override=tau_r_override,
+                     beta_leak=beta_leak)
     if int(workers) > 1:
         from multiprocessing import get_context
         with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
             results = pool.map(worker, specs, chunksize=1)
     else:
         results = list(map(worker, specs))
-    return _dmax_assemble(results, taus, delays, crit, seeds, episodes, V)
+    return _dmax_assemble(
+        results, taus, delays, crit, seeds, episodes, V,
+        retention_definition=retention_definition, beta_leak=beta_leak,
+    )
 
 
-def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
-                      delay_ratios=(4, 8, 12, 16, 20), crit=0.75, workers=1,
-                      device_k=K_STAGES, tau_r_override=None):
-    """Reduced live validation of the dense retention--delay law.
+def run_dmax_law(*args, **kwargs):
+    """Deprecated wrapper for :func:`run_retention_delay_curve`."""
+    warnings.warn(
+        "run_dmax_law generated an internally constructed simulation sensitivity, "
+        "not an independently tested physical law. Use run_retention_delay_curve.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return run_retention_delay_curve(*args, **kwargs)
+
+
+def run_retention_delay_curve_adaptive(*, seeds=4, episodes=300, V=1.5,
+                                       taus=None,
+                                       delay_ratios=(4, 8, 12, 16, 20),
+                                       crit=0.75, workers=1,
+                                       device_k=K_STAGES,
+                                       tau_r_override=None,
+                                       beta_leak=1.0,
+                                       retention_definition="deliberately_swept"):
+    """Reduced live sampling of the simulated retention--delay design curve.
 
     The publication sweep uses one 18-value absolute-delay grid for every retention.
     A lightweight notebook need not spend most of its time far from the falling edge:
     this runner evaluates the same device task at fixed ``D / tau_leak`` ratios, then
     interpolates the criterion crossing independently for each retention.  No model
     outputs or fitted values are substituted; every displayed point is obtained from
-    a live ``train_sequential`` cell.  The published-scale :func:`run_dmax_law` remains
-    the exact-grid route.
+    a live ``train_sequential`` cell.  This remains an internally constructed
+    simulation sensitivity rather than independent physical validation.
     """
     from functools import partial
     taus = DMAX_TAUS if taus is None else [float(t) for t in taus]
@@ -694,7 +1455,8 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
     }
     specs = [(tau, D) for tau in taus for D in sampled_delays[tau]]
     worker = partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds,
-                     device_k=device_k, tau_r_override=tau_r_override)
+                     device_k=device_k, tau_r_override=tau_r_override,
+                     beta_leak=beta_leak)
     if int(workers) > 1:
         from multiprocessing import get_context
         with get_context("spawn").Pool(min(int(workers), len(specs))) as pool:
@@ -727,7 +1489,31 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
             "dmax": dmax, "k": k, "r2": r2, "k_plateau": k_plateau,
             "r2_plateau": r2_plateau, "plateau_tau": plateau_tau, "crit": crit,
             "censored": censored, "seeds": seeds, "episodes": episodes, "V_op": V,
-            "mode": "adaptive-live"}
+            "beta_leak": float(beta_leak),
+            "retention_definition": _retention_definition(retention_definition),
+            "mode": "adaptive-live", "threshold_delay": dict(dmax),
+            "simulation_only": True, "independent_physical_validation": False,
+            "interpretation": (
+                "Internally generated retention--delay sensitivity; tau_leak directly "
+                "controls the simulated trace decay."
+            ),
+            "method_provenance": _provenance(
+                "proposed",
+                ["eligibility-trace decay", "adaptive threshold sampling"],
+                "Adaptive simulation grid at fixed delay-to-retention ratios.",
+                "Task-specific sensitivity only; not an independent physical law.",
+            )}
+
+
+def run_dmax_adaptive(*args, **kwargs):
+    """Deprecated wrapper for :func:`run_retention_delay_curve_adaptive`."""
+    warnings.warn(
+        "run_dmax_adaptive samples a simulation design curve, not a physical law. "
+        "Use run_retention_delay_curve_adaptive.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return run_retention_delay_curve_adaptive(*args, **kwargs)
 
 
 # -----------------------------------------------------------------------------
@@ -738,17 +1524,27 @@ def run_dmax_adaptive(*, seeds=4, episodes=300, V=1.5, taus=None,
 # with a delayed goal reward. NOT a perception/benchmark study -- the input stays
 # low-dimensional; what grows is the temporal DEPTH (trajectory length L) of the credit
 # problem. Shallow state x action policy (no homeostasis). Per cell the device trace is
-# compared against the established baselines on the SAME task/network/seeds/budget:
-#   device / eprop / abstract / no_trace.
-# Scaling axes: trajectory length L (T-maze stem) and arm count A_goal (chance = 1/A).
+# compared against repository controls on the same task/network/seeds/budget:
+#   device / shallow_eprop / exponential / no_trace.
+# Scaling axes: required action-sequence length L and action alphabet A.
 # tau_leak is set generously so retention can span the longest trajectory tested.
 # -----------------------------------------------------------------------------
 LONG_HORIZON_CONDS = {
     "device":   dict(),
-    "eprop":    dict(eprop=True),
-    "abstract": dict(abstract=True),
+    "shallow_eprop": dict(eprop=True),
+    "exponential": dict(abstract=True),
     "no_trace": dict(no_trace=True),
 }
+
+
+def _required_actions_for_length(L, A=2):
+    """Deterministic non-constant sequence; L=4, A=2 gives (0, 1, 1, 0)."""
+    L, A = int(L), int(A)
+    if L < 2 or A < 2:
+        raise ValueError("long-horizon sequences require L >= 2 and A >= 2")
+    if A == 2:
+        return tuple((i * (i + 1) // 2) % 2 for i in range(L))
+    return tuple(i % A for i in range(L))
 
 
 def _lh_final_rate(r):
@@ -764,7 +1560,7 @@ def _lh_run(job):
         dt = 5e-3
     else:
         L, A, cond, seed, episodes, D, tau_leak, dt = job
-    env = TMaze(L=L, A_goal=A)
+    env = ActionSequenceTrack(_required_actions_for_length(L, A), n_actions=A)
     r = train_sequential(env, B=1, tau_leak=tau_leak, D=D, episodes=episodes, dt=dt,
                          seed0=seed, **LONG_HORIZON_CONDS[cond])
     return (L, A, cond, seed, _lh_final_rate(r))
@@ -793,14 +1589,30 @@ def _lh_summarize(results, L_grid, A_grid, episodes, D, tau_leak, seeds):
                 summary[(L, A, cond)] = (float(v.mean()), lo, hi)
     return {"L": L_grid, "A": A_grid, "conds": list(LONG_HORIZON_CONDS),
             "summary": summary, "episodes": episodes, "D": D,
-            "tau_leak": tau_leak, "seeds": seeds}
+            "tau_leak": tau_leak, "seeds": seeds,
+            "retention_definition": "deliberately_swept",
+            "task": "ActionSequenceTrack",
+            "task_classification": "multi_decision_terminal_reward",
+            "method_provenance": _provenance(
+                "proposed",
+                ["multi-decision terminal-reward evaluation"],
+                "Action-sequence length and action alphabet are swept in the shared harness.",
+                "Legacy feasibility sweep with uncalibrated comparator rates.",
+            ),
+            "condition_method_provenance": {
+                name: _condition_provenance(name) for name in LONG_HORIZON_CONDS
+            },
+            "claim_limit": (
+                "Task-depth feasibility for repository implementations; comparator "
+                "rates are not calibrated by this legacy sweep."
+            )}
 
 
 def run_long_horizon(*, L_grid=(3, 5, 8, 12), A_grid=(2, 3), seeds=12,
                      episodes=2500, D=2.0, tau_leak=10.0, dt=5e-3):
     """Experiment 15: longer-horizon temporal-credit feasibility, serial.
 
-    Sweeps trajectory length ``L`` x arm count ``A_goal`` x condition x seed and reports
+    Sweeps action-sequence length ``L`` x action alphabet ``A`` x condition x seed and reports
     the final reward rate (mean + bootstrap CI over seeds) for the device trace against
     the eprop / abstract / no_trace baselines. Each seed is an independent ``B=1``,
     ``seed0=seed`` run, so the serial sweep here matches the pooled sweep in ``main``.
@@ -836,7 +1648,7 @@ def _lhf_run(job):
     D2D, read-time; PF off); False = no-trace control (faults moot with no trace)."""
     from .device_faults import maze_fault_stack
     L, p, seed, trace, A, episodes, D, tau_leak = job
-    env = TMaze(L=L, A_goal=A)
+    env = ActionSequenceTrack(_required_actions_for_length(L, A), n_actions=A)
     if trace:
         fault = maze_fault_stack(p_stuck=p, sigma_g=LONG_HORIZON_SIGMA_G, pf_on=False,
                                  stuck_kind="off", w_max=W_MAX,
@@ -856,7 +1668,7 @@ def _lhf_summarize(results, L_grid, p_grid, A, episodes, D, tau_leak, seeds):
     ctl = {(L, p): [] for L in L_grid for p in p_grid}
     for L, p, s, trace, val in results:
         (dev if trace else ctl)[(L, p)].append(val)
-    chance = 1.0 / A
+    chance_by_length = {int(L): float(A ** (-int(L))) for L in L_grid}
     grid = np.zeros((len(L_grid), len(p_grid), 3))
     cgrid = np.zeros((len(L_grid), len(p_grid)))
     for i, L in enumerate(L_grid):
@@ -865,9 +1677,26 @@ def _lhf_summarize(results, L_grid, p_grid, A, episodes, D, tau_leak, seeds):
             lo, hi = _lh_boot_ci(d, seed=i * 10 + j)
             grid[i, j] = (d.mean(), lo, hi); cgrid[i, j] = c.mean()
     return {"L": L_grid, "p": p_grid, "A": A, "grid": grid, "ctrl": cgrid,
-            "chance": chance,
+            "chance_by_length": chance_by_length,
             "faults": "stuck-off + D2D(0.5) [PF excluded] (maze mapping)",
-            "episodes": episodes, "D": D, "tau_leak": tau_leak, "seeds": seeds}
+            "faults_included": ["stuck_off", "sampled_lognormal_D2D"],
+            "faults_excluded": [
+                "line_resistance", "read_noise", "temporal_noise", "drift",
+                "programming_noise", "Poole_Frenkel_read_nonlinearity",
+            ],
+            "episodes": episodes, "D": D, "tau_leak": tau_leak, "seeds": seeds,
+            "retention_definition": "deliberately_swept",
+            "task": "ActionSequenceTrack",
+            "method_provenance": _provenance(
+                "proposed",
+                ["multi-decision terminal-reward evaluation", "fault stress testing"],
+                "The action-sequence task is evaluated under the enumerated fault classes.",
+                "The omitted nonidealities remain outside this simulation's scope.",
+            ),
+            "condition_method_provenance": {
+                "device": _condition_provenance("device"),
+                "no_trace": _condition_provenance("no_trace"),
+            }}
 
 
 def run_long_horizon_faults(*, L_grid=(3, 5, 8, 12), p_grid=(0, 0.1, 0.2, 0.5),
@@ -889,7 +1718,7 @@ def run_long_horizon_faults(*, L_grid=(3, 5, 8, 12), p_grid=(0, 0.1, 0.2, 0.5),
 
 
 def main(argv=None):
-    """Full-scale reproduction CLI for the sequential-maze grids (writes ``data/results``).
+    """Reproduction CLI for action-sequence and retention-delay grids.
 
     ``python -m mrl_trace.maze [--exp6] [--exp8] [--exp15] [--exp15-faults] [--full|--quick]``
 
@@ -904,11 +1733,11 @@ def main(argv=None):
     from multiprocessing import Pool
     from . import paths
 
-    ap = argparse.ArgumentParser(description="Sequential-maze credit-assignment reproductions")
+    ap = argparse.ArgumentParser(description="Action-sequence credit-assignment reproductions")
     ap.add_argument("--exp6", action="store_true",
-                    help="sequential T-maze + benchmark grid -> exp6_sequential.npy")
+                    help="calibrated action-sequence benchmark -> exp6_action_sequence.npy")
     ap.add_argument("--exp8", action="store_true",
-                    help="dense D_max(tau_leak) law -> exp8_dmax_law.npy")
+                    help="simulated retention-delay curve -> exp8_retention_delay_curve.npy")
     ap.add_argument("--exp15", action="store_true",
                     help="longer-horizon feasibility -> exp15_long_horizon.npy")
     ap.add_argument("--exp15-faults", dest="exp15_faults", action="store_true",
@@ -920,46 +1749,36 @@ def main(argv=None):
 
     n_proc = max(1, (os.cpu_count() or 4) - 2)
 
-    # ---- Experiment 6: sequential T-maze + benchmark grid ----
+    # ---- Experiment 6: calibrated multi-decision action sequence ----
     if a.exp6 or run_all:
-        seeds = 6 if a.quick else 20
-        episodes = 400 if a.quick else 800
-        V, D0, TAU0 = 1.5, 4.0, 10.0
-        taus = [2.0, 5.0, 20.0]
-        delays = [2, 4, 8, 16, 32, 64]
-        print(f"=== exp6 sequential T-maze (N={seeds}, {episodes} ep, V={V}) ===", flush=True)
-        conds = {"device": dict(), "rstdp": dict(abstract=True),
-                 "eprop": dict(eprop=True, eta=EPROP_ETA), "no_trace": dict(no_trace=True)}
-        specs = []
-        for name, kw in conds.items():                       # learning-curve runs
-            specs.append((("curve", name), TAU0, D0, kw, False))
-        specs.append((("weights", "device"), TAU0, D0, dict(), True))   # policy run
-        for tau in taus:                                     # grid cells
-            for D in delays:
-                specs.append((("grid", tau, D), tau, D, dict(), False))
-        with Pool(min(len(specs), n_proc)) as pool:
-            res = dict(pool.map(partial(_exp6_worker, seeds=seeds, episodes=episodes, V=V),
-                                specs))
-        grid = _exp6_assemble(res, conds, taus, delays, seeds, episodes, V, D0, TAU0)
-        paths.save_result("exp6_sequential.npy", grid)
-        print(f"  wrote exp6_sequential.npy  criteria={grid['criteria']}", flush=True)
+        if a.quick:
+            run_kw = dict(
+                episodes=40, tuning_episodes=20, calibration_trajectories=8,
+                learning_rates=(0.1, 1.0), tuning_seeds=(1000,),
+                evaluation_seeds=(2000,), dt=0.01, step_dur=0.05, D=0.1,
+            )
+        else:
+            run_kw = {}
+        print("=== exp6 calibrated ActionSequenceTrack ===", flush=True)
+        grid = run_action_sequence(**run_kw)
+        paths.save_result("exp6_action_sequence.npy", grid)
+        print("  wrote exp6_action_sequence.npy", flush=True)
 
-    # ---- Experiment 8: dense D_max(tau_leak) law ----
+    # ---- Experiment 8: simulated retention--delay design curve ----
     if a.exp8 or run_all:
         seeds = 6 if a.quick else 20
         episodes = 400 if a.quick else 800
         V, crit = 1.5, 0.75
         taus, delays = DMAX_TAUS, DMAX_DELAYS
-        print(f"=== exp8 dense D_max(tau_leak): {len(taus)} tau x {len(delays)} delays, "
+        print(f"=== exp8 retention-delay curve: {len(taus)} tau x {len(delays)} delays, "
               f"{seeds} seeds, {episodes} ep, V={V}, crit={crit} ===", flush=True)
         specs = [(tau, D) for tau in taus for D in delays]
         with Pool(min(len(specs), n_proc)) as pool:
             results = pool.map(partial(_dmax_cell, episodes=episodes, V=V, seeds=seeds),
                                specs)
         grid = _dmax_assemble(results, taus, delays, crit, seeds, episodes, V)
-        paths.save_result("exp8_dmax_law.npy", grid)
-        print(f"  wrote exp8_dmax_law.npy  D_max = {grid['k']:.2f} tau (R^2={grid['r2']:.3f}), "
-              f"plateau slope ~{grid['k_plateau']:.2f}", flush=True)
+        paths.save_result("exp8_retention_delay_curve.npy", grid)
+        print("  wrote exp8_retention_delay_curve.npy (simulation-only)", flush=True)
 
     # ---- Experiment 15: longer-horizon feasibility ----
     if a.exp15 or run_all:
@@ -1006,7 +1825,7 @@ def _exp6_worker(spec, seeds, episodes, V):
     """Run one independent exp6 cell for the pool. ``spec`` = (key, tau_leak, D, kwargs,
     want_weights). Returns ``(key, rewards[, weights])``. Deterministic given seed0=0."""
     key, tau_leak, D, kw, want_w = spec
-    env = TMaze(L=3, A_goal=2)
+    env = DelayedCuedChoice(L=3, A_goal=2)
     out = train_sequential(env, B=seeds, tau_leak=tau_leak, D=D, episodes=episodes,
                            V=V, seed0=0, return_weights=want_w, **kw)
     return (key, out)
@@ -1016,7 +1835,7 @@ def _exp6_worker_seeded(spec, seeds, episodes, V, seed0=0, device_k=K_STAGES,
                         tau_r_override=None):
     """Spawn-safe exp6 worker that retains the public runner's ``seed0`` control."""
     key, tau_leak, D, kw, want_w = spec
-    env = TMaze(L=3, A_goal=2)
+    env = DelayedCuedChoice(L=3, A_goal=2)
     out = train_sequential(env, B=seeds, tau_leak=tau_leak, D=D, episodes=episodes,
                            V=V, seed0=seed0, return_weights=want_w,
                            device_k=device_k, tau_r_override=tau_r_override, **kw)
@@ -1037,7 +1856,7 @@ def _exp6_assemble(res, conds, taus, delays, seeds, episodes, V, D0, TAU0):
         curves[name] = running_rate(r.mean(0), window=50)
         finals_ci[name] = bootstrap_ci(finals[name])
     _, w_dev = res[("weights", "device")]
-    env = TMaze(L=3, A_goal=2)
+    env = DelayedCuedChoice(L=3, A_goal=2)
     pol = np.array([policy_correct(env, w_dev[b]) for b in range(seeds)])
     grid = np.zeros((len(taus), len(delays)))
     grid_ci = np.zeros((len(taus), len(delays), 2))
@@ -1065,7 +1884,24 @@ def _exp6_assemble(res, conds, taus, delays, seeds, episodes, V, D0, TAU0):
             "taus": taus, "delays": delays, "grid": grid, "grid_ci": grid_ci,
             "dmax": dmax, "chance": chance, "crit": crit,
             "D0": D0, "TAU0": TAU0, "V": V, "seeds": seeds, "episodes": episodes,
-            "criteria": criteria}
+            "retention_definition": "deliberately_swept",
+            "criteria": criteria,
+            "task": "DelayedCuedChoice",
+            "task_classification": "single_learned_contextual_decision_after_fixed_wait",
+            "comparator_calibrated": False,
+            "method_provenance": _provenance(
+                "adapted",
+                ["delayed contextual decision evaluation"],
+                "The historical auto-advancing task is retained as DelayedCuedChoice.",
+                "Not trajectory-level credit assignment or a calibrated superiority test.",
+            ),
+            "condition_method_provenance": {
+                name: _condition_provenance(name) for name in conds
+            },
+            "claim_limit": (
+                "Historical delayed-choice control only; not trajectory-level policy "
+                "learning and not a calibrated algorithm-superiority comparison."
+            )}
 
 
 if __name__ == "__main__":

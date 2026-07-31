@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the accompanying manuscript."
-title: "mrl-trace: Memristive device eligibility traces for local reinforcement learning"
+title: "mrl-trace: Memristive transients as physical eligibility surrogates"
 type: software
 version: 0.1.0
 date-released: 2026-07-10
@@ -20,7 +20,7 @@ authors:
     given-names: Anthony J.
 preferred-citation:
   type: article
-  title: "Memristive transients as eligibility traces for all-local reinforcement learning"
+  title: "Memristive transients as physical eligibility traces for all-local reinforcement learning"
   year: 2026
   authors:
     - family-names: Vu

@@ -26,7 +26,8 @@ Two complementary studies live here, sharing the same perception front-end:
     (:func:`prep_readouts`). STAGE 2 (decision, pure NumPy) feeds those cached readouts
     as the STATE of the DEEP all-local agent (:func:`~mrl_trace.deep.train_deep`:
     trace + DFA + homeostasis) via its ``state_sampler`` hook, and sweeps hidden width
-    ``H`` x SiO_x stuck-fault fraction ``p`` under the measured device-fault prior. If
+    ``H`` x SiO_x stuck-fault fraction ``p`` under a specified SiO_x-inspired fault
+    stress model. If
     ``readouts.npz`` is ABSENT the sweep falls back to an HONEST proxy front-end (clearly
     logged): class-conditional noisy embeddings whose clusters overlap and whose label is
     a non-linearly-separable XOR of two latent bits, so depth is genuinely required. This
@@ -76,8 +77,26 @@ __all__ = [
     # exp16 stage-1 caching + stage-2 sweep
     "prep_readouts", "run_hybrid_scale",
     # analysis helpers
-    "final_rate",
+    "final_rate", "HYBRID_METHOD_PROVENANCE",
 ]
+
+HYBRID_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": [
+        "surrogate-gradient spiking perception",
+        "direct feedback alignment",
+        "firing-rate homeostasis",
+        "three-factor reward modulation",
+    ],
+    "repository_adaptation": (
+        "A frozen perception front end is composed with the repository's local "
+        "device-eligibility decision rule."
+    ),
+    "claim_limit": (
+        "The composition is repository-specific and its fault sweep covers only the "
+        "nonidealities listed in each result payload."
+    ),
+}
 
 # =============================================================================
 # exp5 -- perception task geometry (noisy oriented gratings) and front-end
@@ -323,7 +342,9 @@ def run_hybrid_decision(*, seeds=_N_SEEDS, front_steps=600, front_seed=0,
     c3 = (hyb >= crit) and (hyb - raw >= 0.15)
     return dict(front_acc=acc, chance=chance, crit=crit, results=res,
                 C1=bool(acc >= 0.85), C2=bool(c2), C3=bool(c3),
-                C=C, A=A, P=IMG * IMG, noise=NOISE, n_seeds=seeds)
+                C=C, A=A, P=IMG * IMG, noise=NOISE, n_seeds=seeds,
+                retention_definition="deliberately_swept",
+                method_provenance=HYBRID_METHOD_PROVENANCE)
 
 
 # =============================================================================
@@ -527,7 +548,16 @@ def run_hybrid_scale(*, H_grid=(32, 128, 512), p_grid=(0.0, 0.2, 0.5), seeds=12,
 
     return {"H": H_grid, "p": p_grid, "conds": list(CONDS), "summary": summary,
             "readouts": bool(have_ro), "front_end": "real" if have_ro else "proxy",
-            "F": F, "A": A, "seeds": seeds, "trials": trials, "claim": claim}
+            "F": F, "A": A, "seeds": seeds, "trials": trials, "claim": claim,
+            "retention_definition": "deliberately_swept",
+            "method_provenance": HYBRID_METHOD_PROVENANCE,
+            "fault_scope": {
+                "status": "adapted",
+                "included_nonidealities": ["stuck_off", "sampled_device_to_device_lognormal"],
+                "excluded_nonidealities": ["line_resistance", "read_noise", "temporal_noise",
+                    "drift", "programming_update_noise", "poole_frenkel_iv_nonlinearity"],
+                "claim_limit": "Simulation stress model, not a comprehensive measured fault prior.",
+            }}
 
 
 def _boot_ci(vals, seed=0):

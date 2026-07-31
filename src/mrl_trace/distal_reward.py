@@ -9,28 +9,43 @@ raises the cue weight and leaves the distractors near baseline despite the delay
 Two settings, matching the paper:
 
 - ``trace_level`` (Fig 4): the device eligibility trace is precomputed as a kernel
-  (from :meth:`TransientGate.trace`) and applied by its lag at reward time; success
+  (from :meth:`CascadeEligibilityGate.trace`) and applied by its lag at reward time; success
   is the cue-to-distractor weight ratio.
 - ``spiking`` (Fig 5): a full LIF output neuron with the device gate integrated
   online per synapse from real Poisson spike coincidences; success is the
   saturation of the cue synapse toward its conductance bound.
 
 Both expose a per-seed ``train_*`` and a vectorised ``sweep_*`` that returns
-per-seed arrays (so bootstrapped CIs can be computed). The retention time
-``tau_leak`` sets the maximum learnable delay in both.
+per-seed arrays (so bootstrapped CIs can be computed). Sweeping ``tau_leak`` changes
+the simulated delay sensitivity in both; it is not an independently tested physical law.
 """
 from __future__ import annotations
 
 import numpy as np
 
-from .device import TransientGate, tau_r, tau_d, K_STAGES
+from .device import (CascadeEligibilityGate, decay_matched_exponential_tau,
+                     tau_r, K_STAGES)
 from .neurons import lif_step, TAU_M, V_TH
 from .learning import LTD_BIAS
+
+DISTAL_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": ["three-factor delayed-reward learning"],
+    "repository_adaptation": (
+        "The cascade eligibility surrogate is driven by the repository's signed "
+        "coincidence rule in trace-level and LIF credit tasks."
+    ),
+    "claim_limit": (
+        "Simulation evidence with deliberately swept retention; the cascade inherits "
+        "the approximation limits recorded by CASCADE_METHOD_PROVENANCE."
+    ),
+}
 
 __all__ = [
     "trace_kernel", "abstract_kernel", "train_trace_level",
     "SpikingGateBank", "train_spiking", "cue_saturation", "W_INIT", "W_MAX",
     "trace_ratio", "run_trace_window", "run_spiking_saturation",
+    "DISTAL_METHOD_PROVENANCE",
 ]
 
 W_INIT, W_MAX = 0.5, 1.0
@@ -39,10 +54,12 @@ W_INIT, W_MAX = 0.5, 1.0
 # ----------------------------------------------------------------------------
 # Trace-level task (Fig 4): precomputed eligibility kernel + lag-based credit
 # ----------------------------------------------------------------------------
-def trace_kernel(t_grid, tau_leak, V=0.9, k=K_STAGES, tau_r_override=None):
+def trace_kernel(t_grid, tau_leak, V=0.9, k=K_STAGES, tau_r_override=None,
+                 beta_leak=1.0):
     """Device eligibility kernel e(t) on ``t_grid`` for a coincidence at t=0."""
-    g = TransientGate(V=V, tau_leak=tau_leak, k=k,
+    g = CascadeEligibilityGate(V=V, tau_leak=tau_leak, k=k,
                       tau_r_override=tau_r_override,
+                      beta_leak=beta_leak,
                       dt=float(t_grid[1] - t_grid[0]))
     return g.trace(t_grid, coincidence_at=0.0, coincidence_dur=0.3)
 
@@ -54,11 +71,12 @@ def abstract_kernel(t_grid, tau):
 
 def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
                       eta=0.05, seed=0, abstract=False, no_trace=False, V=0.9,
-                      k=K_STAGES, tau_r_override=None):
+                      k=K_STAGES, tau_r_override=None, beta_leak=1.0):
     """One seed of the trace-level distal-reward task; returns final weights ``w``
     (``w[0]`` cue, ``w[1:]`` distractors).
 
-    ``abstract=True`` uses an exponential kernel instead of the device trace;
+    ``abstract=True`` uses a single exponential fitted to the device surrogate's
+    post-peak 80--10% decay band instead of merely reusing its nominal retention;
     ``no_trace=True`` is the control with a delta kernel (eligibility only at the
     exact reward instant, so no credit survives any delay ``D>0``)."""
     rng = np.random.default_rng(seed)
@@ -68,10 +86,15 @@ def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
         kern = np.zeros(nt)
         kern[0] = 1.0
     elif abstract:
-        kern = abstract_kernel(t, tau_leak)
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=V, k=k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        kern = abstract_kernel(t, matched_tau)
     else:
         kern = trace_kernel(t, tau_leak, V=V, k=k,
-                            tau_r_override=tau_r_override)
+                            tau_r_override=tau_r_override,
+                            beta_leak=beta_leak)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):
@@ -100,32 +123,54 @@ def train_trace_level(tau_leak, D, *, N=8, trials=1500, T=300.0, dt=0.1,
 class SpikingGateBank:
     """``N`` independent device gates (the Fig-5 per-synapse eligibility bank).
 
-    Equivalent to a vectorised :class:`TransientGate` over an ``(N,)`` grid, with
-    the signed/leak-dominant drive and ``[-Vnmax, Vnmax]`` bound."""
+    Equivalent to a vectorised :class:`CascadeEligibilityGate` over an ``(N,)``
+    grid: the same linear Erlang cascade, signed/leak-dominant drive,
+    age-dependent leakage option and ``[-Vnmax, Vnmax]`` bound."""
 
     def __init__(self, N, V=0.9, tau_leak=5.0, k=K_STAGES, dt=1e-3, Vnmax=1.0,
-                 tau_r_override=None):
+                 tau_r_override=None, beta_leak=1.0):
         self.N, self.k, self.dt, self.Vnmax = N, k, dt, Vnmax
         fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
         self.alpha = k / fitted_tau_r
-        self.tau_d = tau_d(V)
-        self.tau_leak = tau_leak
+        self.beta_leak = float(beta_leak)
+        tl = np.asarray(tau_leak, dtype=float)
+        if (self.beta_leak <= 0 or not np.isfinite(self.beta_leak)
+                or not np.all(np.isfinite(tl)) or np.any(tl <= 0)):
+            raise ValueError("beta_leak and all tau_leak values must be finite and positive")
+        if tl.ndim == 0:
+            self.tau_leak = tl
+        elif tl.shape == (N,):
+            self.tau_leak = tl[:, None]
+        else:
+            raise ValueError("tau_leak must be scalar or have shape (N,)")
+        self._t_since = np.full((N, 1), dt) if beta_leak != 1.0 else None
         self.vn = np.zeros((N, k))
-        self.vsc = np.zeros(N)
 
     def reset(self):
         self.vn[:] = 0.0
-        self.vsc[:] = 0.0
+        if self._t_since is not None:
+            self._t_since[:] = self.dt
 
     def step(self, drive):
         dt, a, Vm = self.dt, self.alpha, self.Vnmax
-        new = self.vn.copy()
-        prev = drive
-        for j in range(self.k):
-            new[:, j] = self.vn[:, j] + dt * (
-                a * prev * (Vm - np.abs(self.vn[:, j])) - self.vn[:, j] / self.tau_leak)
-            prev = self.vn[:, j]
-        self.vsc += dt * (a * drive * (Vm - np.abs(self.vsc)) - self.vsc / self.tau_d)
+        drive = np.asarray(drive, dtype=float)
+        if drive.shape != (self.N,):
+            raise ValueError(f"drive must have shape ({self.N},)")
+        vn = self.vn
+        prev = np.empty_like(vn)
+        prev[:, 0] = Vm * drive
+        prev[:, 1:] = vn[:, :-1]
+        if self.beta_leak == 1.0:
+            leak_rate = 1.0 / self.tau_leak
+        else:
+            self._t_since = np.where(
+                np.abs(drive)[:, None] > 1e-9, dt, self._t_since + dt
+            )
+            tau = self.tau_leak
+            leak_rate = (self.beta_leak / tau) * np.power(
+                np.clip(self._t_since / tau, 1e-6, None), self.beta_leak - 1.0
+            )
+        new = vn + dt * (a * (prev - vn) - vn * leak_rate)
         self.vn = np.clip(new, -Vm, Vm)
         return self.vn[:, -1] / Vm
 
@@ -156,12 +201,12 @@ def _spiking_trial(bank, w, rewarded, D, *, dt=1e-3, cue_rate=200.0, dist_rate=4
 
 
 def train_spiking(tau_leak, D, *, N=8, trials=400, dt=1e-3, seed=0, eta=0.2,
-                  V=0.9, k=K_STAGES, tau_r_override=None):
+                  V=0.9, k=K_STAGES, tau_r_override=None, beta_leak=1.0):
     """One seed of the full-spiking distal-reward task; returns final weights ``w``
     (``w[0]`` cue saturation toward the bound is the success measure)."""
     rng = np.random.default_rng(seed)
     bank = SpikingGateBank(N, tau_leak=tau_leak, dt=dt, V=V, k=k,
-                           tau_r_override=tau_r_override)
+                           tau_r_override=tau_r_override, beta_leak=beta_leak)
     w = np.full(N, W_INIT)
     baseline = 0.5
     for _ in range(trials):
@@ -179,11 +224,12 @@ def cue_saturation(w):
 
 def _spiking_saturation_cell(args):
     """Spawn-safe worker for one retention/delay cell of the Fig. 5 sweep."""
-    name, tau_leak, delay, seeds, trials, dt, eta, V, k, tau_r_override = args
+    (name, tau_leak, delay, seeds, trials, dt, eta, V, k, tau_r_override,
+     beta_leak) = args
     values = np.asarray([
         cue_saturation(train_spiking(
             tau_leak, delay, trials=trials, dt=dt, seed=seed, eta=eta,
-            V=V, k=k, tau_r_override=tau_r_override
+            V=V, k=k, tau_r_override=tau_r_override, beta_leak=beta_leak
         ))
         for seed in range(seeds)
     ], dtype=float)
@@ -195,7 +241,7 @@ def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
                                      ("gate_tl2", 2.0),
                                      ("gate_tl0.5", 0.5)),
                            trials=400, dt=1e-3, eta=0.2, workers=1, V=0.9,
-                           k=K_STAGES, tau_r_override=None):
+                           k=K_STAGES, tau_r_override=None, beta_leak=1.0):
     """Fig. 5 grid: live full-spiking credit saturation.
 
     This is the missing thin sweep driver around the preserved per-seed
@@ -206,7 +252,7 @@ def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
     """
     jobs = [
         (name, tau_leak, delay, int(seeds), int(trials), float(dt), float(eta),
-         float(V), int(k), tau_r_override)
+         float(V), int(k), tau_r_override, float(beta_leak))
         for name, tau_leak in variants for delay in delays
     ]
     if workers in (None, "auto"):
@@ -239,6 +285,9 @@ def run_spiking_saturation(*, seeds=20, delays=(1, 2, 5, 10, 20, 40),
         "n_seeds": int(seeds),
         "trials": int(trials),
         "dt": float(dt),
+        "beta_leak": float(beta_leak),
+        "retention_definition": "deliberately_swept",
+        "method_provenance": DISTAL_METHOD_PROVENANCE,
     }
 
 
@@ -321,7 +370,8 @@ def run_trace_window(*, seeds=20, delays=TIER1_DELAYS, variants=TIER1_VARIANTS,
     return {"delays": list(delays), "ratios": ratios, "ratios_ci": ratios_ci,
             "seed_ratios": seed_ratios,
             "max_learn": {name: _maxd(name) for name, _, _ in variants},
-            "n_seeds": seeds}
+            "n_seeds": seeds, "retention_definition": "deliberately_swept",
+            "method_provenance": DISTAL_METHOD_PROVENANCE}
 
 
 def _trace_cell_star(args):
@@ -363,7 +413,8 @@ def run_trace_window_parallel(*, seeds=20, delays=TIER1_DELAYS,
 
     return {"delays": list(delays), "ratios": ratios, "ratios_ci": ratios_ci,
             "max_learn": {name: _maxd(name) for name, _, _ in variants},
-            "n_seeds": seeds}
+            "n_seeds": seeds, "retention_definition": "deliberately_swept",
+            "method_provenance": DISTAL_METHOD_PROVENANCE}
 
 
 def main(argv=None):

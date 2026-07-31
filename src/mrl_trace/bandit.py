@@ -25,22 +25,47 @@ from __future__ import annotations
 
 import numpy as np
 
-from .device import tau_r, tau_d, K_STAGES
+from .device import decay_matched_exponential_tau, tau_r, K_STAGES
 from .neurons import lif_step_batched, TAU_M, V_TH
-from .learning import LTD_BIAS
+from .learning import (LTD_BIAS, coincidence_drive, SIGNED_RULE_PROVENANCE,
+                       THREE_FACTOR_PROVENANCE)
 
 __all__ = ["GateBankBatched", "AbstractTrace", "train", "reward_rate",
-           "trials_to_criterion", "W_INIT", "W_MAX"]
+           "trials_to_criterion", "W_INIT", "W_MAX", "run_signed_rule_ablations",
+           "run_reversal", "run_reversal_grid", "calibrate_reversal_scales",
+           "reversal_phase_final", "reversal_recriterion",
+           "kaplan_meier_recovery_summary",
+           "BANDIT_METHOD_PROVENANCE"]
 
 W_INIT, W_MAX = 0.5, 1.5
+
+BANDIT_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": [
+        "contextual bandit evaluation",
+        "leaky integrate-and-fire dynamics",
+        "three-factor reward modulation",
+    ],
+    "repository_adaptation": (
+        "The repository's signed coincidence drive is integrated by either the "
+        "cascade eligibility surrogate or an explicit exponential control."
+    ),
+    "claim_limit": (
+        "Results test this repository-specific rule and task implementation; they do "
+        "not establish superiority over complete published learning algorithms."
+    ),
+}
 
 
 class GateBankBatched:
     """Device eligibility gates for ``B`` parallel ``(S, A)`` synapse grids.
 
-    Vectorised form of :class:`mrl_trace.device.TransientGate` (Section 5.3.2
-    physics): ``k`` cascade trap nodes plus one space-charge node per synapse, signed
-    leak-dominant drive, trace bounded in ``[-Vnmax, Vnmax]`` (the LTD wing).
+    Vectorised form of :class:`mrl_trace.device.CascadeEligibilityGate`: ``k``
+    linear low-pass nodes with signed leak-dominant drive, bounded in
+    ``[-Vnmax, Vnmax]``.  Without leakage, its unit-step response is the Erlang
+    candidate used by model identification (up to forward-Euler error). It is a
+    computational surrogate, not the complete product-current model used to fit the
+    measured Au transient.
     """
 
     def __init__(self, B, S, A, tau_leak=10.0, V=0.9, k=K_STAGES, dt=5e-3, Vnmax=1.0,
@@ -48,14 +73,12 @@ class GateBankBatched:
         self.B, self.S, self.A, self.k, self.dt, self.Vnmax = B, S, A, k, dt, Vnmax
         fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
         self.alpha = k / fitted_tau_r
-        self.tau_d = tau_d(V)
-        # Dispersion of the trap-DISCHARGE. beta_leak=1 is the single-rate (mono-exponential)
-        # leak used throughout the learning results; beta_leak<1 is the measured dispersive
-        # (stretched-exponential) discharge, instantaneous rate (beta/tau)(t/tau)^(beta-1) where
-        # t is time-since-last-drive (per synapse). beta=1 recovers 1/tau exactly (bit-identical),
-        # so this is a backward-compatible sensitivity knob: the device study measures
-        # beta_leak~0.85 field-free, and this lets the learning results be re-run at that value
-        # to confirm the single-rate idealisation does not change them.
+        # Dispersion of the trap discharge. beta_leak=1 is the historical single-rate
+        # approximation; beta_leak<1 uses the instantaneous stretched-exponential hazard
+        # (beta/tau)(t/tau)^(beta-1), with t measured since the most recent drive on each
+        # synapse. This is a reset-clock, non-Markov surrogate rather than an exact KWW
+        # state-space realization. Empirical-linked runs pass and record the direct
+        # held-bias fit; beta=1 remains a separately labelled sensitivity.
         self.beta_leak = float(beta_leak)
         # per-synapse discharge clock, shape (B,S,A,1) to compose with vn (B,S,A,k) and a
         # per-synapse tau_leak (1,S,A,1); only allocated when the dispersive discharge is used.
@@ -67,13 +90,14 @@ class GateBankBatched:
         # (B, S, A, k) in step(); a scalar broadcasts trivially. Backward-compatible: a
         # scalar reproduces the original behaviour bit-for-bit.
         tl = np.asarray(tau_leak, dtype=float)
+        if (not np.isfinite(self.beta_leak) or self.beta_leak <= 0
+                or not np.all(np.isfinite(tl)) or np.any(tl <= 0)):
+            raise ValueError("beta_leak and all tau_leak values must be finite and positive")
         self.tau_leak = tl.reshape(1, S, A, 1) if tl.ndim == 2 else tl
         self.vn = np.zeros((B, S, A, k))
-        self.vsc = np.zeros((B, S, A))
 
     def reset(self):
         self.vn[:] = 0.0
-        self.vsc[:] = 0.0
         if self._t_since is not None:
             self._t_since[:] = self.dt
 
@@ -89,7 +113,11 @@ class GateBankBatched:
         dt, a, Vm = self.dt, self.alpha, self.Vnmax
         vn = self.vn
         prev = np.empty_like(vn)
-        prev[..., 0] = drive                       # stage 0 driven by the input coincidence
+        # A unit input has the same scale as the internal state.  With no leakage,
+        # dv_1/dt = alpha*(Vnmax*drive-v_1) and
+        # dv_m/dt = alpha*(v_{m-1}-v_m), whose unit-step final stage is the Erlang CDF
+        # gammainc(k, alpha*t). This is the same candidate evaluated in device fitting.
+        prev[..., 0] = Vm * drive                  # stage 0 driven by input coincidence
         prev[..., 1:] = vn[..., :-1]               # stage j>0 driven by its old upstream node
         if self.beta_leak == 1.0:
             leak_rate = 1.0 / self.tau_leak                       # single-rate (default)
@@ -103,16 +131,16 @@ class GateBankBatched:
             tau = self.tau_leak                                   # scalar or (1,S,A,1)
             leak_rate = (self.beta_leak / tau) * np.power(
                 np.clip(self._t_since / tau, 1e-6, None), self.beta_leak - 1.0)  # (B,S,A,1)
-        new = vn + dt * (a * prev * (Vm - np.abs(vn)) - vn * leak_rate)
+        new = vn + dt * (a * (prev - vn) - vn * leak_rate)
         np.clip(new, -Vm, Vm, out=new)
-        self.vsc += dt * (a * drive * (Vm - np.abs(self.vsc)) - self.vsc / self.tau_d)
         self.vn = new
         return new[..., -1] / Vm
 
 
 class AbstractTrace:
     """Control: an abstract exponential eligibility trace (the hand-set kernel of
-    prior algorithmic work), matched in decay timescale to the device ``tau_leak``.
+    prior algorithmic work). Publication comparators supply the time constant from
+    :func:`mrl_trace.device.decay_matched_exponential_tau`.
     Same signed drive and readout interface as :class:`GateBankBatched`; only the
     dynamics differ (a single leaky integrator, no sigmoidal rise)."""
 
@@ -132,7 +160,8 @@ class AbstractTrace:
 def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
           eta=0.2, in_rate=200.0, ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH,
           sigma0=0.15, sigma1=None, abstract=False, no_trace=False, seed0=0,
-          reward_pools=None, device_k=K_STAGES, tau_r_override=None):
+          reward_pools=None, device_k=K_STAGES, tau_r_override=None,
+          coincidence_mode="signed", beta_leak=1.0):
     """Train the contextual bandit on ``B`` parallel seeds; return rewards ``(B, trials)``.
 
     Parameters mirror the manuscript's experiments:
@@ -142,6 +171,8 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
                     noise is annealed linearly ``sigma0 -> sigma1`` over training;
       ``abstract``  use :class:`AbstractTrace` instead of the device gate;
       ``no_trace``  zero the eligibility every step (device-necessity control).
+      ``coincidence_mode`` selects the proposed signed drive or an unsigned/no-negative
+                    ablation; it is not attributed to the cited R-STDP algorithms.
       ``reward_pools`` biosignal reward: if given, a dict {1: array, 0: array} of
                     per-trial reward VALUES decoded from real EEG (out-of-fold
                     predictions, keyed by the TRUE outcome valence). On each trial the
@@ -157,9 +188,17 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
     ``reward_pools`` is given).
     """
     rng = np.random.default_rng(seed0)
-    Bank = AbstractTrace if abstract else GateBankBatched
-    bank = Bank(B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
-                tau_r_override=tau_r_override)
+    if abstract:
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=0.9, k=device_k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
+    else:
+        bank = GateBankBatched(
+            B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
+            tau_r_override=tau_r_override, beta_leak=beta_leak,
+        )
     w = np.full((B, S, A), W_INIT)
     correct = np.array([s % A for s in range(S)])      # rewarded action per state
     baseline = np.full(B, 1.0 / A)                     # baseline tracks chance for this A
@@ -184,7 +223,8 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
             v, sp = lif_step_batched(v, charge, dt, rng, tau_m=tau_m, v_th=v_th, noise=sigma)
             spk += sp
             drive = np.zeros((B, S, A))
-            drive[bidx, state, :] = pre[bidx, state][:, None] * np.where(sp, 1.0, -ltd)
+            drive[bidx, state, :] = coincidence_drive(
+                pre[bidx, state][:, None], sp, mode=coincidence_mode, ltd=ltd)
             if no_trace:
                 drive[:] = 0.0
             e = bank.step(drive)
@@ -212,6 +252,40 @@ def train(S, A, *, B=6, tau_leak=10.0, D=2.0, trials=1500, dt=5e-3, cue_dur=1.0,
     return rewards
 
 
+def run_signed_rule_ablations(*, seeds=6, trials=600, **kwargs):
+    """Run the proposed signed drive beside its explicit no-negative ablation."""
+    modes = ("signed", "unsigned", "no_negative")
+    rewards = {
+        mode: train(2, 2, B=seeds, trials=trials, coincidence_mode=mode, **kwargs)
+        for mode in modes
+    }
+    return {
+        "rewards": rewards,
+        "finals": {mode: reward_rate(value, window=min(100, trials))
+                   for mode, value in rewards.items()},
+        "retention_definition": "deliberately_swept",
+        "method_provenance": BANDIT_METHOD_PROVENANCE,
+        "component_provenance": {
+            "three_factor": THREE_FACTOR_PROVENANCE,
+            "signed_coincidence": SIGNED_RULE_PROVENANCE,
+            "unsigned_control": {
+                "status": "proposed",
+                "established_basis": ["ablation analysis"],
+                "repository_adaptation": (
+                    "The magnitude of the signed drive is retained while its sign is removed."
+                ),
+                "claim_limit": "Ablation only; not a published R-STDP implementation.",
+            },
+            "no_negative_control": {
+                "status": "proposed",
+                "established_basis": ["coincidence-only eligibility"],
+                "repository_adaptation": "Presynaptic-only negative events are set to zero.",
+                "claim_limit": "Ablation only; not a published R-STDP implementation.",
+            },
+        },
+    }
+
+
 def reward_rate(rewards, window=100):
     """Mean reward over the last ``window`` trials, per seed (axis -1)."""
     rewards = np.asarray(rewards)
@@ -226,7 +300,7 @@ def trials_to_criterion(rew_1d, crit, window=100):
     rew_1d = np.asarray(rew_1d)
     if len(rew_1d) < window:
         return None
-    csum = np.cumsum(rew_1d)
+    csum = np.r_[0.0, np.cumsum(rew_1d)]
     rr = (csum[window:] - csum[:-window]) / window
     if not np.any(rr >= crit):
         return None
@@ -237,10 +311,9 @@ def trials_to_criterion(rew_1d, crit, window=100):
 # Experiment cores (the closed-loop RL studies that compose ``train``)
 #
 # Each ``run_*`` returns the result grid as a plain dict -- no file I/O, no
-# plotting, no stdout.  Notebooks call these at a small (quick) seed/trial count
-# and render the figures inline; ``main()`` (below) calls them at the published
-# 20-seed scale and writes the grid under ``data/results/`` for the notebooks to
-# render.  Reversal (Experiment 18) is a ``train`` variant, so it lives here.
+# plotting, no stdout. Notebooks select reduced or publication budgets and render
+# figures inline; any large per-seed archive is an explicit external output rather
+# than bundled evidence. Reversal is a ``train`` variant, so it lives here.
 # =============================================================================
 
 
@@ -252,25 +325,43 @@ def _mapping(S, A, shift):
 def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
                  n_phases=2, dt=5e-3, cue_dur=1.0, eta=0.2, in_rate=200.0,
                  ltd=LTD_BIAS, tau_m=TAU_M, v_th=V_TH, sigma=0.15, seed0=0,
-                 device_k=K_STAGES, tau_r_override=None):
-    """Reversal learning (Experiment 18): the signed rule must UNLEARN a stale
-    contingency.  Mirrors :func:`train` exactly, but the rewarded mapping is
+                 device_k=K_STAGES, tau_r_override=None, beta_leak=1.0,
+                 eligibility_normalizer=1.0, return_diagnostics=False):
+    """Reversal sensitivity with a trial-local eligibility state.
+
+    The rewarded mapping is
     cyclically shifted by one at each of ``n_phases`` equal-length phase boundaries,
     so the agent must repeatedly unlearn the stale contingency and acquire the new one.
 
-    ``cond`` is ``"device"`` (trap-discharge gate), ``"abstract"`` (matched-tau single
-    exponential, the recency-trace baseline) or ``"no_trace"`` (eligibility zeroed,
+    ``cond`` is ``"device"`` (trap-discharge gate), ``"abstract"`` (post-peak
+    decay-matched single exponential, the recency-trace baseline) or ``"no_trace"`` (eligibility zeroed,
     the device-necessity control).
 
-    Returns ``(rewards (B, trials), flips list[int])`` where ``rewards[:, t]`` is the
-    TRUE task performance under the contingency in force at trial ``t``.
+    The eligibility bank is reset at the beginning of every trial. Therefore a
+    retention-dependent recovery difference reflects within-trial filtering and
+    effective plasticity, not eligibility carried across the reversal boundary.
+    ``eligibility_normalizer`` is a frozen reward-time update RMS from a separate
+    common calibration stream.
+
+    Returns ``(rewards, flips)`` by default, or ``(rewards, flips, diagnostics)``.
     """
+    if cond not in {"device", "abstract", "no_trace"}:
+        raise ValueError("cond must be 'device', 'abstract', or 'no_trace'")
+    eligibility_normalizer = float(eligibility_normalizer)
+    if not np.isfinite(eligibility_normalizer) or eligibility_normalizer <= 0:
+        raise ValueError("eligibility_normalizer must be finite and positive")
     rng = np.random.default_rng(seed0)
+    matched_tau = None
     if cond == "abstract":
-        bank = AbstractTrace(B, S, A, tau_elig=tau_leak, dt=dt)
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=0.9, k=device_k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        bank = AbstractTrace(B, S, A, tau_elig=matched_tau, dt=dt)
     else:
         bank = GateBankBatched(B, S, A, tau_leak=tau_leak, dt=dt, k=device_k,
-                               tau_r_override=tau_r_override)
+                               tau_r_override=tau_r_override,
+                               beta_leak=beta_leak)
     no_trace = (cond == "no_trace")
 
     w = np.full((B, S, A), W_INIT)
@@ -283,6 +374,9 @@ def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
 
     phase_len = trials // n_phases
     flips = [phase_len * p for p in range(1, n_phases)]
+    update_sq_sum = 0.0
+    update_count = 0
+    trace_peak = 0.0
 
     for tr in range(trials):
         phase = min(tr // phase_len, n_phases - 1)
@@ -310,11 +404,153 @@ def run_reversal(cond, *, S=2, A=2, B=20, tau_leak=10.0, D=2.0, trials=3000,
         chosen = np.argmax(spk, axis=1)
         chosen[tie] = rng.integers(A, size=int(tie.sum()))
         r_true = (chosen == correct[state]).astype(float)
-        adv = eta * (r_true - baseline)
-        w = np.clip(w + adv[:, None, None] * e_rew, 0.0, W_MAX)
+        raw_update = (r_true - baseline)[:, None, None] * e_rew
+        update_sq_sum += float(np.sum(raw_update ** 2))
+        update_count += int(raw_update.size)
+        trace_peak = max(trace_peak, float(np.max(np.abs(e_rew))))
+        w = np.clip(
+            w + eta * raw_update / eligibility_normalizer, 0.0, W_MAX
+        )
         baseline += 0.02 * (r_true - baseline)
         rewards[:, tr] = r_true
-    return rewards, flips
+    if not return_diagnostics:
+        return rewards, flips
+    raw_rms = float(np.sqrt(update_sq_sum / max(update_count, 1)))
+    return rewards, flips, {
+        "raw_trace_peak": trace_peak,
+        "raw_effective_update_rms": raw_rms,
+        "eligibility_normalizer": eligibility_normalizer,
+        "normalized_effective_update_rms": raw_rms / eligibility_normalizer,
+        "trace_reset_each_trial": True,
+        "beta_leak": float(beta_leak),
+        "matched_exponential_tau_s": (
+            None if matched_tau is None else float(matched_tau)
+        ),
+        "exponential_matching_protocol": (
+            "normalized device-surrogate 80--10% post-peak decay after a "
+            "0.3-s standard coincidence"
+        ) if cond == "abstract" else None,
+        "claim_limit": (
+            "Within-trial retention sensitivity; eligibility does not persist across "
+            "the reversal boundary."
+        ),
+    }
+
+
+def _reversal_job(job):
+    key, kwargs = job
+    return key, run_reversal(**kwargs)
+
+
+def _map_reversal_jobs(jobs, workers=1, pool=None):
+    if pool is not None:
+        return pool.map(_reversal_job, jobs, chunksize=1)
+    if int(workers) <= 1:
+        return list(map(_reversal_job, jobs))
+    from multiprocessing import get_context
+    with get_context("spawn").Pool(min(int(workers), len(jobs))) as own_pool:
+        return own_pool.map(_reversal_job, jobs, chunksize=1)
+
+
+def calibrate_reversal_scales(taus, *, conditions=("device", "abstract"),
+                              trajectories=256, calibration_trials=8,
+                              workers=1, pool=None, **shared):
+    """Freeze reward-time update RMS on one common untrained random stream.
+
+    This scale control removes the most direct update-magnitude confound across
+    retention/model conditions. It does not make the filters or algorithms
+    equivalent and does not turn reversal into a cross-trial trace-memory test.
+    """
+    jobs = []
+    for tau in (float(value) for value in taus):
+        for condition in conditions:
+            kwargs = dict(shared)
+            kwargs.update(
+                cond=condition, B=int(trajectories), tau_leak=tau,
+                trials=int(calibration_trials), n_phases=1, eta=0.0,
+                eligibility_normalizer=1.0, return_diagnostics=True,
+            )
+            jobs.append(((tau, condition), kwargs))
+    mapped = _map_reversal_jobs(jobs, workers=workers, pool=pool)
+    records = {}
+    for key, (_, _, diagnostics) in mapped:
+        raw = diagnostics["raw_effective_update_rms"]
+        normalizer = raw if np.isfinite(raw) and raw > np.finfo(float).eps else 1.0
+        records[key] = {
+            **diagnostics,
+            "eligibility_normalizer": float(normalizer),
+            "normalized_effective_update_rms": float(raw / normalizer),
+        }
+    return {
+        "protocol": "common_untrained_reward_time_update_rms",
+        "trajectories": int(trajectories),
+        "trials_per_trajectory": int(calibration_trials),
+        "records": records,
+        "claim_limit": (
+            "Scale calibration only; filters remain different and eligibility is "
+            "reset on every trial."
+        ),
+    }
+
+
+def run_reversal_grid(taus, *, conditions=("device", "abstract"), workers=1,
+                      pool=None, calibration_trajectories=256,
+                      calibration_trials=8,
+                      retention_definition="deliberately_swept", **shared):
+    """Calibrate and run independent reversal cells across retention/model pairs."""
+    conditions = tuple(conditions)
+    taus = tuple(float(value) for value in taus)
+    allowed_retention = {
+        "measured_held_bias", "measured_held_bias_quantiles",
+        "measured_near_zero_field", "extrapolated", "deliberately_swept",
+    }
+    retention_definition = str(retention_definition)
+    if retention_definition not in allowed_retention:
+        raise ValueError(
+            f"retention_definition must be one of {sorted(allowed_retention)}, "
+            f"got {retention_definition!r}"
+        )
+    calibration = calibrate_reversal_scales(
+        taus, conditions=conditions, trajectories=calibration_trajectories,
+        calibration_trials=calibration_trials, workers=workers, pool=pool,
+        **shared,
+    )
+    jobs = []
+    for tau in taus:
+        for condition in conditions:
+            kwargs = dict(shared)
+            kwargs.update(
+                cond=condition, tau_leak=tau,
+                eligibility_normalizer=calibration["records"][(tau, condition)][
+                    "eligibility_normalizer"
+                ],
+                return_diagnostics=True,
+            )
+            jobs.append(((tau, condition), kwargs))
+    mapped = _map_reversal_jobs(jobs, workers=workers, pool=pool)
+    return {
+        "taus": list(taus),
+        "conditions": list(conditions),
+        "calibration": calibration,
+        "cells": dict(mapped),
+        "retention_definition": retention_definition,
+        "interpretation": (
+            "Within-trial retention sensitivity after effective-update RMS control; "
+            "not persistence of eligibility across reversal."
+        ),
+        "method_provenance": {
+            "status": "adapted",
+            "established_basis": ["reversal learning", "eligibility traces"],
+            "repository_adaptation": (
+                "Trial-local device and post-peak decay-matched filters are compared "
+                "after reward-time update-scale calibration."
+            ),
+            "claim_limit": (
+                "Descriptive simulated recovery; the trace resets each trial and a "
+                "null result must be retained."
+            ),
+        },
+    }
 
 
 def reversal_phase_final(rw, flips, trials, window=200):
@@ -332,10 +568,55 @@ def reversal_recriterion(rw_1d, flip, crit, window=100):
     seg = rw_1d[flip:]
     if len(seg) < window:
         return None
-    csum = np.cumsum(seg)
+    csum = np.r_[0.0, np.cumsum(seg)]
     rr = (csum[window:] - csum[:-window]) / window
     hit = np.argmax(rr >= crit) if np.any(rr >= crit) else None
     return int(hit + window) if hit is not None else None
+
+
+def kaplan_meier_recovery_summary(times, censored, horizon):
+    """Summarise recovery times without treating right-censoring as an event.
+
+    ``times`` contains the observed recovery time or the last observation time for
+    each seed. ``censored`` is true when recovery was not observed. The returned
+    restricted mean survival time (RMST) integrates the Kaplan--Meier curve only to
+    the common follow-up ``horizon``; the median remains unavailable when survival
+    never falls to 0.5. This is preferable to averaging censoring times as though
+    every unsolved seed recovered at the end of the phase.
+    """
+    times = np.asarray(times, dtype=float).ravel()
+    censored = np.asarray(censored, dtype=bool).ravel()
+    horizon = float(horizon)
+    if times.size == 0 or times.shape != censored.shape:
+        raise ValueError("times and censored must be non-empty arrays of equal shape")
+    if not np.isfinite(horizon) or horizon <= 0:
+        raise ValueError("horizon must be finite and positive")
+    if np.any(~np.isfinite(times)) or np.any(times < 0) or np.any(times > horizon):
+        raise ValueError("all observed or censoring times must lie within the horizon")
+
+    survival = 1.0
+    previous = 0.0
+    rmst = 0.0
+    median = None
+    for time in np.unique(times):
+        rmst += survival * (float(time) - previous)
+        at_risk = int(np.count_nonzero(times >= time))
+        events = int(np.count_nonzero((times == time) & ~censored))
+        if events:
+            survival *= 1.0 - events / at_risk
+            if median is None and survival <= 0.5:
+                median = float(time)
+        previous = float(time)
+    rmst += survival * max(0.0, horizon - previous)
+    return {
+        "kaplan_meier_median_trials": median,
+        "median_status": "observed" if median is not None else "not_reached",
+        "restricted_mean_trials": float(rmst),
+        "restriction_horizon_trials": horizon,
+        "recovered_fraction": float(np.mean(~censored)),
+        "censored_fraction": float(np.mean(censored)),
+        "n_seeds": int(times.size),
+    }
 
 
 def run_learning_and_window(*, seeds=20, delays=(1, 2, 5, 10, 20),
@@ -375,6 +656,8 @@ def run_learning_and_window(*, seeds=20, delays=(1, 2, 5, 10, 20),
         "max_learn": {tl: _maxd(tl) for tl in rates}, "D0": D0, "n_seeds": seeds,
         "curve_device": dev, "curve_notrace": nt,
         "device_final": _ci(dev_fr), "notrace_final": _ci(nt_fr),
+        "retention_definition": "deliberately_swept",
+        "method_provenance": BANDIT_METHOD_PROVENANCE,
     }
 
 
@@ -399,7 +682,8 @@ def _scaling_cell(job):
         chance=chance, crit=crit, device=ci(dev_fr), no_trace=ci(nt_fr),
         trials_to_crit=int(np.median(ok)) if ok else None,
         n_converged=len(ok), passed=bool(dev_fr.mean() >= crit), n_seeds=seeds,
-        trials=trials)
+        trials=trials, retention_definition="deliberately_swept",
+        method_provenance=BANDIT_METHOD_PROVENANCE)
 
 
 def run_scaling(*, seeds=20, grid=((2, 2), (4, 2), (4, 4), (8, 4), (8, 8), (12, 8)),
@@ -428,7 +712,8 @@ def _remedy_cell(job):
     a = np.asarray(fr, float); lo, hi = bootstrap_ci(a)
     return name, dict(final=(float(a.mean()), float(a.std()), lo, hi),
                       passed=bool(a.mean() >= crit), n_seeds=seeds,
-                      trials=kw["trials"])
+                      trials=kw["trials"], retention_definition="deliberately_swept",
+                      method_provenance=BANDIT_METHOD_PROVENANCE)
 
 
 def run_remedies(*, seeds=20, trials=1500, budget_multiplier=4, workers=1):
@@ -488,7 +773,8 @@ def _summarize_reversal(raw, conds, trials, crit, chance):
             "seeds": B, "trials": trials, "n_phases": len(flips) + 1, "S": 2, "A": 2,
             "tau_leak": 10.0, "chance": chance, "crit": crit,
             "reacq_cost": {"device": dev_rc, "abstract": abs_rc, "ratio": ratio},
-            "criteria": criteria}
+            "criteria": criteria, "retention_definition": "deliberately_swept",
+            "method_provenance": BANDIT_METHOD_PROVENANCE}
 
 
 def main(argv=None):

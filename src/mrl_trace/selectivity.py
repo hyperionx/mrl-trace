@@ -11,13 +11,13 @@ top of the shared physics, so they live in their own module.
 - **Interval selectivity (Experiment 10).**  The device trace is *peaked* at a
   non-zero lag ``t*`` (Eqs. 7.1--7.2), so it is a band-pass in time: it credits a
   coincidence at a *preferred interval* and suppresses a coincidence at lag~0
-  (reward time), whereas a matched-decay exponential is monotone (recency-biased)
+  (reward time), whereas a post-peak decay-matched exponential is monotone (recency-biased)
   and credits the lag-0 confound. The preferred interval varies with ``tau_leak``;
   fabrication control of that retention is a design hypothesis, not a result.
   :func:`run_interval_selectivity` measures the *learned* selectivity
   ratio ``S = w_pref/w_late`` from a competitive three-factor loop and returns the
-  design-point comparison plus the ``S(D)`` crossover sweep. Retrospective criteria
-  P1--P4 and kills K1--K2 (retrospective interval-selectivity protocol).
+  design-point comparison plus the ``S(D)`` crossover sweep. Publication inference
+  instead uses :func:`run_predictive_interval_sweep` with one frozen absolute grid.
 
 - **Vector timer (Experiment 20).**  The cascade occupancy *vector* ``v^1..v^k`` is a
   distributed clockless code for elapsed time: the stage occupancies peak at
@@ -31,9 +31,8 @@ top of the shared physics, so they live in their own module.
   two-terminal cell, so the vector result *motivates* a staged-readout device rather
   than being a capability of the present one -- exploratory extension.)
 
-Each ``run_*`` is serial and import-light (a notebook calls it in-kernel at a small
-seed/trial count); ``main()`` runs the published-scale grids, parallelising the
-coarse axis with a process pool, and writes each grid via
+The cores are import-light; independent predictive cells can use a spawn-safe process
+pool. ``main()`` runs the large historical grids and writes each grid via
 ``paths.save_result`` under ``data/results/`` (``exp10_interval.npy``,
 ``exp20_vector_timer.npy``).
 """
@@ -43,7 +42,8 @@ from functools import lru_cache
 
 import numpy as np
 
-from .device import K_STAGES, TransientGate, tau_r
+from .device import (K_STAGES, CascadeEligibilityGate,
+                     decay_matched_exponential_tau, tau_r)
 from .distal_reward import trace_kernel, abstract_kernel, W_INIT
 from .bandit import GateBankBatched
 from .neurons import lif_step_batched, TAU_M, V_TH
@@ -57,7 +57,36 @@ __all__ = [
     "run_vector_timer",
     "aliasing_pair",
     "run_interval",
+    "SELECTIVITY_METHOD_PROVENANCE",
+    "PREDICTIVE_DELAY_GRID",
 ]
+
+# One absolute delay grid is frozen for every retention.  It brackets the expected
+# peaks over the default retention range without recentering the observations around
+# each model prediction.
+PREDICTIVE_DELAY_GRID = (
+    0.5, 0.75, 1.0, 1.4, 2.0, 2.8, 4.0, 5.7, 8.0, 11.3, 16.0, 22.6, 32.0,
+)
+RETENTION_DEFINITIONS = frozenset({
+    "measured_held_bias",
+    "measured_held_bias_quantiles",
+    "measured_near_zero_field",
+    "extrapolated",
+    "deliberately_swept",
+})
+
+SELECTIVITY_METHOD_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": ["eligibility traces", "sequential-state waiting times"],
+    "repository_adaptation": (
+        "The approximate cascade's non-zero-lag kernel is used as an interval-selective "
+        "learning variable and compared with a post-peak decay-matched exponential."
+    ),
+    "claim_limit": (
+        "This is a model prediction; it does not identify microscopic stages or "
+        "demonstrate fabrication tuning of retention."
+    ),
+}
 
 # =============================================================================
 # Experiment 10 -- the dual-phase trace as a tunable interval-selective eligibility.
@@ -65,7 +94,7 @@ __all__ = [
 # Recorded retrospectively in the interval-selectivity protocol (criteria P1-P4, kills
 # K1-K2). Claim: the device trace (Eqs. 7.1-7.2) is PEAKED at a non-zero lag t*, so it
 # implements a band-pass in time -- it credits a coincidence at a *preferred interval*
-# and SUPPRESSES a coincidence at lag~0 (reward time). A matched-decay exponential is
+# and SUPPRESSES a coincidence at lag~0 (reward time). A post-peak decay-matched exponential is
 # monotone (recency-biased) and credits the lag-0 confound instead. The preferred
 # interval varies with tau_leak; fabrication tunability is not assumed.
 #
@@ -83,32 +112,38 @@ LATE_LAG = 0.3       # s, the reward-time confound lag
 LTD = 0.6
 JITTER = 0.15        # per-trial fractional lag jitter (biological timing is noisy)
 DECAY = 0.08         # weight-decay alpha: the leaky three-factor rule Dw=eta((R-b)e-alpha w)
-                     # (the form of Ch2 Eq. 2.17 / Bianchi 2020); makes the equilibrium
+                     # (the form used by Bianchi 2020); makes the equilibrium
                      # weight eligibility-proportional rather than clip-saturated.
 
 
 def peak_lag(tau_leak, V=0.9, T=80.0, dt=0.05, k=K_STAGES,
-             tau_r_override=None):
+             tau_r_override=None, beta_leak=1.0):
     """Preferred interval t* = argmax of the (unnormalised) device trace."""
-    g = TransientGate(V=V, tau_leak=tau_leak, dt=dt, k=k,
-                      tau_r_override=tau_r_override)
+    g = CascadeEligibilityGate(V=V, tau_leak=tau_leak, dt=dt, k=k,
+                      tau_r_override=tau_r_override, beta_leak=beta_leak)
     t = np.arange(0, T, dt)
     raw = g.trace(t, coincidence_at=0.0, coincidence_dur=0.3, normalise=False)
     return float(t[np.argmax(raw)])
 
 
-def _kernel(kind, t, tau_leak, V, k=K_STAGES, tau_r_override=None):
+def _kernel(kind, t, tau_leak, V, k=K_STAGES, tau_r_override=None,
+            beta_leak=1.0):
     if kind == "device":
-        return trace_kernel(t, tau_leak, V=V, k=k, tau_r_override=tau_r_override)
+        return trace_kernel(t, tau_leak, V=V, k=k, tau_r_override=tau_r_override,
+                            beta_leak=beta_leak)
     if kind == "exp":
-        return abstract_kernel(t, tau_leak)
+        matched_tau = decay_matched_exponential_tau(
+            tau_leak, V=V, k=k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        return abstract_kernel(t, matched_tau)
     if kind == "no_trace":
         return np.zeros_like(t, dtype=float)
     raise ValueError(kind)
 
 
 @lru_cache(maxsize=256)
-def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override):
+def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak):
     """Process-local immutable kernel cache for publication sweep workers.
 
     A publication sweep previously rebuilt the same 1,600-point device kernel once
@@ -119,7 +154,7 @@ def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override):
     t = np.arange(0, float(T), float(dt))
     kernel = np.asarray(
         _kernel(kind, t, float(tau_leak), float(V), k=int(k),
-                tau_r_override=tau_r_override),
+                tau_r_override=tau_r_override, beta_leak=float(beta_leak)),
         dtype=float,
     )
     kernel.setflags(write=False)
@@ -128,7 +163,7 @@ def _cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override):
 
 def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
                       T=160.0, dt=0.1, eta=0.05, seed=0, k=K_STAGES,
-                      tau_r_override=None, kernel=None):
+                      tau_r_override=None, beta_leak=1.0, kernel=None):
     """One seed. Returns final weights w (w[0]=syn_pref @ lag D_rew,
     w[1]=syn_late @ lag LATE_LAG, w[2:]=reward-uncorrelated distractors).
 
@@ -140,7 +175,7 @@ def train_selectivity(kind, tau_leak, D_rew, *, V=0.9, N=8, trials=1500,
     rng = np.random.default_rng(seed)
     t = np.arange(0, T, dt)
     nt = len(t)
-    kern = (_cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override)
+    kern = (_cached_kernel(kind, T, dt, tau_leak, V, k, tau_r_override, beta_leak)
             if kernel is None else np.asarray(kernel, dtype=float))
     if kern.shape != t.shape:
         raise ValueError("precomputed selectivity kernel has the wrong shape")
@@ -185,12 +220,13 @@ def selectivity_ratio(w):
 
 
 def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500,
-                       k=K_STAGES, tau_r_override=None):
+                       k=K_STAGES, tau_r_override=None, beta_leak=1.0):
     """Per-seed selectivity ratios over ``seeds`` seeds (serial)."""
     return np.array([
         selectivity_ratio(train_selectivity(kind, tau_leak, D_rew, V=V,
                                              trials=trials, seed=s, k=k,
-                                             tau_r_override=tau_r_override))
+                                             tau_r_override=tau_r_override,
+                                             beta_leak=beta_leak))
         for s in range(seeds)
     ])
 
@@ -198,15 +234,15 @@ def _sweep_selectivity(kind, tau_leak, D_rew, *, V=0.9, seeds=20, trials=1500,
 def _selectivity_seed_job(job):
     """Spawn-safe worker for one deterministic selectivity seed."""
     (cell_id, seed, kind, tau_leak, delay, V, trials, k,
-     tau_r_override) = job
+     tau_r_override, beta_leak) = job
     weights = train_selectivity(
         kind, tau_leak, delay, V=V, trials=trials, seed=seed, k=k,
-        tau_r_override=tau_r_override,
+        tau_r_override=tau_r_override, beta_leak=beta_leak,
     )
     return cell_id, seed, float(selectivity_ratio(weights))
 
 
-def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
+def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9, beta_leak=1.0):
     """Experiment 10 core: device vs exponential interval selectivity + tunability.
 
     Serial; returns the result grid as a plain dict, no file I/O / no plotting /
@@ -215,7 +251,7 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
 
     Computes, at the design point ``tau_leak=10 s, D_rew=t*`` (the last-stage peak),
     the per-seed learned selectivity ``S = w_pref/w_late`` for the device trace and
-    the matched-tau exponential control, with bootstrap CIs; and the ``S(D)`` curve
+    the post-peak decay-matched exponential control, with bootstrap CIs; and the ``S(D)`` curve
     over a log-spaced design-interval grid for three retentions ``tau_leak in
     {5,10,20} s`` (the retrospectively recorded crossover: a short design interval is best
     served by short retention, a long one by long retention -- the peak sliding right
@@ -229,11 +265,14 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
       K2  (kill) device/exp CIs overlap (= not P4).
     """
     taus = [5.0, 10.0, 20.0]
-    tstar = {tl: peak_lag(tl, V=V) for tl in taus}
+    tstar = {tl: peak_lag(tl, V=V, beta_leak=beta_leak) for tl in taus}
 
     tl0 = 10.0
     D0 = round(tstar[tl0], 1)
-    dev_S = _sweep_selectivity("device", tl0, D0, V=V, seeds=seeds, trials=trials)
+    dev_S = _sweep_selectivity(
+        "device", tl0, D0, V=V, seeds=seeds, trials=trials,
+        beta_leak=beta_leak,
+    )
     exp_S = _sweep_selectivity("exp", tl0, D0, V=V, seeds=seeds, trials=trials)
     dlo, dhi = bootstrap_ci(dev_S)
     elo, ehi = bootstrap_ci(exp_S)
@@ -248,7 +287,10 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
     Scurve = {}
     for tl in taus:
         Scurve[tl] = np.array([
-            _sweep_selectivity("device", tl, D, V=V, seeds=seeds, trials=trials).mean()
+            _sweep_selectivity(
+                "device", tl, D, V=V, seeds=seeds, trials=trials,
+                beta_leak=beta_leak,
+            ).mean()
             for D in D_grid
         ])
     D_short, D_long = 2, 32
@@ -266,41 +308,94 @@ def run_interval_selectivity(*, seeds=20, trials=1500, V=0.9):
         "dev_S": dev_S, "exp_S": exp_S, "dev_ci": (dlo, dhi), "exp_ci": (elo, ehi),
         "D_grid": D_grid, "Scurve": Scurve,
         "P1": P1, "P2": P2, "P3": P3, "P4": P4, "seeds": seeds, "trials": trials,
+        "beta_leak": float(beta_leak),
+        "retention_definition": "deliberately_swept",
+        "method_provenance": SELECTIVITY_METHOD_PROVENANCE,
     }
 
 
 def run_predictive_interval_sweep(*, taus=(0.8, 1.3, 2.0, 3.6, 6.0, 10.0),
                                   seeds=20, trials=1500, V=0.9,
-                                  lag_factors=(0.4, 0.7, 1.0, 1.4, 2.0),
-                                  k=K_STAGES, tau_r_override=None, workers=1,
+                                  delay_grid=PREDICTIVE_DELAY_GRID,
+                                  lag_factors=None,
+                                  plateau_fraction=0.05,
+                                  k=K_STAGES, tau_r_override=None, beta_leak=1.0,
+                                  retention_definition="deliberately_swept",
+                                  workers=1,
                                   pool=None):
     """Test the device-model prediction of delay-peaked eligibility.
 
     The model predicts ``tstar`` before learning.  For every retention, the learning
-    rule is then evaluated on a delay grid expressed relative to that frozen prediction
-    for the device, a decay-matched exponential, and a zeroed-trace control.  Raw
-    per-seed selectivity ratios are retained so the notebook record never has to
-    reconstruct evidence from plotted means.
+    rule is then evaluated on the same predefined absolute delay grid for every
+    retention, for the device, a post-peak decay-matched exponential, and a zeroed-trace
+    control.  The shared grid avoids constructing a positive peak-tracking result by
+    recentering every observation grid on its own prediction. Raw per-seed selectivity
+    ratios, a near-maximum preferred band, boundary censoring and a
+    shuffled-prediction null are retained. The reported preferred lag is the geometric
+    centre of that band rather than the arbitrary first index on a saturated plateau.
+
+    ``lag_factors`` is a deprecated compatibility input. If supplied, its union across
+    all predictions is used as one common grid and the payload marks that grid as
+    prediction-derived; publication inference must use ``delay_grid``.
     """
     from scipy.stats import spearmanr
 
+    import warnings
+
     taus = [float(tau) for tau in taus]
+    retention_definition = str(retention_definition)
+    if retention_definition not in RETENTION_DEFINITIONS:
+        raise ValueError(
+            f"retention_definition must be one of {sorted(RETENTION_DEFINITIONS)}, "
+            f"got {retention_definition!r}"
+        )
     predictions = {tau: peak_lag(tau, V=V, k=k,
-                                 tau_r_override=tau_r_override) for tau in taus}
+                                 tau_r_override=tau_r_override,
+                                 beta_leak=beta_leak) for tau in taus}
+    matched_exponential_tau = {
+        tau: decay_matched_exponential_tau(
+            tau, V=V, k=k, tau_r_override=tau_r_override,
+            beta_leak=beta_leak,
+        )
+        for tau in taus
+    }
+    if lag_factors is not None:
+        warnings.warn(
+            "lag_factors is deprecated because per-prediction grids can construct "
+            "peak tracking; pass one absolute delay_grid instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        delays = sorted({
+            round(max(0.1, predictions[tau] * float(factor)), 2)
+            for tau in taus for factor in lag_factors
+        })
+        grid_source = "legacy_prediction_derived_common_union"
+    else:
+        delays = sorted({float(delay) for delay in delay_grid})
+        grid_source = "predefined_absolute_common_grid"
+    if len(delays) < 3 or any(not np.isfinite(delay) or delay <= LATE_LAG for delay in delays):
+        raise ValueError(
+            "delay_grid must contain at least three finite delays greater than the "
+            f"reward-time confound lag ({LATE_LAG:g} s)"
+        )
+    plateau_fraction = float(plateau_fraction)
+    if not 0 <= plateau_fraction < 1:
+        raise ValueError("plateau_fraction must lie in [0, 1)")
     rows = []
-    learned_peak = {}
+    learned_peak_by_condition = {name: {} for name in ("device", "exp", "no_trace")}
+    preferred_band = {name: {} for name in ("device", "exp", "no_trace")}
+    peak_censored = {name: {} for name in ("device", "exp", "no_trace")}
     at_prediction = {"device": [], "exp": [], "no_trace": []}
     cell_specs = []
     for tau in taus:
-        delays = sorted(set(round(max(0.1, predictions[tau] * factor), 2)
-                            for factor in lag_factors))
         for delay in delays:
             for condition in ("device", "exp", "no_trace"):
                 cell_specs.append((float(tau), float(delay), condition))
 
     jobs = [
         (cell_id, seed, condition, tau, delay, float(V), int(trials), int(k),
-         tau_r_override)
+         tau_r_override, float(beta_leak))
         for cell_id, (tau, delay, condition) in enumerate(cell_specs)
         for seed in range(int(seeds))
     ]
@@ -330,10 +425,8 @@ def run_predictive_interval_sweep(*, taus=(0.8, 1.3, 2.0, 3.6, 6.0, 10.0),
         for cell_id, spec in enumerate(cell_specs)
     }
     for tau in taus:
-        delays = sorted(set(round(max(0.1, predictions[tau] * factor), 2)
-                            for factor in lag_factors))
         design_delay = min(delays, key=lambda delay: abs(delay - predictions[tau]))
-        device_means = []
+        means_by_condition = {name: [] for name in ("device", "exp", "no_trace")}
         for delay in delays:
             for condition in ("device", "exp", "no_trace"):
                 values = cell_lookup[(float(tau), float(delay), condition)]
@@ -345,48 +438,122 @@ def run_predictive_interval_sweep(*, taus=(0.8, 1.3, 2.0, 3.6, 6.0, 10.0),
                     "ci_low": float(lo), "ci_high": float(hi),
                     "seed_values": values,
                 })
-                if condition == "device":
-                    device_means.append(float(values.mean()))
+                means_by_condition[condition].append(float(values.mean()))
                 if delay == design_delay:
                     at_prediction[condition].append(values)
-        learned_peak[tau] = float(delays[int(np.argmax(device_means))])
+        for condition, means in means_by_condition.items():
+            values = np.asarray(means, float)
+            tolerance = plateau_fraction * max(float(np.ptp(values)), 1e-12)
+            band_index = np.flatnonzero(values >= float(values.max()) - tolerance)
+            band_delays = np.asarray(delays, float)[band_index]
+            low, high = float(band_delays[0]), float(band_delays[-1])
+            preferred_band[condition][tau] = [low, high]
+            learned_peak_by_condition[condition][tau] = float(
+                np.exp(np.mean(np.log(band_delays)))
+            )
+            touches_left = bool(band_index[0] == 0)
+            touches_right = bool(band_index[-1] == len(delays) - 1)
+            peak_censored[condition][tau] = (
+                "both" if touches_left and touches_right else
+                "left" if touches_left else "right" if touches_right else "none"
+            )
 
     predicted = np.asarray([predictions[tau] for tau in taus], float)
-    learned = np.asarray([learned_peak[tau] for tau in taus], float)
-    peak_tracking_estimable = len(lag_factors) >= 3
-    if not peak_tracking_estimable or np.ptp(predicted) == 0 or np.ptp(learned) == 0:
+
+    def _tracking(condition):
+        learned = np.asarray(
+            [learned_peak_by_condition[condition][tau] for tau in taus], float
+        )
+        uncensored = np.asarray(
+            [peak_censored[condition][tau] == "none" for tau in taus], bool
+        )
+        estimable = bool(uncensored.sum() >= 3)
         correlation = None
-    else:
-        statistic = float(spearmanr(predicted, learned).statistic)
-        correlation = statistic if np.isfinite(statistic) else None
-    device_values = np.concatenate(at_prediction["device"])
-    exponential_values = np.concatenate(at_prediction["exp"])
-    paired_difference = device_values - exponential_values
-    diff_lo, diff_hi = bootstrap_ci(paired_difference)
+        if estimable and np.ptp(predicted[uncensored]) > 0 and np.ptp(learned[uncensored]) > 0:
+            statistic = float(spearmanr(predicted[uncensored], learned[uncensored]).statistic)
+            correlation = statistic if np.isfinite(statistic) else None
+        return learned, uncensored, correlation
+
+    learned, device_uncensored, correlation = _tracking("device")
+    control_correlations = {
+        condition: _tracking(condition)[2] for condition in ("exp", "no_trace")
+    }
+    shuffled_p = None
+    if correlation is not None:
+        from itertools import permutations
+
+        p = predicted[device_uncensored]
+        y = learned[device_uncensored]
+        null = []
+        for permuted in permutations(y.tolist()):
+            statistic = float(spearmanr(p, np.asarray(permuted, float)).statistic)
+            if np.isfinite(statistic):
+                null.append(statistic)
+        if null:
+            shuffled_p = float((1 + np.count_nonzero(np.asarray(null) >= correlation)) /
+                               (1 + len(null)))
+    # A seed is reused across every retention value, so the tau-by-seed cells are
+    # repeated observations from the same stochastic run, not independent samples.
+    # Preserve the pairing at each retention, average within seed, and bootstrap the
+    # independent seed clusters.  Concatenating all cells here would understate the
+    # uncertainty by treating ``len(taus) * seeds`` observations as independent.
+    device_at_prediction = np.stack(at_prediction["device"], axis=0)
+    exponential_at_prediction = np.stack(at_prediction["exp"], axis=0)
+    paired_difference_by_tau_seed = device_at_prediction - exponential_at_prediction
+    per_seed_cluster_difference = paired_difference_by_tau_seed.mean(axis=0)
+    diff_lo, diff_hi = bootstrap_ci(per_seed_cluster_difference)
     diagnostics = {
         "inference_status": (
             "publication_scale" if seeds >= 20 and trials >= 1500
             else "feasibility_only"
         ),
-        "peak_tracking_estimable": peak_tracking_estimable,
+        "peak_tracking_estimable": bool(device_uncensored.sum() >= 3),
+        "preferred_lag_summary": "geometric_center_of_near_maximum_band",
+        "plateau_fraction_of_observed_range": plateau_fraction,
         "spearman_predicted_vs_learned": correlation,
+        "control_peak_correlations": control_correlations,
+        "shuffled_prediction_one_sided_p": shuffled_p,
         "positive_peak_correlation": bool(correlation is not None and correlation > 0),
-        "device_minus_exponential_mean": float(paired_difference.mean()),
+        "device_minus_exponential_mean": float(per_seed_cluster_difference.mean()),
         "device_minus_exponential_95ci": [float(diff_lo), float(diff_hi)],
+        "device_minus_exponential_per_seed_cluster": (
+            per_seed_cluster_difference.tolist()
+        ),
+        "device_minus_exponential_resampling_unit": (
+            "seed_cluster_across_retention"
+        ),
+        "device_minus_exponential_independent_seed_count": int(
+            per_seed_cluster_difference.size
+        ),
+        "matched_exponential_tau_s_by_retention": matched_exponential_tau,
+        "exponential_matching_protocol": (
+            "log-linear fit to the normalized device surrogate's 80--10% "
+            "post-peak decay after a 0.3-s standard coincidence"
+        ),
         "device_beats_exponential": bool(diff_lo > 0),
         "all_predicted_peaks_after_reward_time_confound": bool(
             all(value > LATE_LAG for value in predictions.values())),
         "interpretation": (
-            "Scientific diagnostic only. Editorial suitability is not inferred from "
-            "this thresholded comparison."
+            "Internal model-to-learning consistency test on a shared absolute grid. "
+            "Because learning reads the same frozen kernel, this is not independent "
+            "physical validation or evidence of fabrication control."
         ),
     }
     return {
-        "taus": taus, "predicted_tstar": predictions, "learned_peak": learned_peak,
+        "taus": taus, "predicted_tstar": predictions,
+        "learned_peak": learned_peak_by_condition["device"],
+        "learned_peak_by_condition": learned_peak_by_condition,
+        "preferred_band_by_condition": preferred_band,
+        "peak_censoring": peak_censored,
         "rows": rows, "diagnostics": diagnostics,
         "seeds": int(seeds), "trials": int(trials),
-        "V": float(V), "lag_factors": list(lag_factors), "k": int(k),
+        "V": float(V), "delay_grid": delays, "grid_source": grid_source,
+        "lag_factors": None if lag_factors is None else list(lag_factors), "k": int(k),
+        "plateau_fraction": plateau_fraction,
         "tau_r_override_s": tau_r_override,
+        "beta_leak": float(beta_leak),
+        "retention_definition": retention_definition,
+        "method_provenance": SELECTIVITY_METHOD_PROVENANCE,
     }
 
 
@@ -641,6 +808,18 @@ def run_vector_timer(*, seeds=20, trials=3000, quick=False, pool=None,
         "seps": seps, "ks": ks, "tau_leak": 10.0, "tA": tA, "tB": tB, "tstar": tstar,
         "seeds": seeds, "trials": trials, "dt": dt, "alias_reps": alias_reps,
         "chance": CHANCE, "crit": CRIT,
+        "retention_definition": "deliberately_swept",
+        "method_provenance": {
+            "status": "proposed",
+            "established_basis": ["distributed-state interval coding"],
+            "repository_adaptation": (
+                "Internal cascade-stage occupancies are exposed to a simulated readout."
+            ),
+            "claim_limit": (
+                "The present two-terminal cell cannot expose these stages; this result "
+                "is exploratory future work, not a demonstrated device capability."
+            ),
+        },
         "criteria": {"H1": bool(h1), "H2": bool(h2), "H3": bool(h3), "K1": bool(k1)},
         # extra diagnostics preserved from the original stdout report (H2' weak claim)
         "h2_weak": bool(h2_weak),

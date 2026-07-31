@@ -6,7 +6,6 @@ include pyproject.toml
 recursive-include experiments *.ipynb *.md
 prune experiments/.executed
 prune experiments/generated_figures
-recursive-include data/publication *.json *.png
 include data/SiO_x-multistate-data.mat
 recursive-include data/device_model *.json *.npz *.csv
 recursive-include tests *.py

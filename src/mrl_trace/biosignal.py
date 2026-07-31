@@ -3,8 +3,8 @@
 Loads the OpenNeuro ds003474 probabilistic-selection EEG (Cavanagh; CC0), epochs the
 signal around feedback events, and trains a single-trial decoder of the feedback
 valence (Correct vs Incorrect) from the frontocentral reward-positivity / feedback-
-related negativity. The decoder's per-trial output is used as the biologically measured
-reward gate (R - b) of the three-factor rule, in place of a synthetic reward.
+related negativity. The decoder's out-of-fold per-trial output is used as a recorded
+EEG-derived reward gate (R - b) of the three-factor rule, in place of a synthetic reward.
 
 No MNE dependency: EEGLAB ``.set`` is read with scipy.io.loadmat and the ``.fdt`` as a
 float32 (pnts x nbchan) array; feedback events come from the BIDS ``events.tsv`` (clean
@@ -25,7 +25,25 @@ import scipy.io as sio
 
 __all__ = ["load_subject", "epoch_feedback", "rewp_features", "decode_reward",
            "FRONTOCENTRAL", "build_reward_pools", "run_biosignal_reward",
-           "run_eeg_capstone", "EEG_DATA_DEFAULT", "EEG_POOLS_CACHE"]
+           "run_eeg_capstone", "EEG_DATA_DEFAULT", "EEG_POOLS_CACHE",
+           "EEG_METHOD_PROVENANCE"]
+
+EEG_METHOD_PROVENANCE = {
+    "status": "adapted",
+    "established_basis": [
+        "feedback-locked EEG analysis",
+        "cross-validated logistic decoding",
+        "three-factor reward modulation",
+    ],
+    "repository_adaptation": (
+        "Out-of-fold feedback-valence predictions from an external EEG dataset are "
+        "resampled as the scalar gate in simulated learning."
+    ),
+    "claim_limit": (
+        "This is not online brain-in-the-loop learning, per-trial replay of recorded "
+        "behaviour, or evidence that the simulated agent is a biological learner."
+    ),
+}
 
 #: Frontocentral channels carrying the reward-positivity / FRN (uppercased labels).
 FRONTOCENTRAL = ("FZ", "FC1", "FCZ", "FC2", "CZ", "C1", "C2")
@@ -131,6 +149,7 @@ def decode_reward(features, valence, *, n_splits=5, seed=0, C=0.1):
         "bal_acc": float(balanced_accuracy_score(y, pred)),
         "auc": float(roc_auc_score(y, proba)) if len(np.unique(y)) > 1 else float("nan"),
         "proba": proba, "pred": pred, "valence": y,
+        "method_provenance": EEG_METHOD_PROVENANCE,
     }
 
 
@@ -257,7 +276,8 @@ def run_biosignal_reward(pools, meta, *, seeds=20, trials=600, S=2, A=2,
     from .bandit import train, reward_rate
     from .stats import bootstrap_ci
     if len(pools.get(1, [])) == 0 or len(pools.get(0, [])) == 0:
-        return {"skipped": True, "reason": "no usable ds003474 EEG subjects found"}
+        return {"skipped": True, "reason": "no usable ds003474 EEG subjects found",
+                "method_provenance": EEG_METHOD_PROVENANCE}
     chance = 1.0 / A
     crit = 0.5 * (1 + chance)
 
@@ -285,12 +305,14 @@ def run_biosignal_reward(pools, meta, *, seeds=20, trials=600, S=2, A=2,
         "finals": finals, "curves": curves, "meta": meta,
         "chance": chance, "crit": crit, "seeds": seeds, "trials": trials,
         "S": S, "A": A, "tau_leak": tau_leak, "D": D,
+        "retention_definition": "deliberately_swept",
+        "method_provenance": EEG_METHOD_PROVENANCE,
         "criteria": {"B1": bool(b1), "B2": bool(b2), "B3": bool(b3), "B4": bool(b4)},
     }
 
 
 # --- capstone (Experiment 9, Arm E): EEG reward x deep all-local RL + homeostasis ---
-# Frozen Arm-D operating point (retrospective protocol file).
+# Frozen Arm-D operating point recorded in legacy retrospective analysis notes.
 _CAP_HP = dict(H=16, tau_leak=10.0, D=5.0, eta=0.2, eta_hidden=3.0,
                fb_scale=2.0, bias_o=0.3, V=1.5, sigma0=0.15, sigma1=0.05)
 _CAP_HOMEO = 0.1
@@ -337,6 +359,9 @@ def _summarize_capstone(res, meta, *, seeds, trials, chance, crit, homeo):
         "ci": {str(k): v for k, v in ci.items()}, "meta": meta,
         "HP": _CAP_HP, "homeo": homeo, "seeds": seeds, "trials": trials,
         "chance": chance, "crit": crit,
+        "retention_definition": "deliberately_swept",
+        "method_provenance": EEG_METHOD_PROVENANCE,
+        "hyperparameter_provenance": "pilot_tuned_then_frozen",
         "criteria": {"E2": e2, "E3": e3, "E4": e4},
     }
 
@@ -352,7 +377,7 @@ def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.7
                           (ds003474), the same biosignal reward as
                           :func:`run_biosignal_reward`.
 
-    Tests the recorded hypothesis (retrospective protocol file) that the
+    Tests a hypothesis recorded retrospectively in the legacy analysis notes: the
     local homeostatic stabiliser -- which prevents the policy collapse behind deep-DFA's
     unreliability (Arm D) -- ALSO confers robustness to a noisy biological reward, so
     DFA+homeostasis learns under the EEG reward where DFA-alone does not.
@@ -371,7 +396,8 @@ def run_eeg_capstone(pools, meta, *, seeds=20, trials=3000, chance=0.5, crit=0.7
     empty (EEG absent) the experiment is skipped and ``{"skipped": True}`` is returned.
     """
     if len(pools.get(1, [])) == 0 or len(pools.get(0, [])) == 0:
-        return {"skipped": True, "reason": "no usable ds003474 EEG subjects found"}
+        return {"skipped": True, "reason": "no usable ds003474 EEG subjects found",
+                "method_provenance": EEG_METHOD_PROVENANCE}
     rng = np.random.default_rng(0)
     allv = np.concatenate([pools[1], pools[0]])
     shuf = {1: rng.permutation(allv), 0: rng.permutation(allv)}

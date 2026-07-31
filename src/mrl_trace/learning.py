@@ -10,24 +10,42 @@ where ``e_ij`` is the *device* eligibility trace (see :mod:`mrl_trace.device`),
 eligibility state and the broadcast scalar ``(R - b)`` -- so the rule is
 crossbar-native: no weight transport, no per-synapse gradient.
 
-This module also provides the *signed, leak-dominant coincidence* used to drive the
-gate: a causal pre--post coincidence contributes ``+1``; an acausal one (pre without
-post) contributes ``-ltd``.  The device low-pass-filters this signed drive, so
-reward-uncorrelated synapses net-depress (the LTD-dominant eligibility of Izhikevich
-2007 / Fremaux--Gerstner 2016) rather than drifting up.
+This module also provides the repository's *proposed signed, leak-dominant
+coincidence* drive: a causal pre--post coincidence contributes ``+1`` and a
+presynaptic event without a postsynaptic spike contributes ``-ltd``.  The cited
+three-factor/R-STDP literature motivates reward-modulated eligibility, but does not
+establish this exact discrete drive.
 """
 from __future__ import annotations
 
 import numpy as np
 
-__all__ = ["signed_coincidence", "three_factor_update", "RewardBaseline", "LTD_BIAS"]
+__all__ = ["signed_coincidence", "unsigned_coincidence", "coincidence_drive",
+           "three_factor_update", "RewardBaseline", "LTD_BIAS",
+           "SIGNED_RULE_PROVENANCE", "THREE_FACTOR_PROVENANCE"]
+
+THREE_FACTOR_PROVENANCE = {
+    "status": "established",
+    "established_basis": ["three-factor reward-modulated plasticity"],
+    "repository_adaptation": "A delayed scalar reward gates a local eligibility state.",
+    "claim_limit": "This provenance does not establish the repository's coincidence drive.",
+}
+
+SIGNED_RULE_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": ["three-factor plasticity", "potentiation/depression competition"],
+    "repository_adaptation": (
+        "pre * (+1 when post spikes, otherwise -ltd) is used as the gate input"
+    ),
+    "claim_limit": "This is not the exact update rule of the cited R-STDP papers.",
+}
 
 #: Default acausal (LTD-wing) weight of the signed coincidence kernel.
 LTD_BIAS = 0.6
 
 
 def signed_coincidence(pre, post, ltd=LTD_BIAS):
-    """Signed leak-dominant pre--post coincidence drive.
+    """Repository-proposed signed leak-dominant coincidence drive.
 
     ``pre`` is the presynaptic activity (0/1 or float) and ``post`` whether the
     postsynaptic neuron spiked this step.  Returns ``pre * (+1 if post else -ltd)``,
@@ -37,6 +55,32 @@ def signed_coincidence(pre, post, ltd=LTD_BIAS):
     pre = np.asarray(pre, dtype=float)
     sign = np.where(np.asarray(post, dtype=bool), 1.0, -ltd)
     return pre * sign
+
+
+def unsigned_coincidence(pre, post, ltd=LTD_BIAS):
+    """Magnitude-only ablation of the proposed signed drive.
+
+    Positive coincidences retain magnitude one and presynaptic-only events retain
+    magnitude ``ltd`` but lose their negative sign.  This is distinct from removing
+    the negative term, which leaves only pre/post coincidences.
+    """
+    return np.abs(signed_coincidence(pre, post, ltd=ltd))
+
+
+def coincidence_drive(pre, post, *, mode="signed", ltd=LTD_BIAS):
+    """Select the proposed signed drive or its two explicit ablations.
+
+    ``unsigned`` retains the magnitude of both wings but removes their sign;
+    ``no_negative`` sets presynaptic-only events to zero.  They therefore attribute
+    separately the roles of sign and of the depression wing itself.
+    """
+    if mode == "signed":
+        return signed_coincidence(pre, post, ltd=ltd)
+    if mode == "unsigned":
+        return unsigned_coincidence(pre, post, ltd=ltd)
+    if mode == "no_negative":
+        return np.asarray(pre, dtype=float) * np.asarray(post, dtype=bool)
+    raise ValueError(f"unknown coincidence mode {mode!r}")
 
 
 def three_factor_update(w, eligibility, reward, baseline, eta, w_min=0.0, w_max=1.5):

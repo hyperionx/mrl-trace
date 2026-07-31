@@ -1,32 +1,37 @@
-r"""Fitted SiO\ :sub:`x` device model and the eligibility-trace gate it realises.
+r"""Empirical SiO\ :sub:`x` current model and an Erlang-cascade eligibility surrogate.
 
-The device is a subthreshold silicon-rich SiO\ :sub:`x` memristor whose volatile
-current transient is modelled, after Chapter 5 / Eq. (4) of the manuscript, as a
-short cascade of ``k`` sequential trap-filling states (giving a compressed-exponential
-sigmoidal rise) followed by a leakage relaxation.  Driven by a pre--post spike
-coincidence rather than a constant bias, the same dynamical system is an
-*eligibility trace*: a coincidence-triggered conductance excursion that decays to
-baseline with a retention time ``tau_leak = R_leak * C``.
+The measured current is fitted empirically by a KWW rise multiplied by a screening
+decay.  The learning simulations use a separate linear cascade-plus-leak state.  With
+no discharge and a unit step, its continuous-time final-stage response is exactly the
+Erlang CDF used by the model-identification workflow.  That Erlang response is only a
+compact approximation to the KWW rise: the cascade is not a state-space realisation of
+the complete product-current fit, and its integer depth is not an identified microscopic
+trap count.
 
 Fitted field-acceleration laws (manuscript Eqs. (5.8)/(5.9), ``V`` = ``|bias|`` in volts)::
 
     tau_r(V) = 1.45e2 * exp(-2.9 V)   s     (cascade rise)
     tau_d(V) = 1.17e4 * exp(-3.9 V)   s     (space-charge decay)
-    beta = 2 (fixed shape exponent),  k = 3 cascade stages
+    beta = 2 (fixed shape exponent),  k = 3 representative cascade stages
 
-``tau_leak`` is a *programmable* retention parameter, independent of the
-field-set ``tau_r``/``tau_d``; it is the electrical knob on the credit-assignment
-window demonstrated throughout the paper.
+``tau_leak`` is either a directly fitted discharge time or a deliberately swept model
+parameter, as recorded by each experiment.  The repository does not demonstrate
+electrode or fabrication control of this quantity.
 
 The gate integrates by forward Euler and is forward-only (the learning rule is a
 local three-factor rule, not BPTT), so there is no autograd-stiffness concern.
 """
 from __future__ import annotations
 
+import warnings
+from functools import lru_cache
+
 import numpy as np
 
-__all__ = ["tau_r", "tau_d", "BETA", "K_STAGES", "TransientGate",
-           "fit_kww_laws", "simulate_habituation", "KWW_VOLTAGES"]
+__all__ = ["tau_r", "tau_d", "BETA", "K_STAGES", "CascadeEligibilityGate",
+           "TransientGate", "CASCADE_METHOD_PROVENANCE", "KWW_METHOD_PROVENANCE",
+           "fit_kww_laws", "simulate_habituation", "KWW_VOLTAGES",
+           "decay_matched_exponential_tau"]
 
 #: Historical compact-model compression exponent of the Au rise.
 BETA = 2.0
@@ -45,28 +50,60 @@ def tau_d(V: float) -> float:
     return 1.17e4 * np.exp(-3.9 * V)
 
 
-class TransientGate:
-    """Stateful eligibility-trace generator from the fitted device transient.
+CASCADE_METHOD_PROVENANCE = {
+    "status": "adapted",
+    "established_basis": ["sequential-state waiting times", "leaky eligibility traces"],
+    "repository_adaptation": (
+        "A linear Erlang cascade is shape-calibrated to the empirical KWW rise and "
+        "combined with a specified leakage time and, when beta_leak differs from one, "
+        "an age-dependent stretched-discharge hazard."
+    ),
+    "claim_limit": (
+        "The no-leak step response matches the fitted Erlang candidate, but that "
+        "candidate only approximates the KWW rise; it neither exactly realises the "
+        "product-current model nor identifies a microscopic stage count. The "
+        "stretched-discharge clock resets on drive and is a non-Markov surrogate."
+    ),
+}
 
-    State is ``k`` cascade trap nodes (carrying the sigmoidal rise) plus one
-    space-charge node (slow branch).  The output ``e(t)`` is the normalised final
-    cascade stage, which carries both the compressed-exponential rise and the
-    ``tau_leak`` relaxation.  The cascade headroom term uses ``|v|`` so the trace
-    may take signed (depressing) excursions, as a leak-dominant kernel requires.
+KWW_METHOD_PROVENANCE = {
+    "status": "empirical_fit",
+    "established_basis": ["Kohlrausch-Williams-Watts empirical relaxation fitting"],
+    "repository_adaptation": "Shared field laws are fitted across measured Au traces.",
+    "claim_limit": "The empirical fit does not uniquely identify a microscopic mechanism.",
+}
+
+
+class CascadeEligibilityGate:
+    """Stateful linear Erlang-cascade-plus-leak eligibility surrogate.
+
+    State is ``k`` identical first-order low-pass nodes in series.  With a unit-step
+    drive and no leakage, the final-stage continuous-time response is
+    ``gammainc(k, k*t/tau_r)``: the same Erlang CDF evaluated during physical-model
+    selection.  The implementation uses forward Euler, so agreement converges with
+    ``dt``.  The output is the normalised final stage with ``tau_leak`` relaxation.
+    For ``beta_leak != 1`` the leakage rate is the instantaneous
+    stretched-exponential hazard evaluated at time since the most recent drive; this
+    reset-clock construction is an explicit non-Markov approximation. Space charge is
+    not part of this output; it remains in the separate current/habituation model.
 
     Parameters
     ----------
     V : float
-        Bias magnitude (V); sets the field-accelerated ``tau_r``, ``tau_d``.
+        Bias magnitude (V); sets the field-accelerated rise ``tau_r``.
     tau_leak : float
         Retention/relaxation time constant (s); measured or deliberately swept as
         stated by the calling experiment.
+    beta_leak : float
+        Stretched-exponential discharge exponent. ``1`` is the historical single-rate
+        approximation; empirical ITO-linked runs must pass and record their fitted value.
     k : int
         Number of sequential cascade stages.
     dt : float
         Integration step (s).
     vnmax : float
-        Saturated trap occupancy (state bound).
+        State scale and symmetric numerical bound. A unit drive has magnitude
+        ``vnmax`` inside the cascade and the returned eligibility is divided by it.
     shape : tuple[int, ...]
         Optional grid shape for a vectorised bank of independent gates (e.g.
         ``(n_state, n_action)`` for a crossbar).  Default ``()`` is a single gate.
@@ -74,25 +111,27 @@ class TransientGate:
 
     def __init__(self, V: float = 0.9, tau_leak: float = 2.0, k: int = K_STAGES,
                  dt: float = 0.05, vnmax: float = 1.0, shape: tuple = (),
-                 tau_r_override: float | None = None,
-                 tau_d_override: float | None = None):
+                 tau_r_override: float | None = None, beta_leak: float = 1.0):
+        if (not np.isfinite(tau_leak) or not np.isfinite(beta_leak)
+                or tau_leak <= 0 or beta_leak <= 0):
+            raise ValueError("tau_leak and beta_leak must be finite and positive")
         self.V = V
         self.tau_leak = tau_leak
         self.k = k
         self.dt = dt
         self.vnmax = vnmax
         self.shape = tuple(shape)
+        self.beta_leak = float(beta_leak)
         # per-stage rate: total rise matches the fitted tau_r(V) spread over k
         # sequential stages (Erlang-k).
         self.tau_r = float(tau_r(V) if tau_r_override is None else tau_r_override)
         self.alpha = k / self.tau_r
-        self.tau_d = float(tau_d(V) if tau_d_override is None else tau_d_override)
         self.reset()
 
     def reset(self) -> None:
         """Zero all internal states."""
         self.vn = np.zeros(self.shape + (self.k,))
-        self.vsc = np.zeros(self.shape)
+        self._t_since = np.full(self.shape, self.dt, dtype=float)
 
     def step(self, drive):
         """Advance one ``dt`` under coincidence ``drive`` and return ``e(t)``.
@@ -102,13 +141,32 @@ class TransientGate:
         """
         dt, a, vm = self.dt, self.alpha, self.vnmax
         drive = np.asarray(drive, dtype=float)
+        self._t_since = np.where(
+            np.abs(drive) > 1e-9, dt, self._t_since + dt
+        )
+        if self.beta_leak == 1.0:
+            leak_rate = 1.0 / self.tau_leak
+        else:
+            leak_rate = (self.beta_leak / self.tau_leak) * np.power(
+                np.clip(self._t_since / self.tau_leak, 1e-6, None),
+                self.beta_leak - 1.0,
+            )
         new = self.vn.copy()
-        prev = drive
+        # A unit drive corresponds to the state scale ``vm``.  Every stage uses the
+        # upstream node's OLD value, which is the forward-Euler discretisation of
+        #
+        #   dv_1/dt = alpha * (vm * drive - v_1) - h(a) * v_1
+        #   dv_m/dt = alpha * (v_{m-1} - v_m) - h(a) * v_m.
+        #
+        # Without leakage, the continuous-time unit-step response of v_k / vm is
+        # gammainc(k, alpha*t), exactly the Erlang candidate used during fitting.
+        prev = vm * drive
         for j in range(self.k):
             vj = self.vn[..., j]
-            new[..., j] = vj + dt * (a * prev * (vm - np.abs(vj)) - vj / self.tau_leak)
+            new[..., j] = vj + dt * (
+                a * (prev - vj) - vj * leak_rate
+            )
             prev = vj
-        self.vsc = self.vsc + dt * (a * drive * (vm - np.abs(self.vsc)) - self.vsc / self.tau_d)
         self.vn = np.clip(new, -vm, vm)
         return self.vn[..., -1] / vm
 
@@ -131,6 +189,76 @@ class TransientGate:
             pk = out.max()
             return out / pk if pk > 0 else out
         return out
+
+
+@lru_cache(maxsize=256)
+def decay_matched_exponential_tau(
+    tau_leak: float,
+    V: float = 0.9,
+    k: int = K_STAGES,
+    tau_r_override: float | None = None,
+    beta_leak: float = 1.0,
+    coincidence_dur: float = 0.3,
+) -> float:
+    """Fit the exponential control to the surrogate's post-peak decay.
+
+    Matching nominal ``tau_leak`` values is not decay matching because every cascade
+    stage also contains the intrinsic ``-alpha*v`` term.  This deterministic protocol
+    simulates one standard coincidence pulse, normalises the last-stage response, and
+    fits ``log(e/e_peak)`` against time over the predeclared 80--10% post-peak band.
+    The returned time constant is used only by the single-exponential control; it does
+    not alter or reinterpret the fitted ITO retention.
+    """
+    tau_leak = float(tau_leak)
+    V = float(V)
+    k = int(k)
+    beta_leak = float(beta_leak)
+    coincidence_dur = float(coincidence_dur)
+    fitted_tau_r = tau_r(V) if tau_r_override is None else float(tau_r_override)
+    if (not np.isfinite(tau_leak) or tau_leak <= 0 or k < 1
+            or not np.isfinite(fitted_tau_r) or fitted_tau_r <= 0
+            or not np.isfinite(beta_leak) or beta_leak <= 0
+            or not np.isfinite(coincidence_dur) or coincidence_dur <= 0):
+        raise ValueError("matching parameters must be finite and positive")
+
+    # alpha=k/tau_r bounds the asymptotic decay even for a stretched-leak hazard.
+    # A fixed dense grid makes the matching rule independent of each task's solver dt.
+    horizon = max(5.0 * coincidence_dur, 16.0 * fitted_tau_r)
+    t_grid = np.linspace(0.0, horizon, 12001)
+    gate = CascadeEligibilityGate(
+        V=V, tau_leak=tau_leak, k=k, dt=float(t_grid[1]),
+        tau_r_override=fitted_tau_r, beta_leak=beta_leak,
+    )
+    response = gate.trace(
+        t_grid, coincidence_at=0.0, coincidence_dur=coincidence_dur,
+        normalise=True,
+    )
+    peak_index = int(np.argmax(response))
+    tail = response[peak_index:]
+    elapsed = t_grid[peak_index:] - t_grid[peak_index]
+    mask = (tail <= 0.80) & (tail >= 0.10)
+    if np.count_nonzero(mask) < 3:
+        mask = (tail < 0.95) & (tail > 1e-6)
+    if np.count_nonzero(mask) < 3:
+        raise RuntimeError("device kernel did not expose an identifiable decay band")
+    slope, _intercept = np.polyfit(elapsed[mask], np.log(tail[mask]), 1)
+    matched_tau = -1.0 / float(slope)
+    if not np.isfinite(matched_tau) or matched_tau <= 0:
+        raise RuntimeError("post-peak exponential decay fit was not identifiable")
+    return matched_tau
+
+
+class TransientGate(CascadeEligibilityGate):
+    """Deprecated compatibility alias for :class:`CascadeEligibilityGate`."""
+
+    def __init__(self, *args, tau_d_override=None, **kwargs):
+        warnings.warn(
+            "TransientGate is deprecated; use CascadeEligibilityGate. "
+            "tau_d_override never affected the eligibility readout and is ignored.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 # =============================================================================
@@ -288,7 +416,9 @@ def fit_kww_laws(export_dir=None, *, beta=BETA, voltages=KWW_VOLTAGES):
     laws, rows = _kww_fit_global(data, beta, voltages=voltages)
     bk = _kww_beta_to_k()
     return {"laws": laws, "beta_to_k": bk,
-            "rows": {f"{V}": rows[V] for V in voltages}}
+            "rows": {f"{V}": rows[V] for V in voltages},
+            "method_provenance": KWW_METHOD_PROVENANCE,
+            "cascade_interpretation": CASCADE_METHOD_PROVENANCE}
 
 
 # --- habituation regime simulation (Fig 5.15) hyperparameters ---------------
@@ -369,7 +499,19 @@ def simulate_habituation(*, k=HABIT_K, a=HABIT_A, tl_trap=HABIT_TL_TRAP,
               "recover_t270": float(at(270))}
     reproduced = bool(at(165) < at(100) * 0.9 and at(270) > at(165) * 1.1)
     return {"tg": tg, "I": I, "f": f, "xk": xk, "s": s,
-            "checks": checks, "reproduced": reproduced}
+            "checks": checks, "reproduced": reproduced,
+            "method_provenance": {
+                "status": "adapted",
+                "established_basis": ["coupled trap and space-charge rate equations"],
+                "repository_adaptation": (
+                    "A mean-field pulse-rate protocol is simulated using separately "
+                    "active trap and screening states."
+                ),
+                "claim_limit": (
+                    "This qualitative simulation is not an identified microscopic "
+                    "mechanism or a learning-result payload."
+                ),
+            }}
 
 
 def main(argv=None):

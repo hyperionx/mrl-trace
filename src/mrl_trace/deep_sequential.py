@@ -1,44 +1,21 @@
-"""Deep sequential all-local spiking RL with a physical eligibility trace -- Arm E.
+"""Deep delayed contextual choice with a cascade eligibility surrogate.
 
-This module is the composition of the two working reductions in the package:
+This historical experiment composes a hidden LIF policy, Direct Feedback Alignment
+(DFA), firing-rate homeostasis and the repository's custom signed eligibility rule.
+The composite reinforcement-learning update is proposed here; citations for DFA,
+homeostasis and three-factor learning support the components, not this exact method.
 
-- :func:`mrl_trace.deep.train_deep` -- a DEEP (hidden-layer) all-local policy
-  trained by Direct Feedback Alignment (DFA) with optional local homeostasis, on a
-  non-linearly-separable XOR contextual bandit a single trained layer cannot solve.
-  It supplies the depth + DFA + homeostasis machinery and the correct update signs.
-- :func:`mrl_trace.maze.train_sequential` (the T-maze) -- a SHALLOW policy that
-  bridges a cue->reward gap across a multi-step trajectory, with the device eligibility
-  integrating CONTINUOUSLY across the steps and a single delayed goal reward gating the
-  surviving trace into every used synapse.
+At episode start a two-bit cue is drawn and the rewarded terminal action is its XOR.
+The environment then auto-advances through ``L`` position-labelled presentation windows:
+actions during those windows do not affect transitions.  Only the final arm choice is
+consequential.  Accordingly this is a deep delayed contextual decision with a temporal
+input sequence, not a multi-decision T-maze or evidence of trajectory-level policy credit.
+The cue remains present throughout, and a delayed reward gates the eligibility surrogate
+after the final choice.
 
-The question this module asks is whether a device-supplied physical eligibility trace
-lets a FULLY-LOCAL (no backprop, no weight transport) DEEP policy bridge the cue->reward
-gap across a genuine multi-step trajectory whose final decision is non-linearly
-separable (XOR of two cue bits). It therefore demands all three at once:
-
-  (a) a longer-horizon trajectory: ``L >= 4`` stem steps actually traversed, with the
-      goal reward DELAYED by ``D >= 2`` s after the junction decision;
-  (b) a HIDDEN layer trained by DFA, required because the cued decision is XOR (a single
-      trained layer cannot solve it);
-  (c) LOCAL HOMEOSTASIS stabilising hidden-unit firing.
-
-Task ("deep T-maze"). At episode start a two-bit cue ``(b0, b1)`` is drawn; the correct
-arm at the junction is ``XOR(b0, b1)``. The agent then AUTO-ADVANCES through ``L`` stem
-states (a one-way corridor, as in :class:`mrl_trace.maze.TMaze`, so the only
-learned decision is the arm choice -- this keeps the reward distal and removes the
-stem-advance reinforcement artefact). Input lines carry the cue on dedicated cue lines
-AND the current stem position on dedicated one-hot position lines, so each step presents
-a genuinely different state (a real trajectory, not a longer cue). The eligibility gates
-of BOTH layers integrate continuously across all ``L`` steps -- never reset between
-steps -- so the trace from early steps has decayed more than from late steps when the
-single goal reward lands ``D`` seconds after the junction action. The reward gates the
-surviving trace into both layers via the same three-factor / DFA update as
-:func:`train_deep`.
-
-All conventions follow the package: ``B`` seeds as a vectorised batch, device gate via
-:class:`GateBankBatched`, signed leak-dominant coincidence, ``dw = eta * L * e`` with
-``L`` the (output scalar / DFA hidden) learning signal, ``dt = 5e-3`` s, coarsened
-undriven relaxation for the delay.
+``GateBankBatched`` is an approximate computational cascade, not the empirical Au current
+model itself.  Homeostasis settings were pilot-tuned and then frozen.  Returned reward
+arrays therefore report behaviour of this repository-specific simulation only.
 """
 from __future__ import annotations
 
@@ -49,7 +26,26 @@ from .neurons import lif_step_batched, TAU_M, V_TH
 from .learning import LTD_BIAS
 from .maze import reward_rate
 
-__all__ = ["train_deep_sequential", "reward_rate"]
+__all__ = ["train_deep_sequential", "reward_rate", "DEEP_DELAYED_CHOICE_PROVENANCE"]
+
+
+DEEP_DELAYED_CHOICE_PROVENANCE = {
+    "status": "proposed",
+    "established_basis": [
+        "LIF dynamics",
+        "Direct Feedback Alignment",
+        "firing-rate homeostasis",
+        "three-factor reward modulation",
+    ],
+    "repository_adaptation": (
+        "A deep delayed XOR choice combining the cascade eligibility surrogate, "
+        "custom signed coincidence, DFA and multiplicative homeostasis."
+    ),
+    "claim_limit": (
+        "The stem auto-advances and only the terminal choice affects reward; this is a "
+        "delayed contextual decision, not multi-decision trajectory credit assignment."
+    ),
+}
 
 
 def _relax_gate(bank, n_relax, stride, rem):
@@ -97,35 +93,35 @@ def train_deep_sequential(*, mode="dfa", B=20, H=16, L=4, A=2, tau_leak=20.0, D=
                           w_scale2=0.3, w_max=W_MAX, bias_o=0.35, homeo=1.0,
                           homeo_target=0.35, homeo_tau=200.0, weight_fault=0.0,
                           early_stop=None, seed0=0, return_weights=False):
-    """Deep sequential XOR T-maze, ``B`` parallel seeds; returns rewards ``(B, trials)``.
+    """Deep delayed XOR choice, ``B`` parallel seeds; returns rewards ``(B, trials)``.
 
     Architecture (extends :func:`train_deep` with a stem-position input block):
       ``F = 4 + L`` input lines -> ``H`` hidden LIF neurons -> ``A`` action LIF neurons,
       with device-synapse matrices ``W1 (F,H)`` and ``W2 (H,A)``. The first 4 lines carry
       the XOR cue (persistent context, active on every step so the junction can decide on
       it); the next ``L`` lines are a one-hot of the current stem position (so each step
-      is a genuinely different state). Each weight matrix has its own
-      :class:`GateBankBatched` eligibility (retention ``tau_leak``, signed leak-dominant
+      is a distinct presentation window). Each weight matrix has its own
+      :class:`GateBankBatched` eligibility surrogate (retention ``tau_leak``, custom signed
       drive) that integrates CONTINUOUSLY across all ``L`` stem steps -- never reset
       between steps.
 
-    Trajectory. The agent auto-advances through ``L`` stem states (a one-way corridor:
-    the action does not move it, exactly as :class:`mrl_trace.maze.TMaze`), so the
-    only learned decision is the arm chosen at the junction (the last state). Reward
+    Delayed contextual sequence. The agent auto-advances through ``L`` presentation
+    windows regardless of its actions, so the only consequential decision is the arm
+    chosen at the final window. Reward
     ``R in {0,1}``, contingent on the junction action matching ``XOR(b0, b1)``, is
     delivered after the action->reward delay ``D``. The surviving eligibility then gates
     into both layers.
 
-    ``mode`` selects the spatial-credit pathway (eligibility is the device trace in all):
+    ``mode`` selects the spatial-credit pathway (eligibility uses the cascade surrogate):
       ``shallow``  one trained layer F->A (should FAIL XOR -- depth-necessity control);
       ``elm``      hidden layer fixed random, only the output trained;
       ``global``   both layers trained by the pure global scalar (R-b) (structural-credit
                    failure mode);
-      ``dfa``      both layers trained by Direct Feedback Alignment (all-local; the
-                   device arm of the demonstration);
-      ``no_trace`` deep DFA with the eligibility zeroed (device-necessity control).
+      ``dfa``      both layers trained by the repository's DFA composite;
+      ``no_trace`` deep DFA with eligibility zeroed (trace-necessity control).
 
-    ``homeo > 0`` enables local homeostatic regulation of hidden-unit firing.
+    ``homeo > 0`` enables local homeostatic regulation of hidden-unit firing; its
+    parameters were pilot-tuned and then frozen.
     ``weight_fault`` randomly stuck-at-zeroes that fraction of W1/W2 synapses (a device
     yield stressor; 0 disables). ``early_stop`` (a reward-rate threshold) stops a seed's
     updates once its trailing reward rate exceeds it (the policy is then run frozen);
@@ -190,9 +186,10 @@ def train_deep_sequential(*, mode="dfa", B=20, H=16, L=4, A=2, tau_leak=20.0, D=
         spk_o_dec = np.zeros((B, A))
         spk_h_dec = np.zeros((B, H))
 
-        # --- traverse the L-step stem trajectory ---
+        # --- auto-advance through the L presentation windows ---
         # The cue lines are presented on every step (persistent context); the position
-        # line for the current state is active too, so each step is a distinct state. The
+        # line for the current window is active too. Actions before the last window have no
+        # transition consequence, so this remains a delayed contextual decision. The
         # eligibility gates integrate across ALL steps (never reset). Only the LAST step
         # is the junction where the arm choice is read out (auto-advance corridor).
         for st in range(L):
@@ -219,8 +216,8 @@ def train_deep_sequential(*, mode="dfa", B=20, H=16, L=4, A=2, tau_leak=20.0, D=
                         spk_o_dec += sp_o
                     # Signed leak-dominant coincidence. The INPUT->HIDDEN bank g1 is
                     # driven on EVERY step: its cue+position rows differ per step, so it
-                    # accumulates the trajectory eligibility (early steps decay more than
-                    # late ones by reward time -- the bridging the device must support).
+                    # accumulates eligibility across presentation windows (early activity
+                    # decays more than late activity by reward time).
                     # The HIDDEN->OUTPUT bank g_out shares the same (H,A) synapses across
                     # steps, so a stem-step output coincidence (made by an as-yet random
                     # arm decision) would POLLUTE the junction credit; the arm decision --
