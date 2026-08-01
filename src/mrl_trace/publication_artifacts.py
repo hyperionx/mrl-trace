@@ -254,6 +254,74 @@ def write_tex_macros(references: dict[str, dict], path) -> None:
                     f"\\newcommand{{\\{prefix}ExpEta{token}}}"
                     f"{{{float(values['matched_exponential']):.2f}}}"
                 )
+    codesign = references.get("codesign")
+    if codesign is not None:
+        benchmark = codesign["benchmark"]
+        lines.append(
+            f"\\newcommand{{\\CodesignPhysicalPreferredLag}}"
+            f"{{{float(benchmark['protocol']['physical_preferred_lag_s']):.2f}}}"
+        )
+        method_prefixes = {
+            "physical_headroom_v1": "CodesignPhysical",
+            "linear_erlang_v1": "CodesignLinear",
+            "physical_decay_matched_exponential": "CodesignExponential",
+            "learned_signed_exponential_k3": "CodesignLearned",
+        }
+        for method, prefix in method_prefixes.items():
+            record = benchmark["summary"][method]
+            lines.append(
+                f"\\newcommand{{\\{prefix}OverallLoss}}{{{float(record['log_loss']):.3f}}}"
+            )
+            for regime, values in sorted(record["by_regime"].items()):
+                token = "".join(part.title() for part in regime.split("_"))
+                lines.append(
+                    f"\\newcommand{{\\{prefix}{token}Loss}}"
+                    f"{{{float(values['log_loss']):.3f}}}"
+                )
+                lines.append(
+                    f"\\newcommand{{\\{prefix}{token}Accuracy}}"
+                    f"{{{float(values['top1_accuracy']):.3f}}}"
+                )
+        for comparator, record in sorted(benchmark["paired_bootstrap"].items()):
+            token = method_prefixes[comparator].removeprefix("Codesign")
+            lines.extend((
+                f"\\newcommand{{\\CodesignPhysicalMinus{token}Loss}}"
+                f"{{{float(record['mean_physical_minus_comparator']):.3f}}}",
+                f"\\newcommand{{\\CodesignPhysicalMinus{token}Lo}}"
+                f"{{{float(record['ci95'][0]):.3f}}}",
+                f"\\newcommand{{\\CodesignPhysicalMinus{token}Hi}}"
+                f"{{{float(record['ci95'][1]):.3f}}}",
+            ))
+        resources = {
+            row["implementation"]: row
+            for row in codesign["resource_accounting"]["rows"]
+        }
+        resource_names = {
+            "physical_headroom_in_material": "Physical",
+            "physical_decay_matched_exponential": "Exponential",
+            "digital_linear_erlang_k3": "Linear",
+            "learned_signed_exponential_k3": "Learned",
+        }
+        for implementation, token in resource_names.items():
+            row = resources[implementation]
+            lines.append(
+                f"\\newcommand{{\\Codesign{token}ExternalBits}}"
+                f"{{{int(row['external_state_bits_per_synapse'])}}}"
+            )
+            lines.append(
+                f"\\newcommand{{\\Codesign{token}SharedCoefficients}}"
+                f"{{{int(row['shared_coefficient_words'])}}}"
+            )
+        preferred = [
+            float(row["preferred_lag_s"])
+            for row in codesign["timing_phase_envelope"]
+        ]
+        lines.append(
+            f"\\newcommand{{\\CodesignPhaseMinimum}}{{{min(preferred):.2f}}}"
+        )
+        lines.append(
+            f"\\newcommand{{\\CodesignPhaseMaximum}}{{{max(preferred):.2f}}}"
+        )
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -397,11 +465,19 @@ def write_reference_figures(reference_dir, output_dir) -> dict[str, str]:
     interval_path = output_dir / "fig_interval_fair.png"
     fig.savefig(interval_path, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    return {
+    result = {
         "sequential": str(sequential_path),
         "dms": str(dms_path),
         "interval": str(interval_path),
     }
+    codesign_path = reference_dir / "codesign_reference.json"
+    if codesign_path.exists():
+        from .codesign import render_codesign_figure
+        codesign = json.loads(codesign_path.read_text(encoding="utf-8"))
+        result["codesign"] = render_codesign_figure(
+            codesign, output_dir / "fig_codesign.png"
+        )
+    return result
 
 
 def main(argv=None) -> int:
@@ -412,12 +488,14 @@ def main(argv=None) -> int:
     parser.add_argument("--sequential", action="store_true")
     parser.add_argument("--dms", action="store_true")
     parser.add_argument("--interval", action="store_true")
+    parser.add_argument("--codesign", action="store_true")
     parser.add_argument(
         "--figures-dir",
         help="render tracked reference summaries into this directory",
     )
     args = parser.parse_args(argv)
-    if not (args.sequential or args.dms or args.interval or args.figures_dir):
+    if not (args.sequential or args.dms or args.interval or args.codesign
+            or args.figures_dir):
         parser.error("select a benchmark and/or --figures-dir")
     output = Path(args.output_dir)
     payloads = {}
@@ -451,7 +529,25 @@ def main(argv=None) -> int:
         result = run_interval_selectivity(**kwargs)
         paths = write_reference_artifacts(result, "interval", output)
         payloads["interval"] = json.loads(Path(paths["json"]).read_text())
-    for existing in ("sequential", "dms", "interval"):
+    if args.codesign:
+        from .codesign import build_codesign_reference, write_codesign_artifacts
+        kwargs = ({
+            "trials_per_block": 4, "learned_multistarts": 1,
+            "bootstrap_resamples": 100,
+            "phase_kwargs": {
+                "voltages": (0.9,), "depths": (3,),
+                "retention_definitions": (("smoke", 1.5, "smoke"),),
+            },
+        } if args.smoke else {})
+        codesign = build_codesign_reference(**kwargs)
+        write_codesign_artifacts(
+            codesign,
+            json_path=output / "codesign_reference.json",
+            block_csv_path=output / "codesign_evaluation.csv",
+            phase_csv_path=output / "codesign_phase.csv",
+        )
+        payloads["codesign"] = codesign
+    for existing in ("sequential", "dms", "interval", "codesign"):
         path = output / f"{existing}_reference.json"
         if existing not in payloads and path.exists():
             payloads[existing] = json.loads(path.read_text(encoding="utf-8"))

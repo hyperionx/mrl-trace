@@ -17,7 +17,11 @@ from .device import (
     CascadeEligibilityGate, LinearErlangEligibilityGate,
     decay_matched_exponential_tau,
 )
-from .dopamine import DANDI001340_METHOD_PROVENANCE, LoggedSession
+from .dopamine import (
+    DANDI001340_METHOD_PROVENANCE,
+    DANDI001340_VERDICT,
+    LoggedSession,
+)
 from .model_specs import (
     PRIMARY_MODEL_ID, LINEAR_MODEL_ID, device_model_spec, file_sha256,
 )
@@ -74,10 +78,15 @@ def _predictive_linkage_metadata(reference=None) -> dict:
     path = Path(reference)
     if not path.exists():
         return {"available": False, "used_for_computation": False}
+    repository_root = Path(__file__).resolve().parents[2]
+    try:
+        display_path = path.resolve().relative_to(repository_root).as_posix()
+    except ValueError:
+        display_path = str(path)
     return {
         "available": True,
         "sha256": file_sha256(path),
-        "path": str(path),
+        "path": display_path,
         "used_for_computation": False,
     }
 
@@ -575,7 +584,8 @@ def evaluate_logged_replay_loso(
         }
 
     bootstrap = None
-    if {"device", "shuffled_device"}.issubset(conditions):
+    paired_comparisons = {}
+    if "device" in conditions:
         by_key = {
             (row["condition"], row["held_out_mouse"], row["session_id"]):
             row["log_loss"]
@@ -585,21 +595,28 @@ def evaluate_logged_replay_loso(
             (row["held_out_mouse"], row["session_id"])
             for row in session_rows if row["condition"] == "device"
         })
-        differences = np.asarray([
-            by_key[("device", *key)] - by_key[("shuffled_device", *key)]
-            for key in keys
-        ])
-        lo, hi = bootstrap_ci(differences, n_boot=n_boot, seed=seed)
-        bootstrap = {
-            "comparison": "device_minus_shuffled_device",
-            "mean": float(differences.mean()),
-            "ci95": [lo, hi],
-            "negative_is_better": True,
-            "n_sessions": len(differences),
-        }
+        comparators = [condition for condition in conditions if condition != "device"]
+        for comparator_index, comparator in enumerate(comparators):
+            differences = np.asarray([
+                by_key[("device", *key)] - by_key[(comparator, *key)]
+                for key in keys
+            ])
+            lo, hi = bootstrap_ci(
+                differences,
+                n_boot=n_boot,
+                seed=seed + comparator_index,
+            )
+            paired_comparisons[comparator] = {
+                "comparison": f"device_minus_{comparator}",
+                "mean": float(differences.mean()),
+                "ci95": [lo, hi],
+                "negative_is_better": True,
+                "n_sessions": len(differences),
+            }
+        bootstrap = paired_comparisons.get("shuffled_device")
 
     summary = {
-        "verdict": "Conditional Go",
+        "verdict": DANDI001340_VERDICT,
         "n_mice": len(mice),
         "n_sessions": len(sessions),
         "n_trials": int(sum(session.n_trials for session in sessions)),
@@ -607,9 +624,13 @@ def evaluate_logged_replay_loso(
         "pooled_log_loss": pooled,
         "per_mouse_log_loss": per_mouse,
         "device_minus_shuffled_bootstrap": bootstrap,
+        "physical_device_paired_comparisons": paired_comparisons,
         "interpretation": (
-            "Action-contingent logged replay is feasible. A positive biological-"
-            "learning result and device-kernel superiority are not established."
+            "Action-contingent logged replay is feasible. The physical device "
+            "improves slightly over shuffled and shifted signals, but its paired "
+            "intervals versus plain dLight, its matched exponential, and the "
+            "linear device include zero. Biological learning and device-kernel "
+            "superiority are therefore not established."
         ),
         "configuration": {
             "choice_model": (
@@ -719,6 +740,7 @@ def write_replay_artifacts(evaluation: dict, output_dir: str | Path) -> dict:
     _write_csv(prediction_path, evaluation["predictions"])
     _write_csv(session_path, evaluation["session_scores"])
     manifest_payload = {
+        "source_revision": None,
         "summary": evaluation["summary"],
         "parameters_by_training_fold":
             evaluation["parameters_by_training_fold"],
@@ -728,6 +750,16 @@ def write_replay_artifacts(evaluation: dict, output_dir: str | Path) -> dict:
             "figure": figure_path.name,
         },
     }
+    from .publication_artifacts import _source_revision
+    manifest_payload["source_revision"] = _source_revision(
+        Path(__file__).resolve().parents[2]
+    )
+    preparation_manifest = output / "dandi001340_preparation_manifest.json"
+    if preparation_manifest.is_file():
+        manifest_payload["preparation_manifest"] = {
+            "path": preparation_manifest.name,
+            "sha256": file_sha256(preparation_manifest),
+        }
     if "quality_filtered_sensitivity" in evaluation:
         sensitivity = evaluation["quality_filtered_sensitivity"]
         manifest_payload["quality_filtered_sensitivity"] = {
@@ -742,37 +774,71 @@ def write_replay_artifacts(evaluation: dict, output_dir: str | Path) -> dict:
     import matplotlib.pyplot as plt
 
     condition_order = [
-        condition for condition in REPLAY_CONDITIONS
+        condition for condition in (
+            "plain_dlight", "device", "matched_exponential",
+            "linear_device", "linear_matched_exponential", "no_trace",
+            "shuffled_device", "shifted_device",
+        )
         if condition in evaluation["summary"]["pooled_log_loss"]
     ]
     session_rows = evaluation["session_scores"]
+    by_session = {
+        (row["condition"], row["held_out_mouse"], row["session_id"]):
+        row["log_loss"]
+        for row in session_rows
+    }
+    baseline_keys = sorted({
+        (row["held_out_mouse"], row["session_id"])
+        for row in session_rows if row["condition"] == "previous_choice"
+    })
     means, errors = [], [[], []]
     for index, condition in enumerate(condition_order):
         values = np.asarray([
-            row["log_loss"] for row in session_rows
-            if row["condition"] == condition
+            by_session[(condition, *key)]
+            - by_session[("previous_choice", *key)]
+            for key in baseline_keys
         ])
-        mean = float(values.mean())
-        lo, hi = bootstrap_ci(values, seed=index)
+        mean = 1e4 * float(values.mean())
+        lo, hi = bootstrap_ci(values, n_boot=10_000, seed=index)
         means.append(mean)
-        errors[0].append(mean - lo)
-        errors[1].append(hi - mean)
-    fig, ax = plt.subplots(figsize=(8.4, 3.5))
+        errors[0].append(mean - 1e4 * lo)
+        errors[1].append(1e4 * hi - mean)
+    fig, ax = plt.subplots(figsize=(7.2, 3.5))
     colors = [
-        "#777777", "#3aa07a", "#2f4b8f", "#d49b37",
-        "#b0b0b0", "#b44b48", "#8b6bb1", "#222222",
+        "#3aa07a", "#2f4b8f", "#d49b37", "#6f7fae",
+        "#c7a95a", "#aaaaaa", "#b44b48", "#8b6bb1",
     ][:len(condition_order)]
-    ax.bar(np.arange(len(condition_order)), means, yerr=errors,
-           color=colors, capsize=3)
-    ax.set_xticks(
-        np.arange(len(condition_order)),
-        [name.replace("_", "\n") for name in condition_order],
-        fontsize=7.5,
+    y = np.arange(len(condition_order))
+    ax.errorbar(
+        means, y, xerr=np.asarray(errors), fmt="none",
+        ecolor="0.45", elinewidth=2.0, capsize=3,
     )
-    ax.set_ylabel("held-out next-choice log loss")
-    ax.set_title("DANDI 001340 logged replay - Conditional Go", loc="left")
+    ax.scatter(means, y, c=colors, s=42, zorder=3)
+    labels = {
+        "plain_dlight": "plain dLight",
+        "device": "physical device",
+        "matched_exponential": "physical matched exp.",
+        "linear_device": "linear device",
+        "linear_matched_exponential": "linear matched exp.",
+        "no_trace": "no trace",
+        "shuffled_device": "shuffled physical",
+        "shifted_device": "shifted physical",
+    }
+    ax.set_yticks(y, [labels[name] for name in condition_order])
+    ax.invert_yaxis()
+    ax.axvline(0.0, color="0.35", lw=0.8)
+    ax.set_xlabel(r"session-paired $\Delta$ log loss vs previous choice ($\times 10^4$)")
+    outcome_loss = evaluation["summary"]["pooled_log_loss"].get("outcome_rl")
+    suffix = (
+        f"; outcome-RL control = {outcome_loss:.3f}"
+        if outcome_loss is not None else ""
+    )
+    ax.set_title(
+        f"DANDI 001340 logged replay - intact dLight versus controls{suffix}",
+        loc="left",
+    )
     ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(True, axis="y", color="0.88", lw=0.5)
+    ax.grid(True, axis="x", color="0.88", lw=0.5)
     ax.set_axisbelow(True)
     fig.tight_layout()
     fig.savefig(figure_path, dpi=180, bbox_inches="tight")

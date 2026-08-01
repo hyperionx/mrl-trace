@@ -25,7 +25,7 @@ keywords = [
     "spiking-neural-networks",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -83,7 +83,7 @@ Repository = "https://github.com/hyperionx/mrl-trace"
 where = ["src"]
 
 [tool.setuptools.package-data]
-mrl_trace = ["dandi001340_assets.csv"]
+mrl_trace = ["dandi001340_assets.csv", "dandi000351_assets.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,3697 @@
+{
+  "analysis": "temporal_credit_codesign_reference",
+  "artifact_digest_sha256": "2faa29e09e2f8fd038f22ee3a1271e1207ebec920f6883c17535c0e7cb6606af",
+  "benchmark": {
+    "analysis": "resource_matched_temporal_attribution",
+    "artifact_digest_sha256": "12527c6d645b21352ea2e2b15c192afa4d34d29f9439aaa9a46c1a2c82f498e1",
+    "held_out_blocks": [
+      {
+        "block_id": 0,
+        "log_loss": 0.9603870352337855,
+        "method": "physical_headroom_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.4375,
+        "trials": 48
+      },
+      {
+        "block_id": 1,
+        "log_loss": 0.7433679381446789,
+        "method": "physical_headroom_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.875,
+        "trials": 48
+      },
+      {
+        "block_id": 2,
+        "log_loss": 0.7900071290580791,
+        "method": "physical_headroom_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.8958333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 3,
+        "log_loss": 0.8882275778717679,
+        "method": "physical_headroom_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.4791666666666667,
+        "trials": 48
+      },
+      {
+        "block_id": 4,
+        "log_loss": 2.696625213778296,
+        "method": "physical_headroom_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.020833333333333332,
+        "trials": 48
+      },
+      {
+        "block_id": 5,
+        "log_loss": 2.235003578946968,
+        "method": "physical_headroom_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.020833333333333332,
+        "trials": 48
+      },
+      {
+        "block_id": 6,
+        "log_loss": 1.7353299020139399,
+        "method": "physical_headroom_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.020833333333333332,
+        "trials": 48
+      },
+      {
+        "block_id": 7,
+        "log_loss": 1.4694156827705402,
+        "method": "physical_headroom_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.08333333333333333,
+        "trials": 48
+      },
+      {
+        "block_id": 8,
+        "log_loss": 3.3291259556764814,
+        "method": "physical_headroom_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 9,
+        "log_loss": 3.319473167182963,
+        "method": "physical_headroom_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 10,
+        "log_loss": 3.333301727978386,
+        "method": "physical_headroom_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 11,
+        "log_loss": 3.274318379091072,
+        "method": "physical_headroom_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 12,
+        "log_loss": 3.7488169241278193,
+        "method": "physical_headroom_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 13,
+        "log_loss": 1.9116107055113423,
+        "method": "physical_headroom_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.020833333333333332,
+        "trials": 48
+      },
+      {
+        "block_id": 14,
+        "log_loss": 1.009147785725159,
+        "method": "physical_headroom_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.375,
+        "trials": 48
+      },
+      {
+        "block_id": 15,
+        "log_loss": 1.2132180815682798,
+        "method": "physical_headroom_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.20833333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 0,
+        "log_loss": 1.5421769902930516,
+        "method": "linear_erlang_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.5,
+        "trials": 48
+      },
+      {
+        "block_id": 1,
+        "log_loss": 2.071856566550931,
+        "method": "linear_erlang_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.4375,
+        "trials": 48
+      },
+      {
+        "block_id": 2,
+        "log_loss": 2.3891957550203116,
+        "method": "linear_erlang_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.25,
+        "trials": 48
+      },
+      {
+        "block_id": 3,
+        "log_loss": 2.5480768080086236,
+        "method": "linear_erlang_v1",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.041666666666666664,
+        "trials": 48
+      },
+      {
+        "block_id": 4,
+        "log_loss": 0.6201663376938646,
+        "method": "linear_erlang_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.75,
+        "trials": 48
+      },
+      {
+        "block_id": 5,
+        "log_loss": 0.36077178918847613,
+        "method": "linear_erlang_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 6,
+        "log_loss": 0.45161856634020797,
+        "method": "linear_erlang_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.8541666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 7,
+        "log_loss": 0.6000986247514066,
+        "method": "linear_erlang_v1",
+        "regime": "early_delay",
+        "top1_accuracy": 0.8333333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 8,
+        "log_loss": 2.3765080362200783,
+        "method": "linear_erlang_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 9,
+        "log_loss": 2.5306902932802005,
+        "method": "linear_erlang_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 10,
+        "log_loss": 2.5804709785824476,
+        "method": "linear_erlang_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.020833333333333332,
+        "trials": 48
+      },
+      {
+        "block_id": 11,
+        "log_loss": 2.3699308091429425,
+        "method": "linear_erlang_v1",
+        "regime": "recency",
+        "top1_accuracy": 0.125,
+        "trials": 48
+      },
+      {
+        "block_id": 12,
+        "log_loss": 1.2990455917776986,
+        "method": "linear_erlang_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.4166666666666667,
+        "trials": 48
+      },
+      {
+        "block_id": 13,
+        "log_loss": 0.5947269073281155,
+        "method": "linear_erlang_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.7083333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 14,
+        "log_loss": 1.7857360970262093,
+        "method": "linear_erlang_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.3333333333333333,
+        "trials": 48
+      },
+      {
+        "block_id": 15,
+        "log_loss": 2.450042883100251,
+        "method": "linear_erlang_v1",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.041666666666666664,
+        "trials": 48
+      },
+      {
+        "block_id": 0,
+        "log_loss": 2.1146296095723955,
+        "method": "physical_decay_matched_exponential",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 1,
+        "log_loss": 2.4479570820323766,
+        "method": "physical_decay_matched_exponential",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 2,
+        "log_loss": 2.5660222666419217,
+        "method": "physical_decay_matched_exponential",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 3,
+        "log_loss": 2.8340862639711997,
+        "method": "physical_decay_matched_exponential",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 4,
+        "log_loss": 1.1399343014867647,
+        "method": "physical_decay_matched_exponential",
+        "regime": "early_delay",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 5,
+        "log_loss": 1.3782119677052478,
+        "method": "physical_decay_matched_exponential",
+        "regime": "early_delay",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 6,
+        "log_loss": 1.5850237785834225,
+        "method": "physical_decay_matched_exponential",
+        "regime": "early_delay",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 7,
+        "log_loss": 1.7919330793268948,
+        "method": "physical_decay_matched_exponential",
+        "regime": "early_delay",
+        "top1_accuracy": 0.0,
+        "trials": 48
+      },
+      {
+        "block_id": 8,
+        "log_loss": 0.3398986416073277,
+        "method": "physical_decay_matched_exponential",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 9,
+        "log_loss": 0.3713718824673184,
+        "method": "physical_decay_matched_exponential",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 10,
+        "log_loss": 0.40522613473761404,
+        "method": "physical_decay_matched_exponential",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 11,
+        "log_loss": 0.4084357411313751,
+        "method": "physical_decay_matched_exponential",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 12,
+        "log_loss": 0.4869003345674556,
+        "method": "physical_decay_matched_exponential",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.875,
+        "trials": 48
+      },
+      {
+        "block_id": 13,
+        "log_loss": 0.8637253666714364,
+        "method": "physical_decay_matched_exponential",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.6041666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 14,
+        "log_loss": 1.5794702181166613,
+        "method": "physical_decay_matched_exponential",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.2916666666666667,
+        "trials": 48
+      },
+      {
+        "block_id": 15,
+        "log_loss": 2.377107627481295,
+        "method": "physical_decay_matched_exponential",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.041666666666666664,
+        "trials": 48
+      },
+      {
+        "block_id": 0,
+        "log_loss": 0.8234148756624343,
+        "method": "learned_signed_exponential_k3",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.5208333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 1,
+        "log_loss": 0.5171760459166651,
+        "method": "learned_signed_exponential_k3",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.9583333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 2,
+        "log_loss": 0.5861242972165973,
+        "method": "learned_signed_exponential_k3",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.8541666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 3,
+        "log_loss": 0.9536871259528571,
+        "method": "learned_signed_exponential_k3",
+        "regime": "physical_aligned",
+        "top1_accuracy": 0.4166666666666667,
+        "trials": 48
+      },
+      {
+        "block_id": 4,
+        "log_loss": 0.6215890823858535,
+        "method": "learned_signed_exponential_k3",
+        "regime": "early_delay",
+        "top1_accuracy": 0.7916666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 5,
+        "log_loss": 0.3350132672777489,
+        "method": "learned_signed_exponential_k3",
+        "regime": "early_delay",
+        "top1_accuracy": 0.9791666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 6,
+        "log_loss": 0.4694395103802964,
+        "method": "learned_signed_exponential_k3",
+        "regime": "early_delay",
+        "top1_accuracy": 0.8541666666666666,
+        "trials": 48
+      },
+      {
+        "block_id": 7,
+        "log_loss": 0.6694569108460063,
+        "method": "learned_signed_exponential_k3",
+        "regime": "early_delay",
+        "top1_accuracy": 0.8333333333333334,
+        "trials": 48
+      },
+      {
+        "block_id": 8,
+        "log_loss": 0.24364564002595426,
+        "method": "learned_signed_exponential_k3",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 9,
+        "log_loss": 0.26211659944160676,
+        "method": "learned_signed_exponential_k3",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 10,
+        "log_loss": 0.25537517790056685,
+        "method": "learned_signed_exponential_k3",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 11,
+        "log_loss": 0.29346134980780986,
+        "method": "learned_signed_exponential_k3",
+        "regime": "recency",
+        "top1_accuracy": 1.0,
+        "trials": 48
+      },
+      {
+        "block_id": 12,
+        "log_loss": 0.8735007926109728,
+        "method": "learned_signed_exponential_k3",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.8125,
+        "trials": 48
+      },
+      {
+        "block_id": 13,
+        "log_loss": 1.4451580841693275,
+        "method": "learned_signed_exponential_k3",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.625,
+        "trials": 48
+      },
+      {
+        "block_id": 14,
+        "log_loss": 1.4837282707408324,
+        "method": "learned_signed_exponential_k3",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.3541666666666667,
+        "trials": 48
+      },
+      {
+        "block_id": 15,
+        "log_loss": 1.4986179649959992,
+        "method": "learned_signed_exponential_k3",
+        "regime": "broad_delay",
+        "top1_accuracy": 0.041666666666666664,
+        "trials": 48
+      }
+    ],
+    "interpretation": "Regime-specific timing attribution under equal dynamic-state count. All kernels receive label-free pilot RMS scaling; the signed three-state basis is pilot-fitted separately for each predeclared task family and is a tuned upper comparator, not a material model. No result is a closed-loop learning or hardware-energy claim.",
+    "learned_basis_by_regime": {
+      "broad_delay": {
+        "fit_seed": 3117,
+        "gain": 121640.76162888239,
+        "multistarts": 12,
+        "pilot_objective": 1.1698030708451546,
+        "readout_weights": [
+          -0.7894794815338014,
+          0.21448889522894107,
+          0.5750797006160001
+        ],
+        "state_count": 3,
+        "tau_s": [
+          0.685809978340462,
+          0.707841382166907,
+          0.6774554465234862
+        ]
+      },
+      "early_delay": {
+        "fit_seed": 3118,
+        "gain": 58371.02552456165,
+        "multistarts": 12,
+        "pilot_objective": 0.4609155911896587,
+        "readout_weights": [
+          0.00030205212103721603,
+          -0.7072488182402161,
+          0.7069646510698636
+        ],
+        "state_count": 3,
+        "tau_s": [
+          1.1709862370649966,
+          2.8948055671030173,
+          2.8960312526698218
+        ]
+      },
+      "physical_aligned": {
+        "fit_seed": 3119,
+        "gain": 8383.91472340126,
+        "multistarts": 12,
+        "pilot_objective": 0.6323107930416115,
+        "readout_weights": [
+          0.36999209162758695,
+          -0.815153260842491,
+          0.4456803938596552
+        ],
+        "state_count": 3,
+        "tau_s": [
+          8.38209123144655,
+          8.958859271448874,
+          9.486011086400946
+        ]
+      },
+      "recency": {
+        "fit_seed": 3120,
+        "gain": 6095.599970266739,
+        "multistarts": 12,
+        "pilot_objective": 0.2609353827013567,
+        "readout_weights": [
+          0.4681383192228985,
+          0.34610917641399774,
+          -0.813052859337684
+        ],
+        "state_count": 3,
+        "tau_s": [
+          0.2823067036288369,
+          0.25564818497760305,
+          0.27070509831894973
+        ]
+      }
+    },
+    "method_provenance": {
+      "claim_limit": "The benchmark measures temporal attribution, not closed-loop reward learning. Resource counts are topology-derived lower bounds and exclude uncharacterised analogue peripherals, routing, retention refresh and write energy.",
+      "established_basis": [
+        "eligibility-kernel temporal attribution",
+        "state-space resource accounting",
+        "held-out hyperparameter selection"
+      ],
+      "repository_adaptation": "Frozen physical and linear kernels are compared with a pilot-fitted signed three-exponential basis on disjoint held-out timing blocks.",
+      "status": "resource_matched_model_analysis"
+    },
+    "model_specifications": {
+      "linear_erlang_v1": {
+        "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+        "default_beta_leak": 1.0,
+        "default_cascade_depth": 3,
+        "default_voltage_v": 0.9,
+        "equation_family": "linear_erlang_cascade",
+        "model_id": "linear_erlang_v1",
+        "primary": false,
+        "schema_version": 1,
+        "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+        "tau_r_law": {
+          "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+          "expression": "145*exp(-2.9*abs(V))",
+          "field_coefficient_per_v": 2.9,
+          "prefactor_s": 145.0,
+          "source": "global Au transient fit; kww_final.json",
+          "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+        },
+        "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+      },
+      "physical_headroom_v1": {
+        "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+        "default_beta_leak": 1.0,
+        "default_cascade_depth": 3,
+        "default_voltage_v": 0.9,
+        "equation_family": "nonlinear_normalized_headroom_cascade",
+        "model_id": "physical_headroom_v1",
+        "primary": true,
+        "schema_version": 1,
+        "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+        "tau_r_law": {
+          "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+          "expression": "145*exp(-2.9*abs(V))",
+          "field_coefficient_per_v": 2.9,
+          "prefactor_s": 145.0,
+          "source": "global Au transient fit; kww_final.json",
+          "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+        },
+        "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+      }
+    },
+    "paired_bootstrap": {
+      "learned_signed_exponential_k3": {
+        "ci95": [
+          0.6997292432424703,
+          2.0028823804508553
+        ],
+        "mean_physical_minus_comparator": 1.3328669868342518,
+        "negative_is_better_for_physical": true,
+        "resamples": 10000,
+        "resampling_unit": "held_out_scenario_block"
+      },
+      "linear_erlang_v1": {
+        "ci95": [
+          -0.2811669490787082,
+          1.02642517506622
+        ],
+        "mean_physical_minus_comparator": 0.3803914843984214,
+        "negative_is_better_for_physical": true,
+        "resamples": 10000,
+        "resampling_unit": "held_out_scenario_block"
+      },
+      "physical_decay_matched_exponential": {
+        "ci95": [
+          -0.2944284127861673,
+          1.5553451308765904
+        ],
+        "mean_physical_minus_comparator": 0.6229651555361782,
+        "negative_is_better_for_physical": true,
+        "resamples": 10000,
+        "resampling_unit": "held_out_scenario_block"
+      }
+    },
+    "pilot_fitted_gains": {
+      "learned_signed_exponential_k3": {
+        "broad_delay": 121640.76162888239,
+        "early_delay": 58371.02552456165,
+        "physical_aligned": 8383.91472340126,
+        "recency": 6095.599970266739
+      },
+      "linear_erlang_v1": {
+        "broad_delay": 3.263160130348361,
+        "early_delay": 2.5779856938809727,
+        "physical_aligned": 4.283941016141161,
+        "recency": 4.536091376398465
+      },
+      "physical_decay_matched_exponential": {
+        "broad_delay": 4.281086832421661,
+        "early_delay": 3.471746615968177,
+        "physical_aligned": 3.2885295897620157,
+        "recency": 3.3290009765949
+      },
+      "physical_headroom_v1": {
+        "broad_delay": 3.6211925451797145,
+        "early_delay": 2.88225615917125,
+        "physical_aligned": 2.5387991152842466,
+        "recency": 2.5039685914967906
+      }
+    },
+    "protocol": {
+      "amplitude_control": "label-free unit-RMS within-trial score normalization fitted on the corresponding pilot regime",
+      "candidate_events_per_trial": 4,
+      "evaluation_data_used_for_fitting": false,
+      "evaluation_seed": 9100,
+      "physical_preferred_lag_s": 19.36,
+      "pilot_seed": 3100,
+      "score": "predeclared causal-event softmax log loss",
+      "synthetic_operating_point": {
+        "beta_leak": 1.0,
+        "cascade_depth": 3,
+        "tau_leak_s": 10.0,
+        "voltage_v": 0.9
+      },
+      "trials_per_scenario_block": 48
+    },
+    "schema_version": 1,
+    "summary": {
+      "learned_signed_exponential_k3": {
+        "by_regime": {
+          "broad_delay": {
+            "log_loss": 1.325251278129283,
+            "top1_accuracy": 0.45833333333333337
+          },
+          "early_delay": {
+            "log_loss": 0.5238746927224763,
+            "top1_accuracy": 0.8645833333333334
+          },
+          "physical_aligned": {
+            "log_loss": 0.7201005861871385,
+            "top1_accuracy": 0.6875
+          },
+          "recency": {
+            "log_loss": 0.26364969179398445,
+            "top1_accuracy": 1.0
+          }
+        },
+        "log_loss": 0.7082190622082205,
+        "top1_accuracy": 0.7526041666666666
+      },
+      "linear_erlang_v1": {
+        "by_regime": {
+          "broad_delay": {
+            "log_loss": 1.5323878698080686,
+            "top1_accuracy": 0.375
+          },
+          "early_delay": {
+            "log_loss": 0.5081638294934888,
+            "top1_accuracy": 0.859375
+          },
+          "physical_aligned": {
+            "log_loss": 2.1378265299682293,
+            "top1_accuracy": 0.3072916666666667
+          },
+          "recency": {
+            "log_loss": 2.464400029306417,
+            "top1_accuracy": 0.036458333333333336
+          }
+        },
+        "log_loss": 1.660694564644051,
+        "top1_accuracy": 0.39453125
+      },
+      "physical_decay_matched_exponential": {
+        "by_regime": {
+          "broad_delay": {
+            "log_loss": 1.326800886709212,
+            "top1_accuracy": 0.453125
+          },
+          "early_delay": {
+            "log_loss": 1.4737757817755823,
+            "top1_accuracy": 0.0
+          },
+          "physical_aligned": {
+            "log_loss": 2.4906738055544735,
+            "top1_accuracy": 0.0
+          },
+          "recency": {
+            "log_loss": 0.38123309998590876,
+            "top1_accuracy": 1.0
+          }
+        },
+        "log_loss": 1.4181208935062941,
+        "top1_accuracy": 0.36328125
+      },
+      "physical_headroom_v1": {
+        "by_regime": {
+          "broad_delay": {
+            "log_loss": 1.97069837423315,
+            "top1_accuracy": 0.15104166666666666
+          },
+          "early_delay": {
+            "log_loss": 2.034093594377436,
+            "top1_accuracy": 0.03645833333333333
+          },
+          "physical_aligned": {
+            "log_loss": 0.8454974200770778,
+            "top1_accuracy": 0.671875
+          },
+          "recency": {
+            "log_loss": 3.3140548074822256,
+            "top1_accuracy": 0.0
+          }
+        },
+        "log_loss": 2.0410860490424723,
+        "top1_accuracy": 0.21484375
+      }
+    }
+  },
+  "method_provenance": {
+    "claim_limit": "The benchmark measures temporal attribution, not closed-loop reward learning. Resource counts are topology-derived lower bounds and exclude uncharacterised analogue peripherals, routing, retention refresh and write energy.",
+    "established_basis": [
+      "eligibility-kernel temporal attribution",
+      "state-space resource accounting",
+      "held-out hyperparameter selection"
+    ],
+    "repository_adaptation": "Frozen physical and linear kernels are compared with a pilot-fitted signed three-exponential basis on disjoint held-out timing blocks.",
+    "status": "resource_matched_model_analysis"
+  },
+  "predictive_linkage": {
+    "available": true,
+    "file_sha256": "3c11f2648bb46a36b8b8ddeb8824ceb54c79558a254731025b1ae4bb8d3f7447",
+    "manifest_digest_sha256": "bc6eb8f7539a5f8299b4a65d26ddabc98993a4deccad5dcf86c61372a164a6ee",
+    "role": "provenance and uncertainty context only",
+    "supported_candidates": [
+      "kww",
+      "linear_k2",
+      "linear_k3",
+      "linear_k4",
+      "linear_k5"
+    ],
+    "supported_depths": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "used_for_benchmark_fitting": false
+  },
+  "resource_accounting": {
+    "interpretation": "Topology-derived lower bounds only. No absolute energy, area or throughput advantage is claimed without a circuit and peripherals.",
+    "rows": [
+      {
+        "claim_limit": "Assumes the fitted internal relaxation is supplied by the two differential cells; excludes selector, sense, reward line and write.",
+        "dynamic_states": 3,
+        "external_state_bits_per_synapse": 0,
+        "externally_stored_state_words": 0,
+        "implementation": "physical_headroom_in_material",
+        "physical_cells_per_signed_synapse": 2,
+        "readout_multiplies_per_reward": 0,
+        "recurrence_adds_per_tick": 0,
+        "recurrence_multiplies_per_tick": 0,
+        "shared_coefficient_words": 0
+      },
+      {
+        "claim_limit": "Digital-state lower bound; weight-cell and routing cost excluded.",
+        "dynamic_states": 1,
+        "external_state_bits_per_synapse": 16,
+        "externally_stored_state_words": 1,
+        "implementation": "physical_decay_matched_exponential",
+        "physical_cells_per_signed_synapse": 2,
+        "readout_multiplies_per_reward": 0,
+        "recurrence_adds_per_tick": 1,
+        "recurrence_multiplies_per_tick": 1,
+        "shared_coefficient_words": 1
+      },
+      {
+        "claim_limit": "Forward-Euler lower bound before memory traffic and control.",
+        "dynamic_states": 3,
+        "external_state_bits_per_synapse": 48,
+        "externally_stored_state_words": 3,
+        "implementation": "digital_linear_erlang_k3",
+        "physical_cells_per_signed_synapse": 2,
+        "readout_multiplies_per_reward": 0,
+        "recurrence_adds_per_tick": 6,
+        "recurrence_multiplies_per_tick": 6,
+        "shared_coefficient_words": 2
+      },
+      {
+        "claim_limit": "Three decays plus signed readout; excludes coefficient-training and memory-traffic cost.",
+        "dynamic_states": 3,
+        "external_state_bits_per_synapse": 48,
+        "externally_stored_state_words": 3,
+        "implementation": "learned_signed_exponential_k3",
+        "physical_cells_per_signed_synapse": 2,
+        "readout_multiplies_per_reward": 3,
+        "recurrence_adds_per_tick": 3,
+        "recurrence_multiplies_per_tick": 3,
+        "shared_coefficient_words": 6
+      }
+    ],
+    "state_word_bits": 16
+  },
+  "schema_version": 1,
+  "timing_phase_envelope": [
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.5,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.4,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 9.25,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 10.05,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.5,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.4,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 9.200000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 10.0,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.5,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.3500000000000005,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 9.0,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 9.75,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.2,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.450000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 9.15,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 0.9,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.2000000000000002,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.6500000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.85,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 7.15,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 7.6000000000000005,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.8,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.45,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.9000000000000004,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.35,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.700000000000001,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 18.2,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 19.75,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.8,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.45,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.9000000000000004,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.35,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.65,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 17.85,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 19.3,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.8,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.85,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.3000000000000003,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.35,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 15.9,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 16.900000000000002,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.75,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.8000000000000003,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.2,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 7.3500000000000005,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 11.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 11.950000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.5500000000000003,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.9000000000000004,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.25,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 7.1000000000000005,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 7.300000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.6500000000000004,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.6,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.95,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 12.9,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 26.150000000000002,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 28.05,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.6500000000000004,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.6,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.95,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 12.75,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 24.1,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 25.5,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.6,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.5500000000000003,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.2,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.9,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 11.350000000000001,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 17.05,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 17.650000000000002,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.5500000000000003,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.45,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.0,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.55,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.15,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 10.700000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 11.0,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.35,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.95,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.5500000000000003,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.25,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.65,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.5,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.75,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.65,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.550000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 17.0,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 30.55,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 31.950000000000003,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.5,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.75,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.65,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.550000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 16.25,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 25.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 26.450000000000003,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.45,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.7,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.550000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.3500000000000005,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 12.4,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 16.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 16.95,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.35,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.3500000000000005,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 4.9,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.4,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 8.25,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 10.450000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 10.700000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 2.8000000000000003,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.3000000000000003,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.6,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 3.8000000000000003,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 5.3500000000000005,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.6000000000000005,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "physical_headroom_v1",
+      "preferred_lag_s": 6.75,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.8500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.1,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.4000000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.8000000000000003,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.1000000000000005,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.25,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.8500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.05,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.2000000000000002,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.35,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.5,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.6,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.75,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.05,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.1500000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.85,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.35,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.65,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.8,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.8500000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.3,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.5,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.55,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.55,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.65,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.65,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.7000000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 2,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.55,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.0,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.5,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.6000000000000005,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 6.3500000000000005,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 6.550000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.85,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.1,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.35,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.0,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 5.25,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 5.3500000000000005,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.3,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.6,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.75,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.9000000000000001,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.85,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.35,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.4000000000000004,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.05,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.35,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.9000000000000001,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.1,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.1,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.8500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 0.9500000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.0,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.2000000000000002,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 3,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.3,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.15,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.75,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.1,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.45,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 5.95,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 7.800000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 8.0,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.0500000000000003,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.5500000000000003,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.85,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.1,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 5.050000000000001,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 6.300000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 6.4,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.7000000000000002,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.0500000000000003,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.25,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.45,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.45,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.95,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.0,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.35,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.55,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.6500000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.75,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.2,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.0,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.1,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.1500000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.2000000000000002,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.35,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 4,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.4500000000000002,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.7,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.4000000000000004,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.85,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.25,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 6.95,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 8.8,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 8.950000000000001,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 14.249669912632424,
+      "voltage_v": 0.8
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.5,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.1,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.45,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.8000000000000003,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 5.800000000000001,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 7.050000000000001,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 7.15,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 10.662508845643279,
+      "voltage_v": 0.9
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.1,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.45,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.6500000000000004,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.85,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 3.85,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.3500000000000005,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 4.3500000000000005,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 5.969921286164822,
+      "voltage_v": 1.1
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.6,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.8,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.9000000000000001,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.0,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.4000000000000004,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.6,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 2.6,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 3.3425491766477076,
+      "voltage_v": 1.3
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.1500000000000001,
+      "retention_id": "held_bias_q10",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 0.8448946663770562,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.25,
+      "retention_id": "held_bias_q25",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.1669372374932345,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.3,
+      "retention_id": "held_bias_q50",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.3896742156393977,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.3,
+      "retention_id": "held_bias_q75",
+      "retention_source": "direct held-bias distribution",
+      "tau_leak_s": 1.6179662155669912,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.5,
+      "retention_id": "near_zero_device_1",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 4.312684718514085,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.55,
+      "retention_id": "near_zero_device_2",
+      "retention_source": "supplementary 1-mV read",
+      "tau_leak_s": 9.1966164265996,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    },
+    {
+      "cascade_depth": 5,
+      "model_id": "linear_erlang_v1",
+      "preferred_lag_s": 1.55,
+      "retention_id": "synthetic_10s",
+      "retention_source": "declared synthetic operating point",
+      "tau_leak_s": 10.0,
+      "tau_r_s": 1.8714878241695816,
+      "voltage_v": 1.5
+    }
+  ]
+}

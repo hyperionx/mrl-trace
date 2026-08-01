@@ -1,0 +1,899 @@
+{
+  "claim": "Feasibility of logged action-contingent replay only; no positive biological-learning or device-superiority result.",
+  "historical_unverified_quality_target": {
+    "n_sessions": 37,
+    "n_trials": 32373,
+    "status": "not_reproduced_by_pinned_external_rerun_2026-08-01"
+  },
+  "preprocessing_parameters": {
+    "airpls_convergence": 0.001,
+    "airpls_lambda": "[2*sin(pi*dt/window_s)]^-4",
+    "airpls_max_iterations": 50,
+    "airpls_penalty_order": 2,
+    "huber_irls_c": 1.345,
+    "huber_irls_convergence": 1e-08,
+    "huber_irls_max_iterations": 50,
+    "quality_bootstrap_ci": 0.95,
+    "quality_bootstrap_resamples": 10000,
+    "quality_min_rewarded_trials": 20,
+    "quality_min_stochastic_omission_trials": 20,
+    "quality_rule": "reward_minus_stochastic_omission_ci_wholly_positive",
+    "reference_alignment": "linear_415_onto_470",
+    "session_standardization": "mean_zero_population_sd_one",
+    "timestamp_basis": "actual_NWB_timestamps"
+  },
+  "primary_window_s": 60.0,
+  "quality_target_resolution": "The pinned external rerun selected 38 sessions and 33,330 aligned trials at every declared detrending window. The earlier 37-session/32,373-trial target was not reproduced and is not forced by a post-hoc session exclusion.",
+  "reports": {
+    "120": {
+      "dataset": "DANDI:001340@0.250221.0527",
+      "detrend_window_s": 120.0,
+      "device_exponential_overlap_correlation": 0.8706703737600257,
+      "device_overlap_reward_omission_auc": 0.8172436764284976,
+      "linear_device_exponential_overlap_correlation": 0.9105823554923487,
+      "linear_device_overlap_reward_omission_auc": 0.8186158313254257,
+      "method_provenance": {
+        "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+        "dataset": "DANDI:001340@0.250221.0527",
+        "established_basis": [
+          "fiber-photometry artifact regression",
+          "airPLS baseline estimation",
+          "logged behavioral replay"
+        ],
+        "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+        "source_method_doi": "10.1371/journal.pcbi.1013226",
+        "status": "adapted",
+        "verdict": "Conditional Go"
+      },
+      "mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "n_aligned_trials": 39020,
+      "n_assets": 69,
+      "n_behavior_only_sessions": 21,
+      "n_quality_sessions": 38,
+      "n_quality_trials": 33330,
+      "n_substantive_sessions": 46,
+      "n_truncated_sessions": 2,
+      "n_valid_behavior_trials": 58590,
+      "physical_linear_overlap_correlation": 0.9847424113668937,
+      "quality_mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "verdict": "Conditional Go"
+    },
+    "30": {
+      "dataset": "DANDI:001340@0.250221.0527",
+      "detrend_window_s": 30.0,
+      "device_exponential_overlap_correlation": 0.8740818212095266,
+      "device_overlap_reward_omission_auc": 0.8167589896487437,
+      "linear_device_exponential_overlap_correlation": 0.9129870917135507,
+      "linear_device_overlap_reward_omission_auc": 0.818142548868472,
+      "method_provenance": {
+        "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+        "dataset": "DANDI:001340@0.250221.0527",
+        "established_basis": [
+          "fiber-photometry artifact regression",
+          "airPLS baseline estimation",
+          "logged behavioral replay"
+        ],
+        "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+        "source_method_doi": "10.1371/journal.pcbi.1013226",
+        "status": "adapted",
+        "verdict": "Conditional Go"
+      },
+      "mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "n_aligned_trials": 39020,
+      "n_assets": 69,
+      "n_behavior_only_sessions": 21,
+      "n_quality_sessions": 38,
+      "n_quality_trials": 33330,
+      "n_substantive_sessions": 46,
+      "n_truncated_sessions": 2,
+      "n_valid_behavior_trials": 58590,
+      "physical_linear_overlap_correlation": 0.9852318198772125,
+      "quality_mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "verdict": "Conditional Go"
+    },
+    "60": {
+      "dataset": "DANDI:001340@0.250221.0527",
+      "detrend_window_s": 60.0,
+      "device_exponential_overlap_correlation": 0.8723851438232345,
+      "device_overlap_reward_omission_auc": 0.8166514229497385,
+      "linear_device_exponential_overlap_correlation": 0.9117880311881833,
+      "linear_device_overlap_reward_omission_auc": 0.8180357473548399,
+      "method_provenance": {
+        "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+        "dataset": "DANDI:001340@0.250221.0527",
+        "established_basis": [
+          "fiber-photometry artifact regression",
+          "airPLS baseline estimation",
+          "logged behavioral replay"
+        ],
+        "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+        "source_method_doi": "10.1371/journal.pcbi.1013226",
+        "status": "adapted",
+        "verdict": "Conditional Go"
+      },
+      "mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "n_aligned_trials": 39020,
+      "n_assets": 69,
+      "n_behavior_only_sessions": 21,
+      "n_quality_sessions": 38,
+      "n_quality_trials": 33330,
+      "n_substantive_sessions": 46,
+      "n_truncated_sessions": 2,
+      "n_valid_behavior_trials": 58590,
+      "physical_linear_overlap_correlation": 0.9849879250474551,
+      "quality_mice": [
+        "BSD011",
+        "BSD015",
+        "BSD016",
+        "BSD017",
+        "BSD019"
+      ],
+      "verdict": "Conditional Go"
+    }
+  },
+  "schema_version": 1,
+  "sensitivity_windows_s": [
+    30.0,
+    120.0
+  ],
+  "source_assets": [
+    {
+      "asset_id": "3dc41a5e-760d-4516-ba6a-a3468cb14f99",
+      "path": "sub-BSD011/sub-BSD011_ses-p148.nwb",
+      "sha256": "c726c3f5527e0815aaa4ce0bee85b8d3bcf85e9cc956a709d5fe0ca0b8cfeabc",
+      "size": 6339152
+    },
+    {
+      "asset_id": "51ebb5b1-5136-45a1-b40d-45f731a77fd9",
+      "path": "sub-BSD011/sub-BSD011_ses-p149.nwb",
+      "sha256": "b74e61799d73e7d0601915796b58164e80f40d8088eada4941add7079010eab1",
+      "size": 6175960
+    },
+    {
+      "asset_id": "2cff8cbe-8e63-4cbb-8428-70c7b50c1aea",
+      "path": "sub-BSD011/sub-BSD011_ses-p150.nwb",
+      "sha256": "6a3d21584efd5f4d3a699932b5b4b5c8f9bfd7fc07613c2b6e2c15dd0b155ee4",
+      "size": 3916200
+    },
+    {
+      "asset_id": "8ff1c1fb-854b-4684-b343-2afd5c29e209",
+      "path": "sub-BSD011/sub-BSD011_ses-p151.nwb",
+      "sha256": "836b0e551cceb850f491b0028e1cccd3f1026c629379e25e7cb35a63dc918a9c",
+      "size": 3625584
+    },
+    {
+      "asset_id": "5000f5b4-46ef-4d67-afd4-202c02a0163e",
+      "path": "sub-BSD011/sub-BSD011_ses-p152.nwb",
+      "sha256": "d094bd582f95629b43691ab0f2d6dbd810ab2444fd7d7ca8913a047f5a54940d",
+      "size": 3817184
+    },
+    {
+      "asset_id": "5615e137-d040-4f19-a412-187701a6c710",
+      "path": "sub-BSD011/sub-BSD011_ses-p153.nwb",
+      "sha256": "2b166aa2844b78367146f00f42a4f95e00472ddddf5ade5b73fbdee287fb19a0",
+      "size": 4203792
+    },
+    {
+      "asset_id": "f71be15d-ad84-4576-8ef2-cab4635e4134",
+      "path": "sub-BSD011/sub-BSD011_ses-p154.nwb",
+      "sha256": "6e4f4219bc648081e98240f577abe3e9faa0e22766fd4fd2d0dcb53a230be1d8",
+      "size": 4860632
+    },
+    {
+      "asset_id": "f531d3fe-d346-431b-b4ad-a3636f8e3bb9",
+      "path": "sub-BSD011/sub-BSD011_ses-p155.nwb",
+      "sha256": "9aae18ca5983d262961aa5d01e429c95850fbd0899747033162dbeba25639a9a",
+      "size": 4281184
+    },
+    {
+      "asset_id": "e57238de-6a32-4aa4-9ef8-0f51e6712b4a",
+      "path": "sub-BSD011/sub-BSD011_ses-p156.nwb",
+      "sha256": "38b3e84b04417cf5cee867d3fef932238873ca77b57b98d100a9731f04e20406",
+      "size": 3845784
+    },
+    {
+      "asset_id": "5c7a8763-037e-4395-8d7e-4cb8ebed06d2",
+      "path": "sub-BSD011/sub-BSD011_ses-p157.nwb",
+      "sha256": "18dd413415d10fcc335b8d2db51bc7b23521bcd0ea9d1712432e8523549459f0",
+      "size": 4547840
+    },
+    {
+      "asset_id": "a6bf0168-181f-4a7e-aea4-db40269a3027",
+      "path": "sub-BSD011/sub-BSD011_ses-p158.nwb",
+      "sha256": "c7b5006579451ac271225036279513805694bbc16b49a7afda98a24bd2a1fa48",
+      "size": 4071376
+    },
+    {
+      "asset_id": "c82d9ca3-55c1-4539-a954-7005d2ac6b61",
+      "path": "sub-BSD011/sub-BSD011_ses-p159.nwb",
+      "sha256": "6096a244cb175c1e8789d30c7255aaada65a53e3a507c151b35d223f6e830056",
+      "size": 4790904
+    },
+    {
+      "asset_id": "5262ce59-f5c5-4c15-98b0-6a01c4d35485",
+      "path": "sub-BSD011/sub-BSD011_ses-p160.nwb",
+      "sha256": "8176549c4b372639948240113816cbf46a89890eb4dd67dffd20ead157c17a31",
+      "size": 4043712
+    },
+    {
+      "asset_id": "d419bbd7-c716-4d35-816b-ee1ddb984943",
+      "path": "sub-BSD011/sub-BSD011_ses-p161.nwb",
+      "sha256": "9777f7b02aebbe71abcb105eb9f28574e4e91b842c3e4290cae7f73f41e8c62b",
+      "size": 4602016
+    },
+    {
+      "asset_id": "adda11c0-949f-4514-9eb8-77aac0434ecb",
+      "path": "sub-BSD015/sub-BSD015_ses-p104.nwb",
+      "sha256": "89bd98defd1edde6cecc473e51c60882ea662f94bbabdf6985a275205d49489d",
+      "size": 4247536
+    },
+    {
+      "asset_id": "09e82a0c-cb91-4787-b1e5-08caebac5a60",
+      "path": "sub-BSD015/sub-BSD015_ses-p105.nwb",
+      "sha256": "33c3b017b882aba3508288fa8befd4d23b210d747ab37c4c8af773e48ae653f2",
+      "size": 3625952
+    },
+    {
+      "asset_id": "4e1e832c-4db0-4927-9317-18a4294344b8",
+      "path": "sub-BSD015/sub-BSD015_ses-p106.nwb",
+      "sha256": "58244185c1af01c2c19e94ef9632ff3a943b5ccf9ea927229b87912b89ca831e",
+      "size": 566016
+    },
+    {
+      "asset_id": "09ebae78-6b5b-4919-be2b-97317fb6ae4e",
+      "path": "sub-BSD015/sub-BSD015_ses-p107.nwb",
+      "sha256": "042ad2f15fd407db54b3e5f99b815ed24198b6b66d37c903926845a652a6e13d",
+      "size": 3765368
+    },
+    {
+      "asset_id": "67e681f2-114a-483b-9027-afcc99eeeb34",
+      "path": "sub-BSD015/sub-BSD015_ses-p108.nwb",
+      "sha256": "2c8356aae1a5bfa34f5473d95816650f1b5aae15d2d21bdbcf1d09a3ffb87be6",
+      "size": 3100640
+    },
+    {
+      "asset_id": "b3ed2964-e447-44b1-a371-4e2fc18c3ecb",
+      "path": "sub-BSD015/sub-BSD015_ses-p109.nwb",
+      "sha256": "56b1f024425b5cbd77cd4464829c89ef30407a6655f0b5038cb27ce6dd4f8897",
+      "size": 513088
+    },
+    {
+      "asset_id": "40dd9cad-8fd8-4ef5-8688-190f334076a5",
+      "path": "sub-BSD015/sub-BSD015_ses-p110.nwb",
+      "sha256": "75d249d84ca95b339ba0fc450a3e4e02e730c5fdc30c2a8e86b863bd6c00d68c",
+      "size": 3790040
+    },
+    {
+      "asset_id": "a30aacc4-6f40-431c-9e5d-a77ef24cb32f",
+      "path": "sub-BSD015/sub-BSD015_ses-p111.nwb",
+      "sha256": "1f3664a9181ec4079f28d9cfe4812e9349b7f524fc975324a175079cf196d6b7",
+      "size": 3507280
+    },
+    {
+      "asset_id": "7e484872-b9c9-4de5-840d-ba1a4fb5c8c7",
+      "path": "sub-BSD015/sub-BSD015_ses-p112.nwb",
+      "sha256": "f1e6cc7284834cc7188bb46b5638f0c4618e3a05ae39373c8decd62cdd751042",
+      "size": 464904
+    },
+    {
+      "asset_id": "47fddb4d-ab7a-4c2d-a592-88ed4bf35f34",
+      "path": "sub-BSD015/sub-BSD015_ses-p113.nwb",
+      "sha256": "fbecbf802ed5850f4d301541059f497bfd8d44e95739b096146ec21e3fd1e2fb",
+      "size": 531456
+    },
+    {
+      "asset_id": "992230e1-c3e6-4b3a-93e8-c13da137ebaa",
+      "path": "sub-BSD015/sub-BSD015_ses-p114.nwb",
+      "sha256": "7c2127b5003e314c77428554d1a58d797965600e5170846aaad31d401644c1c5",
+      "size": 475528
+    },
+    {
+      "asset_id": "9f4832e4-135f-4e9f-b0c0-2adf0dd854cd",
+      "path": "sub-BSD015/sub-BSD015_ses-p115.nwb",
+      "sha256": "bf29a0343982faffa86a28b921688ecd3d312230a96727827806dbb80de21eb9",
+      "size": 394288
+    },
+    {
+      "asset_id": "68b94ab5-f281-4eb2-b9fa-81ee2a4d5993",
+      "path": "sub-BSD015/sub-BSD015_ses-p116.nwb",
+      "sha256": "75ea96bcc8e44d0ffddf3fad915021f7f46b87bc30d99400e7f5cd6cb641191b",
+      "size": 2937912
+    },
+    {
+      "asset_id": "40aa6b12-8519-48b3-a9ac-9b233ef42688",
+      "path": "sub-BSD015/sub-BSD015_ses-p117.nwb",
+      "sha256": "23fe4414517550e4e58417f240d9d75af471f372ef69c7ad349606c409e8b562",
+      "size": 3174560
+    },
+    {
+      "asset_id": "5c909cad-f69b-442a-bb9a-f5631c302154",
+      "path": "sub-BSD016/sub-BSD016_ses-p106.nwb",
+      "sha256": "fa4d628876717cfb9c6de3d22e38c71f8a0c18dd4118e97fa6ef37b188f37de1",
+      "size": 2988176
+    },
+    {
+      "asset_id": "b39e1b32-b587-4d53-a85b-e0c8e42c3dc6",
+      "path": "sub-BSD016/sub-BSD016_ses-p107.nwb",
+      "sha256": "bbd97aa247cb1bc757cd680a191d341379953fafe4c17b68a3697c3282c26e54",
+      "size": 2986536
+    },
+    {
+      "asset_id": "634821a0-f403-4332-b618-d0e91b33d93b",
+      "path": "sub-BSD016/sub-BSD016_ses-p108.nwb",
+      "sha256": "6f68ff51daeda089bd3042dc3f2010e4a1b7ecc72b1bab15d8be5a01b452086e",
+      "size": 511936
+    },
+    {
+      "asset_id": "d0a71987-053e-44e6-aa78-374637496a3b",
+      "path": "sub-BSD016/sub-BSD016_ses-p109.nwb",
+      "sha256": "06c40d0757520fc9585ac9da4cc8d65968d06bb674a40c175e00383145f86983",
+      "size": 4198904
+    },
+    {
+      "asset_id": "ed19b3d4-6ce9-4f55-8fc2-be0c0ea20d4e",
+      "path": "sub-BSD016/sub-BSD016_ses-p110.nwb",
+      "sha256": "1862f7a34ae15d2a672c9eedf4e7f737f6be1e2829e66b8d0e8e6a3423b0e30b",
+      "size": 3096592
+    },
+    {
+      "asset_id": "4e1ce05a-d1df-4e90-86ef-eb84d245b821",
+      "path": "sub-BSD016/sub-BSD016_ses-p111.nwb",
+      "sha256": "16f041f4554865cf37d5e7163c8700b69be430e26024fef4cb8a1c4d07397b96",
+      "size": 537712
+    },
+    {
+      "asset_id": "0a9e52d5-7d13-48c0-8ea0-b0caf5d2817a",
+      "path": "sub-BSD016/sub-BSD016_ses-p112.nwb",
+      "sha256": "f7c4083b56f57d7c9b532d83bac7f369548677f7432c9efb175962faccbe5f6a",
+      "size": 2951840
+    },
+    {
+      "asset_id": "6d754e4b-48dd-4e68-88ae-eb3422c0132a",
+      "path": "sub-BSD016/sub-BSD016_ses-p113.nwb",
+      "sha256": "6cfae35df897868c4ba07d0af5e93d27f5149366115974f490658306aa9ec4f4",
+      "size": 2896752
+    },
+    {
+      "asset_id": "fe2f5163-889a-40e8-a0d7-27ee21a77573",
+      "path": "sub-BSD016/sub-BSD016_ses-p114.nwb",
+      "sha256": "c766e3a928feab4930edb60cb3cf88d146580d1e4319a98f70a69fd94f069258",
+      "size": 551552
+    },
+    {
+      "asset_id": "15b2502e-618d-49fb-ac54-3376a710b0a8",
+      "path": "sub-BSD016/sub-BSD016_ses-p115.nwb",
+      "sha256": "b08643c78257371d31bb8161c32b70bc16e8fcd67c6eed7d60cc7f11c567d1bd",
+      "size": 507584
+    },
+    {
+      "asset_id": "6b9c5e66-80c9-4581-bbf9-54b87c9795bb",
+      "path": "sub-BSD016/sub-BSD016_ses-p116.nwb",
+      "sha256": "2de15b047294151853be553817560da24e94b243fb4c0eb2c26a417424b1fc1e",
+      "size": 507584
+    },
+    {
+      "asset_id": "e5dc38ad-e214-47d7-8aa2-8328eb255097",
+      "path": "sub-BSD016/sub-BSD016_ses-p117.nwb",
+      "sha256": "7e54bd09b992b8e757b20b43f355176db2dd60ec2f36a5791e7b1a4e9da7db6e",
+      "size": 528456
+    },
+    {
+      "asset_id": "03905354-e850-4d1a-9ea0-5147b3ee7fa4",
+      "path": "sub-BSD016/sub-BSD016_ses-p118.nwb",
+      "sha256": "7d978cce7024ef52af4941753529c1c183b15c0e0d33c9f1ddd709e104840ff5",
+      "size": 566736
+    },
+    {
+      "asset_id": "c22702cd-91eb-4f59-84fa-cd280fb28d7b",
+      "path": "sub-BSD016/sub-BSD016_ses-p119.nwb",
+      "sha256": "62b10f3a027a1efef092711ad0770791d202677e4d60a7c0b64c6c86e24ce357",
+      "size": 502800
+    },
+    {
+      "asset_id": "a91cfb94-d17d-4089-ab74-d22b131b49e6",
+      "path": "sub-BSD017/sub-BSD017_ses-p153.nwb",
+      "sha256": "b6cd366a0041c2189701dac340c6113b692f80729a4a704a46997a653f4bf9c1",
+      "size": 4695488
+    },
+    {
+      "asset_id": "b9991bee-6f99-43da-a7c8-09363a524017",
+      "path": "sub-BSD017/sub-BSD017_ses-p154.nwb",
+      "sha256": "34e9c8cfe01f0013b2c6e0cd539b8bcb4d9ff6a15912aff0ddd6aa0ba8aa608c",
+      "size": 4202688
+    },
+    {
+      "asset_id": "33246f45-5d60-4994-9fd2-609958cc9ac5",
+      "path": "sub-BSD017/sub-BSD017_ses-p155.nwb",
+      "sha256": "82bdafd230d41bbbd6981162c7e7bdce5022b3fdf5e608a08ceae92f26bc6617",
+      "size": 368896
+    },
+    {
+      "asset_id": "81d2a4f9-c360-409e-8647-76e1d9f25fb1",
+      "path": "sub-BSD017/sub-BSD017_ses-p156.nwb",
+      "sha256": "7875622abe6db41a2ccc2cd53362167cd20ab5eedb0e86ce02277ca18897a19d",
+      "size": 3654120
+    },
+    {
+      "asset_id": "a89199f8-2d44-43f2-9dec-c257f0808e83",
+      "path": "sub-BSD017/sub-BSD017_ses-p157.nwb",
+      "sha256": "11d25b9a4fd90c263d2f474bb60ddac811cebe8c5a03ddfc880a1e2b2c0593b1",
+      "size": 3284496
+    },
+    {
+      "asset_id": "d687c72e-3ec4-4a53-879c-ecd13550481d",
+      "path": "sub-BSD017/sub-BSD017_ses-p158.nwb",
+      "sha256": "e472d0232466419c0e22cd09309f5280e66f141860568f96201072c586e8f5dd",
+      "size": 453688
+    },
+    {
+      "asset_id": "6a954812-82e2-4be9-a603-61cb25d0171f",
+      "path": "sub-BSD017/sub-BSD017_ses-p159.nwb",
+      "sha256": "bf95c62c1fb908b3e05a1afa3ec9c45eebfa5ec2a318df9261a84ef14424f94d",
+      "size": 4086288
+    },
+    {
+      "asset_id": "e0e316fa-b2e1-4f5e-b5d7-fa6d67b0e103",
+      "path": "sub-BSD017/sub-BSD017_ses-p160.nwb",
+      "sha256": "984697943743ed25a376a4f6ca2c036441c01328cf9f36480121cdcec038bd91",
+      "size": 3311520
+    },
+    {
+      "asset_id": "51325cdc-8cff-4ce1-bf4a-da655370715c",
+      "path": "sub-BSD017/sub-BSD017_ses-p161.nwb",
+      "sha256": "1b3afc373343f4e22fcdfb454082da73cd803da996910c69f58d493e128d8203",
+      "size": 452728
+    },
+    {
+      "asset_id": "644c04df-74fb-4c9c-be89-44096d95563c",
+      "path": "sub-BSD017/sub-BSD017_ses-p162.nwb",
+      "sha256": "6e0cfa47f5cee6fda640a1d5bebce1cd3a3084d6a579c230dd18ccb5e89622ee",
+      "size": 3666072
+    },
+    {
+      "asset_id": "2d2ea0cd-932a-47dc-85b5-beeab22310e9",
+      "path": "sub-BSD017/sub-BSD017_ses-p163.nwb",
+      "sha256": "ccd6cb1c619d2d1651296ac444ab8cbdb7215f82d221d48955bcc6f4e52024ed",
+      "size": 3759744
+    },
+    {
+      "asset_id": "a4fe7b4d-0089-420d-9a65-c945a2deeecb",
+      "path": "sub-BSD017/sub-BSD017_ses-p164.nwb",
+      "sha256": "c8935d7d461dd24ffd394dae5504b4c08b2715df86291f4f67ffaa36dcf97f13",
+      "size": 417480
+    },
+    {
+      "asset_id": "faaeff4a-ab13-4cfb-ad07-7e726c207fdb",
+      "path": "sub-BSD017/sub-BSD017_ses-p167.nwb",
+      "sha256": "2bdc1aeac53009129da37164f13ea132aca7a425e691810838d0b7368ef4cf7f",
+      "size": 448952
+    },
+    {
+      "asset_id": "92228528-5df3-4eec-8895-7f4c74adc02c",
+      "path": "sub-BSD019/sub-BSD019_ses-p139.nwb",
+      "sha256": "8dd9176bd02610aefbf4130f17dfa652faa10eb66c365ec98dc303799979ebba",
+      "size": 4001944
+    },
+    {
+      "asset_id": "ff937bb8-a825-4f9f-9bcf-db57e75db614",
+      "path": "sub-BSD019/sub-BSD019_ses-p140.nwb",
+      "sha256": "e9d6b3b42622178572f0e1ce29ffa6bafeb1ad1a7fe135ac166e17d4084da54b",
+      "size": 4333016
+    },
+    {
+      "asset_id": "51a52ec4-0c3e-41eb-ad0c-74666b616083",
+      "path": "sub-BSD019/sub-BSD019_ses-p141.nwb",
+      "sha256": "08b6daf08bd449b624dc215b27a610f94e7a6606049f1d5f67c9d35acea190b2",
+      "size": 460168
+    },
+    {
+      "asset_id": "aa4efa15-a80f-46d6-8cc7-b81aff26dd33",
+      "path": "sub-BSD019/sub-BSD019_ses-p142.nwb",
+      "sha256": "82504c1b60552b6a04d5c93dc47ed5efde773437d0b1140d4f2e803f126ad6b5",
+      "size": 3940896
+    },
+    {
+      "asset_id": "0b3d5db8-0cbb-442b-bc32-c49b0052098b",
+      "path": "sub-BSD019/sub-BSD019_ses-p143.nwb",
+      "sha256": "edf3ee3f6cbab2a81f440bc3f1ba73c6765c09d3e94e1cf63215b0e024524fba",
+      "size": 3812272
+    },
+    {
+      "asset_id": "1c07846f-7e71-4c11-b9d4-0fda30f9a80b",
+      "path": "sub-BSD019/sub-BSD019_ses-p144.nwb",
+      "sha256": "cd0d17c2a410f1ff133414837cb1607271ce50cf2e1d8a165ea1b3e1c6dd5ca4",
+      "size": 459784
+    },
+    {
+      "asset_id": "6e221d12-2ea3-4595-b65a-e1533e2c9d14",
+      "path": "sub-BSD019/sub-BSD019_ses-p145.nwb",
+      "sha256": "ede150aeca76633a0599e286fcb4d43d7e681928c40b8c016e05517abfa49244",
+      "size": 3872472
+    },
+    {
+      "asset_id": "0bc6e9eb-2299-4fe5-8a4d-2d405abb9d55",
+      "path": "sub-BSD019/sub-BSD019_ses-p146.nwb",
+      "sha256": "2324bc357db95b5dcbe86c2b6346a2b83191284fd98c5e79006533b05321a892",
+      "size": 4446000
+    },
+    {
+      "asset_id": "21370ea2-a4b8-4268-9613-93d5a9afce1f",
+      "path": "sub-BSD019/sub-BSD019_ses-p147.nwb",
+      "sha256": "0dc987e026c65bd9ae7d9d3b6fe2e2357fbc9faa5f7a595eec3a87ca9827a85f",
+      "size": 489904
+    },
+    {
+      "asset_id": "9f1de659-587b-4f27-972e-b876e199b776",
+      "path": "sub-BSD019/sub-BSD019_ses-p148.nwb",
+      "sha256": "3b1b1442aed811a1f6986c027d7128b41f9c804ec4ad7fe4c19678d245564120",
+      "size": 3717992
+    },
+    {
+      "asset_id": "7105f277-dbbc-491d-a23d-8e494e3cb83e",
+      "path": "sub-BSD019/sub-BSD019_ses-p150.nwb",
+      "sha256": "bd892e5f7dca8ea7465761e72ff90393714f7e917fe781009172699148649ada",
+      "size": 4048368
+    },
+    {
+      "asset_id": "0f4a92de-712f-48d8-a396-cb3f81a2e9cb",
+      "path": "sub-BSD019/sub-BSD019_ses-p151.nwb",
+      "sha256": "3ecff483503f2a9c5ef9f50bcfbd6b6f35a189bb5d3c48ec0b3ff5b96bf1d432",
+      "size": 560896
+    },
+    {
+      "asset_id": "45223417-4911-4ca3-9864-02a339ba1f16",
+      "path": "sub-BSD019/sub-BSD019_ses-p152.nwb",
+      "sha256": "bd7d582ef7df6d443111b2c5f30254159af37dbf2fcbb1718f3853160ee58625",
+      "size": 3782344
+    },
+    {
+      "asset_id": "14af851c-cc70-458f-b666-642f7d180b66",
+      "path": "sub-BSD019/sub-BSD019_ses-p153.nwb",
+      "sha256": "ec055e28cc560d2a952c367bf401ccdae2f6bca8bbf200ea770b66cec1386b16",
+      "size": 4640968
+    }
+  ],
+  "source_manifest": "mrl_trace/dandi001340_assets.csv",
+  "triage_trace": {
+    "n_rewarded": 22604,
+    "n_stochastic_omission": 7227,
+    "reward_mean_dlight_z": [
+      0.0,
+      -0.003588207820249405,
+      -0.008370701229551624,
+      -0.013911838211396535,
+      -0.02111779647791166,
+      -0.029330974330525773,
+      -0.03710785166809968,
+      -0.042750452900365644,
+      -0.04423375237881064,
+      -0.03904526376720681,
+      -0.024819427107543892,
+      -0.0012094365493774415,
+      0.030892289924787434,
+      0.06973092151958586,
+      0.11180853342130471,
+      0.1542107260677759,
+      0.19419686500631445,
+      0.22935831157957212,
+      0.2599895934759028,
+      0.2865394302988462,
+      0.30965775507571164,
+      0.33135307870699376,
+      0.35420872614743387,
+      0.3780488122264155,
+      0.4031339644071432,
+      0.4296761682657753,
+      0.4578212370353743,
+      0.485348755786529,
+      0.5123385470149208,
+      0.5388541134668635,
+      0.564006012766167,
+      0.5866738627040134,
+      0.6072639795230595,
+      0.6257129514997086,
+      0.6418127023335887,
+      0.6559388670256447,
+      0.6677227590667023,
+      0.6776718722962348,
+      0.6853843230693795,
+      0.6905439125289848,
+      0.693266395895882,
+      0.6942894276818495,
+      0.6933386241688368,
+      0.6910011412050537,
+      0.6884237979869995,
+      0.6853366106224132,
+      0.6822989745083106,
+      0.6787553517892754,
+      0.6755510622926927,
+      0.6719171319668713,
+      0.6677189293027127,
+      0.6629969291445861,
+      0.6589681997987923,
+      0.6540292667260229,
+      0.6487767570938047,
+      0.6439738562741428,
+      0.6395041932029372,
+      0.6351862478617162,
+      0.632006615097365,
+      0.6295992874604145,
+      0.6272774192455447,
+      0.6245077203529757,
+      0.6209563266862871,
+      0.6167834588701469,
+      0.6119569316212033,
+      0.6074477897709759,
+      0.6031936443907897,
+      0.5994924772761022,
+      0.5954143833438111,
+      0.5905807138926287,
+      0.5851729345945356,
+      0.5790477840398407,
+      0.5724860811485244,
+      0.5664409732678433,
+      0.5609801277576831,
+      0.5559223660881505,
+      0.5517020256417406,
+      0.5480174064698999,
+      0.5443392138192932,
+      0.5399956921131646,
+      0.5351740839404139,
+      0.5296968525739301,
+      0.5229756074964786,
+      0.5158342352715051,
+      0.5089005470863855,
+      0.5020060388396872,
+      0.495385443130921,
+      0.4900311226806343,
+      0.4856099106585806,
+      0.4818538483459656,
+      0.478776247228148,
+      0.476444961117972,
+      0.4734401690734524,
+      0.4698287765508976,
+      0.46575286684837836,
+      0.4609841658141356,
+      0.4550489638959882,
+      0.44887930654804814,
+      0.4419665742072631,
+      0.43457443682177604,
+      0.4270003497292625
+    ],
+    "stochastic_omission_mean_dlight_z": [
+      0.0,
+      -0.00600797441195652,
+      -0.012395965140289025,
+      -0.019625845282731834,
+      -0.027109454345166723,
+      -0.0343481698719434,
+      -0.042410483786256864,
+      -0.05154848361101238,
+      -0.062362602414167204,
+      -0.07554514507137014,
+      -0.0906811029187892,
+      -0.10785593631241348,
+      -0.12663645632505272,
+      -0.14513511209337382,
+      -0.16287626563257146,
+      -0.1805182999861954,
+      -0.1977765224894354,
+      -0.21435369903886115,
+      -0.23156775254394457,
+      -0.24913357063890293,
+      -0.2668928614586617,
+      -0.283114340972508,
+      -0.29840453198869343,
+      -0.3113544955722024,
+      -0.32335977378477615,
+      -0.3355264261153009,
+      -0.3491100361092577,
+      -0.363869525912603,
+      -0.38095296055820843,
+      -0.3979967175835085,
+      -0.4135119253001753,
+      -0.4275298123425774,
+      -0.44014632226030187,
+      -0.45141307839403677,
+      -0.46364861791024575,
+      -0.47666682501919744,
+      -0.48927320179542977,
+      -0.5019813055399324,
+      -0.5136969010739204,
+      -0.5234105635553675,
+      -0.5322426971681071,
+      -0.5415997547292427,
+      -0.5512832292584553,
+      -0.5616956222352836,
+      -0.5723336040778232,
+      -0.5827711241882881,
+      -0.5924502051120248,
+      -0.6009672462642226,
+      -0.6093055089126682,
+      -0.6175854855076632,
+      -0.6249867370844917,
+      -0.6321820852925009,
+      -0.6388444228379617,
+      -0.6425799210618495,
+      -0.645964278989733,
+      -0.6496824339650001,
+      -0.6528345615168896,
+      -0.655575122209455,
+      -0.6600732695473143,
+      -0.6630917996072353,
+      -0.6656037319110718,
+      -0.6678940926743503,
+      -0.6710977473163413,
+      -0.6742342573535176,
+      -0.6786827385050179,
+      -0.6828899347194948,
+      -0.6859655951842744,
+      -0.6878325325669522,
+      -0.6873305187120461,
+      -0.6847646494702045,
+      -0.6810934308062067,
+      -0.6775123395024656,
+      -0.6730588533245788,
+      -0.6700056963487767,
+      -0.6665998674048351,
+      -0.6622850441212346,
+      -0.6581237031748528,
+      -0.6548279366609029,
+      -0.6516914153466373,
+      -0.6493748429391386,
+      -0.647552545795772,
+      -0.6451382849176386,
+      -0.6422921825487506,
+      -0.6377208377038828,
+      -0.6335054349902611,
+      -0.6305452910955089,
+      -0.6280791500812296,
+      -0.6248637103479465,
+      -0.6232610895791103,
+      -0.6190815928487439,
+      -0.6126764587068675,
+      -0.6047336829110557,
+      -0.5968655900866146,
+      -0.5881163234698722,
+      -0.5827136562837996,
+      -0.5786415493376814,
+      -0.5762993606376501,
+      -0.574501512911314,
+      -0.5730931259206019,
+      -0.5694684244284437,
+      -0.5652101274566221
+    ],
+    "time_from_outcome_s": [
+      0.0,
+      0.01,
+      0.02,
+      0.03,
+      0.04,
+      0.05,
+      0.06,
+      0.07,
+      0.08,
+      0.09,
+      0.1,
+      0.11,
+      0.12,
+      0.13,
+      0.14,
+      0.15,
+      0.16,
+      0.17,
+      0.18,
+      0.19,
+      0.2,
+      0.21,
+      0.22,
+      0.23,
+      0.24,
+      0.25,
+      0.26,
+      0.27,
+      0.28,
+      0.29,
+      0.3,
+      0.31,
+      0.32,
+      0.33,
+      0.34,
+      0.35000000000000003,
+      0.36,
+      0.37,
+      0.38,
+      0.39,
+      0.4,
+      0.41000000000000003,
+      0.42,
+      0.43,
+      0.44,
+      0.45,
+      0.46,
+      0.47000000000000003,
+      0.48,
+      0.49,
+      0.5,
+      0.51,
+      0.52,
+      0.53,
+      0.54,
+      0.55,
+      0.56,
+      0.5700000000000001,
+      0.58,
+      0.59,
+      0.6,
+      0.61,
+      0.62,
+      0.63,
+      0.64,
+      0.65,
+      0.66,
+      0.67,
+      0.68,
+      0.6900000000000001,
+      0.7000000000000001,
+      0.71,
+      0.72,
+      0.73,
+      0.74,
+      0.75,
+      0.76,
+      0.77,
+      0.78,
+      0.79,
+      0.8,
+      0.81,
+      0.8200000000000001,
+      0.8300000000000001,
+      0.84,
+      0.85,
+      0.86,
+      0.87,
+      0.88,
+      0.89,
+      0.9,
+      0.91,
+      0.92,
+      0.93,
+      0.9400000000000001,
+      0.9500000000000001,
+      0.96,
+      0.97,
+      0.98,
+      0.99,
+      1.0
+    ]
+  }
+}

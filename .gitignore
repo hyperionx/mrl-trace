@@ -186,6 +186,8 @@ data/results/reference/*
 !data/results/reference/*.json
 !data/results/reference/*.csv
 !data/results/reference/*.tex
+!data/results/reference/fig_coddington_causal.png
+!data/results/reference/fig_jeong_directional.png
 data/raw/
 data/dandi/
 data/openneuro/
@@ -197,8 +199,12 @@ data/device_model/gold_export/
 data/device_model/*.mat
 data/device_model/*.npz
 scratch/
+/tmp/
 
 # Notebook execution products and optional figure exports.
 experiments/.executed/
 experiments/generated_figures/
 /generated_figures/
+
+# Deterministic CLI outputs are regenerated under profile-specific directories.
+/reproduction/

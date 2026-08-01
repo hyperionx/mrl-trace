@@ -1,0 +1,1473 @@
+{
+  "artifacts": {
+    "figure": "fig_dopamine_replay.png",
+    "predictions": "dandi001340_loso_predictions.csv",
+    "session_scores": "dandi001340_replay_sessions.csv"
+  },
+  "parameters_by_training_fold": {
+    "device": {
+      "BSD011": {
+        "bias": -0.013481419713343304,
+        "eta": 0.28521256456938504,
+        "kappa": 1.3215136091221285
+      },
+      "BSD015": {
+        "bias": -0.009375793568727024,
+        "eta": 0.30591398196877034,
+        "kappa": 1.363847759138432
+      },
+      "BSD016": {
+        "bias": -0.01521033681158169,
+        "eta": 0.32973158421050885,
+        "kappa": 1.2906716233328899
+      },
+      "BSD017": {
+        "bias": -0.014561014783849748,
+        "eta": 0.3290475446989393,
+        "kappa": 1.459967786134305
+      },
+      "BSD019": {
+        "bias": -0.017931183236175426,
+        "eta": 0.3673886800608692,
+        "kappa": 1.3416318096421538
+      }
+    },
+    "linear_device": {
+      "BSD011": {
+        "bias": -0.013913374583559323,
+        "eta": 0.36828542621359267,
+        "kappa": 1.3214987246331995
+      },
+      "BSD015": {
+        "bias": -0.00962582678721603,
+        "eta": 0.39677570554172525,
+        "kappa": 1.3638826033354066
+      },
+      "BSD016": {
+        "bias": -0.015532692660951586,
+        "eta": 0.43207533481766774,
+        "kappa": 1.2906536608765968
+      },
+      "BSD017": {
+        "bias": -0.014435908256334532,
+        "eta": 0.4385659822204382,
+        "kappa": 1.4599507081163163
+      },
+      "BSD019": {
+        "bias": -0.018593629712643677,
+        "eta": 0.48387403776328974,
+        "kappa": 1.3416137081136905
+      }
+    },
+    "linear_matched_exponential": {
+      "BSD011": {
+        "bias": -0.019408975878965295,
+        "eta": 0.023121582879844074,
+        "kappa": 1.3218696910139311
+      },
+      "BSD015": {
+        "bias": -0.012929170460218733,
+        "eta": 0.023462053581535938,
+        "kappa": 1.3643260610874115
+      },
+      "BSD016": {
+        "bias": -0.022786681413478133,
+        "eta": 0.02603899408272121,
+        "kappa": 1.2910333399155907
+      },
+      "BSD017": {
+        "bias": -0.021907532548069233,
+        "eta": 0.030095606299840618,
+        "kappa": 1.4602579754352407
+      },
+      "BSD019": {
+        "bias": -0.015471760738507903,
+        "eta": 0.027431074882725944,
+        "kappa": 1.3420088455290564
+      }
+    },
+    "matched_exponential": {
+      "BSD011": {
+        "bias": -0.019736384645324838,
+        "eta": 0.0018789704779252044,
+        "kappa": 1.3217931745846394
+      },
+      "BSD015": {
+        "bias": -0.01346694618990011,
+        "eta": 0.0019209191233823606,
+        "kappa": 1.3642521557200544
+      },
+      "BSD016": {
+        "bias": -0.022818232130326088,
+        "eta": 0.002114393825184845,
+        "kappa": 1.2909572032438383
+      },
+      "BSD017": {
+        "bias": -0.02162183583758101,
+        "eta": 0.002448429744937344,
+        "kappa": 1.4602013336660549
+      },
+      "BSD019": {
+        "bias": -0.016452764796580976,
+        "eta": 0.0022357726173087354,
+        "kappa": 1.3419415583377095
+      }
+    },
+    "no_trace": {
+      "BSD011": {
+        "bias": -0.004515870488142791,
+        "eta": 0.0,
+        "kappa": 1.3223677746903044
+      },
+      "BSD015": {
+        "bias": 0.0013002841677785797,
+        "eta": 0.0,
+        "kappa": 1.3648165690303617
+      },
+      "BSD016": {
+        "bias": -0.00966764370315447,
+        "eta": 0.0,
+        "kappa": 1.2915574007483224
+      },
+      "BSD017": {
+        "bias": -0.015297685967647773,
+        "eta": 0.0,
+        "kappa": 1.4607317180988115
+      },
+      "BSD019": {
+        "bias": 0.00021451230958235127,
+        "eta": 0.0,
+        "kappa": 1.3425619813072571
+      }
+    },
+    "outcome_rl": {
+      "BSD011": {
+        "bias": -0.023305819597500683,
+        "eta": 0.89610254192099,
+        "kappa": 0.9252546013887604
+      },
+      "BSD015": {
+        "bias": 0.0007626237173531848,
+        "eta": 0.9109830246484805,
+        "kappa": 0.9560265204742014
+      },
+      "BSD016": {
+        "bias": -0.021059893616089377,
+        "eta": 0.9024789378487956,
+        "kappa": 0.8938616739029748
+      },
+      "BSD017": {
+        "bias": -0.03592145559759209,
+        "eta": 0.8973886922620853,
+        "kappa": 1.0436918405642384
+      },
+      "BSD019": {
+        "bias": -0.009796078208156346,
+        "eta": 0.8936281174460811,
+        "kappa": 0.9283378909607629
+      }
+    },
+    "plain_dlight": {
+      "BSD011": {
+        "bias": -0.019795979680007476,
+        "eta": 0.0005547438458254701,
+        "kappa": 1.321793500137096
+      },
+      "BSD015": {
+        "bias": -0.013596856689869569,
+        "eta": 0.000568607518922116,
+        "kappa": 1.3642266131669507
+      },
+      "BSD016": {
+        "bias": -0.02276087032042402,
+        "eta": 0.0006240882179612775,
+        "kappa": 1.2909501779463501
+      },
+      "BSD017": {
+        "bias": -0.021490226750266708,
+        "eta": 0.0007222153799762188,
+        "kappa": 1.4601751082618464
+      },
+      "BSD019": {
+        "bias": -0.01675037994790138,
+        "eta": 0.0006606649990090808,
+        "kappa": 1.3419358326626636
+      }
+    },
+    "previous_choice": {
+      "BSD011": {
+        "bias": -0.004516230987612885,
+        "eta": 0.0,
+        "kappa": 1.3223679280206644
+      },
+      "BSD015": {
+        "bias": 0.0013022277646866647,
+        "eta": 0.0,
+        "kappa": 1.364815941342742
+      },
+      "BSD016": {
+        "bias": -0.009666475783828366,
+        "eta": 0.0,
+        "kappa": 1.2915481952220667
+      },
+      "BSD017": {
+        "bias": -0.015297020022648905,
+        "eta": 0.0,
+        "kappa": 1.460732705322577
+      },
+      "BSD019": {
+        "bias": 0.00021479306302072177,
+        "eta": 0.0,
+        "kappa": 1.3425617755739732
+      }
+    },
+    "shifted_device": {
+      "BSD011": {
+        "bias": -0.005938984703503513,
+        "eta": 0.03521692114477057,
+        "kappa": 1.3223487655635113
+      },
+      "BSD015": {
+        "bias": -0.00015798002542326148,
+        "eta": 0.06515428055199159,
+        "kappa": 1.3647801979617125
+      },
+      "BSD016": {
+        "bias": -0.01308201307970863,
+        "eta": 0.21187221561351935,
+        "kappa": 1.2913911787222758
+      },
+      "BSD017": {
+        "bias": -0.017626427754043637,
+        "eta": 0.08695399565336874,
+        "kappa": 1.4606503363948387
+      },
+      "BSD019": {
+        "bias": -0.00029946409247581747,
+        "eta": 0.015243892981029385,
+        "kappa": 1.3425083097035666
+      }
+    },
+    "shuffled_device": {
+      "BSD011": {
+        "bias": -0.004502363868423655,
+        "eta": 0.00033546262790251185,
+        "kappa": 1.3223730981104143
+      },
+      "BSD015": {
+        "bias": 0.0013048493992169614,
+        "eta": 0.00033546262790251185,
+        "kappa": 1.364816230320059
+      },
+      "BSD016": {
+        "bias": -0.00969732431442221,
+        "eta": 0.000540309572772071,
+        "kappa": 1.291558670668594
+      },
+      "BSD017": {
+        "bias": -0.015292775246184671,
+        "eta": 0.00033546262790251185,
+        "kappa": 1.4607412507015396
+      },
+      "BSD019": {
+        "bias": 0.00019398448110469435,
+        "eta": 0.0006486963794906345,
+        "kappa": 1.3425169227013847
+      }
+    }
+  },
+  "preparation_manifest": {
+    "path": "dandi001340_preparation_manifest.json",
+    "sha256": "a3b95aa913f4f5c397ebcdd4340068ad777369d89ebef36a7a9edb5f44d992c4"
+  },
+  "quality_filtered_sensitivity": {
+    "parameters_by_training_fold": {
+      "device": {
+        "BSD011": {
+          "bias": -0.013481419713343304,
+          "eta": 0.28521256456938504,
+          "kappa": 1.3215136091221285
+        },
+        "BSD015": {
+          "bias": -0.00826942369613589,
+          "eta": 0.303277705041072,
+          "kappa": 1.345161331683236
+        },
+        "BSD016": {
+          "bias": -0.01550265261223797,
+          "eta": 0.3314455183318424,
+          "kappa": 1.2594419353194537
+        },
+        "BSD017": {
+          "bias": -0.01487605182319064,
+          "eta": 0.32519161089068327,
+          "kappa": 1.4617735498357767
+        },
+        "BSD019": {
+          "bias": -0.019177088807426145,
+          "eta": 0.37198472937771276,
+          "kappa": 1.3162233677156039
+        }
+      },
+      "linear_device": {
+        "BSD011": {
+          "bias": -0.013913374583559323,
+          "eta": 0.36828542621359267,
+          "kappa": 1.3214987246331995
+        },
+        "BSD015": {
+          "bias": -0.008800244320657591,
+          "eta": 0.39269281660553734,
+          "kappa": 1.3451966620131297
+        },
+        "BSD016": {
+          "bias": -0.016127423070820327,
+          "eta": 0.4335079632553349,
+          "kappa": 1.2594359310178573
+        },
+        "BSD017": {
+          "bias": -0.015006602626622397,
+          "eta": 0.4305215044673501,
+          "kappa": 1.4617647775720302
+        },
+        "BSD019": {
+          "bias": -0.020426825682515165,
+          "eta": 0.49142761641178395,
+          "kappa": 1.316250490251805
+        }
+      },
+      "linear_matched_exponential": {
+        "BSD011": {
+          "bias": -0.019408975878965295,
+          "eta": 0.023121582879844074,
+          "kappa": 1.3218696910139311
+        },
+        "BSD015": {
+          "bias": -0.013760935881956008,
+          "eta": 0.024003683041753984,
+          "kappa": 1.3456922494541332
+        },
+        "BSD016": {
+          "bias": -0.026308326319902105,
+          "eta": 0.027740676121390556,
+          "kappa": 1.2598635712082202
+        },
+        "BSD017": {
+          "bias": -0.025360412854150367,
+          "eta": 0.03264281359176034,
+          "kappa": 1.4620912083128126
+        },
+        "BSD019": {
+          "bias": -0.017421531285140728,
+          "eta": 0.02852205680418805,
+          "kappa": 1.316723393315469
+        }
+      },
+      "matched_exponential": {
+        "BSD011": {
+          "bias": -0.019736384645324838,
+          "eta": 0.0018789704779252044,
+          "kappa": 1.3217931745846394
+        },
+        "BSD015": {
+          "bias": -0.014430663702094667,
+          "eta": 0.0019644015030539945,
+          "kappa": 1.3456185085908035
+        },
+        "BSD016": {
+          "bias": -0.026233569884433764,
+          "eta": 0.0022377587277222838,
+          "kappa": 1.2597991458095092
+        },
+        "BSD017": {
+          "bias": -0.02487275725963765,
+          "eta": 0.002616983048586383,
+          "kappa": 1.4620212003738342
+        },
+        "BSD019": {
+          "bias": -0.018768013888007588,
+          "eta": 0.0023285054728215686,
+          "kappa": 1.3166494152044863
+        }
+      },
+      "no_trace": {
+        "BSD011": {
+          "bias": -0.004515870488142791,
+          "eta": 0.0,
+          "kappa": 1.3223677746903044
+        },
+        "BSD015": {
+          "bias": 0.0048295398205950735,
+          "eta": 0.0,
+          "kappa": 1.3462630803199893
+        },
+        "BSD016": {
+          "bias": -0.008591251985818709,
+          "eta": 0.0,
+          "kappa": 1.2605132053530617
+        },
+        "BSD017": {
+          "bias": -0.015562163099386597,
+          "eta": 0.0,
+          "kappa": 1.462695395568272
+        },
+        "BSD019": {
+          "bias": 0.0038572975766671003,
+          "eta": 0.0,
+          "kappa": 1.3173654772327072
+        }
+      },
+      "outcome_rl": {
+        "BSD011": {
+          "bias": -0.023305819597500683,
+          "eta": 0.89610254192099,
+          "kappa": 0.9252546013887604
+        },
+        "BSD015": {
+          "bias": 0.0005005616948873197,
+          "eta": 0.9171458160410605,
+          "kappa": 0.9419378876441139
+        },
+        "BSD016": {
+          "bias": -0.025515694189818264,
+          "eta": 0.9062225681528518,
+          "kappa": 0.8690605375601766
+        },
+        "BSD017": {
+          "bias": -0.04420585138640472,
+          "eta": 0.8997902846358538,
+          "kappa": 1.0484200114472968
+        },
+        "BSD019": {
+          "bias": -0.012410370964020591,
+          "eta": 0.895394850683703,
+          "kappa": 0.906826307958384
+        }
+      },
+      "plain_dlight": {
+        "BSD011": {
+          "bias": -0.019795979680007476,
+          "eta": 0.0005547438458254701,
+          "kappa": 1.321793500137096
+        },
+        "BSD015": {
+          "bias": -0.014592014441396716,
+          "eta": 0.000581610181910483,
+          "kappa": 1.3455920611726746
+        },
+        "BSD016": {
+          "bias": -0.02614774465343986,
+          "eta": 0.0006589753521968557,
+          "kappa": 1.2597848729919945
+        },
+        "BSD017": {
+          "bias": -0.024650594575178337,
+          "eta": 0.0007685387579514981,
+          "kappa": 1.4620063938416155
+        },
+        "BSD019": {
+          "bias": -0.01915110586586684,
+          "eta": 0.0006885018774405716,
+          "kappa": 1.3166270724362978
+        }
+      },
+      "previous_choice": {
+        "BSD011": {
+          "bias": -0.004516230987612885,
+          "eta": 0.0,
+          "kappa": 1.3223679280206644
+        },
+        "BSD015": {
+          "bias": 0.0048278468672265235,
+          "eta": 0.0,
+          "kappa": 1.3462636740848881
+        },
+        "BSD016": {
+          "bias": -0.008590275423697284,
+          "eta": 0.0,
+          "kappa": 1.2605133277669633
+        },
+        "BSD017": {
+          "bias": -0.015561508538053787,
+          "eta": 0.0,
+          "kappa": 1.4626963660234764
+        },
+        "BSD019": {
+          "bias": 0.003857354731312646,
+          "eta": 0.0,
+          "kappa": 1.3173657958765437
+        }
+      },
+      "shifted_device": {
+        "BSD011": {
+          "bias": -0.005938984703503513,
+          "eta": 0.03521692114477057,
+          "kappa": 1.3223487655635113
+        },
+        "BSD015": {
+          "bias": 0.00436241555046301,
+          "eta": 0.014369688119671577,
+          "kappa": 1.3462642774083098
+        },
+        "BSD016": {
+          "bias": -0.012633681929375626,
+          "eta": 0.15601923853914668,
+          "kappa": 1.2604331654394194
+        },
+        "BSD017": {
+          "bias": -0.01797886726364443,
+          "eta": 0.061565177637979064,
+          "kappa": 1.4626789199466668
+        },
+        "BSD019": {
+          "bias": 0.003828128966658247,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.3173658471729521
+        }
+      },
+      "shuffled_device": {
+        "BSD011": {
+          "bias": -0.004502363868423655,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.3223730981104143
+        },
+        "BSD015": {
+          "bias": 0.004881282457130481,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.3462263063649704
+        },
+        "BSD016": {
+          "bias": -0.008573200146485426,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.2605125229008827
+        },
+        "BSD017": {
+          "bias": -0.015556211840292499,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.4626853838193783
+        },
+        "BSD019": {
+          "bias": 0.0038748677303256144,
+          "eta": 0.00033546262790251185,
+          "kappa": 1.3173454802954379
+        }
+      }
+    },
+    "summary": {
+      "configuration": {
+        "choice_model": "P(right)=sigmoid(bias+kappa*previous_action+w_right-w_left)",
+        "device": {
+          "V": 0.9,
+          "area_matching_horizon_s": 120.0,
+          "beta": 1.0,
+          "gate_model": "physical_headroom_v1",
+          "k": 3,
+          "kernel_normalization": "none",
+          "solver_dt_s": 0.005,
+          "tau_leak_s": 10.0
+        },
+        "eligibility_event": "center_out",
+        "eligibility_pulse_s": 0.3,
+        "first_trial_scored": false,
+        "integration": "trapezoidal",
+        "linear_sensitivity": {
+          "gate_model": "linear_erlang_v1",
+          "matched_exponential_recomputed_independently": true
+        },
+        "matched_exponential": "post-peak decay matched to the frozen device kernel and rescaled to equal finite-horizon area",
+        "model_specifications": {
+          "linear_erlang_v1": {
+            "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+            "default_beta_leak": 1.0,
+            "default_cascade_depth": 3,
+            "default_voltage_v": 0.9,
+            "equation_family": "linear_erlang_cascade",
+            "model_id": "linear_erlang_v1",
+            "primary": false,
+            "schema_version": 1,
+            "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+            "tau_r_law": {
+              "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+              "expression": "145*exp(-2.9*abs(V))",
+              "field_coefficient_per_v": 2.9,
+              "prefactor_s": 145.0,
+              "source": "global Au transient fit; kww_final.json",
+              "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+            },
+            "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+          },
+          "physical_headroom_v1": {
+            "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+            "default_beta_leak": 1.0,
+            "default_cascade_depth": 3,
+            "default_voltage_v": 0.9,
+            "equation_family": "nonlinear_normalized_headroom_cascade",
+            "model_id": "physical_headroom_v1",
+            "primary": true,
+            "schema_version": 1,
+            "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+            "tau_r_law": {
+              "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+              "expression": "145*exp(-2.9*abs(V))",
+              "field_coefficient_per_v": 2.9,
+              "prefactor_s": 145.0,
+              "source": "global Au transient fit; kww_final.json",
+              "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+            },
+            "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+          }
+        },
+        "optimizer": {
+          "bias_bounds": [
+            -5.0,
+            5.0
+          ],
+          "continuous_log_eta_bounds": [
+            -8.0,
+            3.0
+          ],
+          "kappa_bounds": [
+            -5.0,
+            5.0
+          ],
+          "method": "bounded_deterministic_multistart_L-BFGS-B",
+          "n_starts": 8,
+          "outcome_logit_eta_bounds": [
+            -8.0,
+            8.0
+          ],
+          "seed": 0
+        },
+        "outcome_debase": "subtract interpolated dLight at outcome from the complete center-out through outcome+1s segment",
+        "outcome_window_s": 1.0,
+        "prediction_timing": "before current action teacher forcing and outcome",
+        "predictive_linkage_manifest": {
+          "available": true,
+          "path": "data/results/reference/predictive_linkage_manifest.json",
+          "sha256": "3c11f2648bb46a36b8b8ddeb8824ceb54c79558a254731025b1ae4bb8d3f7447",
+          "used_for_computation": false
+        },
+        "session_bootstrap_resamples": 10000,
+        "shift_control": "half-session circular shift of the complete continuous dLight trace",
+        "shuffle_control": "deterministic within-session permutation of intact complete waveform-segment overlaps",
+        "weights_reset": "per_session"
+      },
+      "device_minus_shuffled_bootstrap": {
+        "ci95": [
+          -0.00029653277700663087,
+          -4.0234776598050375e-05
+        ],
+        "comparison": "device_minus_shuffled_device",
+        "mean": -0.00016295192507869092,
+        "n_sessions": 38,
+        "negative_is_better": true
+      },
+      "interpretation": "Action-contingent logged replay is feasible. The physical device improves slightly over shuffled and shifted signals, but its paired intervals versus plain dLight, its matched exponential, and the linear device include zero. Biological learning and device-kernel superiority are therefore not established.",
+      "method_provenance": {
+        "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+        "dataset": "DANDI:001340@0.250221.0527",
+        "established_basis": [
+          "fiber-photometry artifact regression",
+          "airPLS baseline estimation",
+          "logged behavioral replay"
+        ],
+        "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+        "source_method_doi": "10.1371/journal.pcbi.1013226",
+        "status": "adapted",
+        "verdict": "Conditional Go"
+      },
+      "n_mice": 5,
+      "n_scored_trials": 33292,
+      "n_sessions": 38,
+      "n_trials": 33330,
+      "per_mouse_log_loss": {
+        "device": {
+          "BSD011": 0.4801531384529763,
+          "BSD015": 0.5156145118214427,
+          "BSD016": 0.4275114205520535,
+          "BSD017": 0.619652588671069,
+          "BSD019": 0.4987146686703464
+        },
+        "linear_device": {
+          "BSD011": 0.48014979867653573,
+          "BSD015": 0.5156090603281356,
+          "BSD016": 0.42751451509982635,
+          "BSD017": 0.6196521547929208,
+          "BSD019": 0.4987276759843912
+        },
+        "linear_matched_exponential": {
+          "BSD011": 0.4802789068707879,
+          "BSD015": 0.5156459080558486,
+          "BSD016": 0.42756689279432813,
+          "BSD017": 0.6198057538812409,
+          "BSD019": 0.49871310040533195
+        },
+        "matched_exponential": {
+          "BSD011": 0.4802592500704171,
+          "BSD015": 0.5156373046560566,
+          "BSD016": 0.4275600878282197,
+          "BSD017": 0.6197854941546261,
+          "BSD019": 0.49870953879268665
+        },
+        "no_trace": {
+          "BSD011": 0.48045496755821754,
+          "BSD015": 0.5157591207110306,
+          "BSD016": 0.4275325806088893,
+          "BSD017": 0.6200133852471005,
+          "BSD019": 0.49874743163402835
+        },
+        "outcome_rl": {
+          "BSD011": 0.40355071384627983,
+          "BSD015": 0.44134848350782613,
+          "BSD016": 0.35855876725378233,
+          "BSD017": 0.5309888757771277,
+          "BSD019": 0.43223231044578386
+        },
+        "plain_dlight": {
+          "BSD011": 0.4802524217628018,
+          "BSD015": 0.5156346863846911,
+          "BSD016": 0.42755738561992457,
+          "BSD017": 0.6197795436678402,
+          "BSD019": 0.49870853441407376
+        },
+        "previous_choice": {
+          "BSD011": 0.48045496371527013,
+          "BSD015": 0.515759112244531,
+          "BSD016": 0.4275325665872148,
+          "BSD017": 0.6200134703194793,
+          "BSD019": 0.4987474278150403
+        },
+        "shifted_device": {
+          "BSD011": 0.48045581993864334,
+          "BSD015": 0.5157562817530934,
+          "BSD016": 0.4277054442975614,
+          "BSD017": 0.6200308555735691,
+          "BSD019": 0.49874715173181733
+        },
+        "shuffled_device": {
+          "BSD011": 0.4804547990810042,
+          "BSD015": 0.5157593161059648,
+          "BSD016": 0.42753267778684195,
+          "BSD017": 0.6200123978887067,
+          "BSD019": 0.4987478144491124
+        }
+      },
+      "physical_device_paired_comparisons": {
+        "linear_device": {
+          "ci95": [
+            -1.0164465218647821e-05,
+            8.166964692283898e-06
+          ],
+          "comparison": "device_minus_linear_device",
+          "mean": -1.3591677284909374e-06,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "linear_matched_exponential": {
+          "ci95": [
+            -0.00012912539763345075,
+            -1.4424663578759382e-06
+          ],
+          "comparison": "device_minus_linear_matched_exponential",
+          "mean": -6.536749535569983e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "matched_exponential": {
+          "ci95": [
+            -0.00011386514370196989,
+            3.5431606016451837e-06
+          ],
+          "comparison": "device_minus_matched_exponential",
+          "mean": -5.42894802881891e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "no_trace": {
+          "ci95": [
+            -0.00029761371649795874,
+            -3.874710539846079e-05
+          ],
+          "comparison": "device_minus_no_trace",
+          "mean": -0.00016302921761826718,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "outcome_rl": {
+          "ci95": [
+            0.07141811552520777,
+            0.07856514989361903
+          ],
+          "comparison": "device_minus_outcome_rl",
+          "mean": 0.07492493375391822,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "plain_dlight": {
+          "ci95": [
+            -0.00010666835798130546,
+            6.402608423526049e-06
+          ],
+          "comparison": "device_minus_plain_dlight",
+          "mean": -5.077120879470145e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "previous_choice": {
+          "ci95": [
+            -0.00029547022901690883,
+            -4.055608929926484e-05
+          ],
+          "comparison": "device_minus_previous_choice",
+          "mean": -0.0001630413962265031,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "shifted_device": {
+          "ci95": [
+            -0.00032596240844186367,
+            -7.039428499346053e-05
+          ],
+          "comparison": "device_minus_shifted_device",
+          "mean": -0.00019370339288591362,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "shuffled_device": {
+          "ci95": [
+            -0.00029653277700663087,
+            -4.0234776598050375e-05
+          ],
+          "comparison": "device_minus_shuffled_device",
+          "mean": -0.00016295192507869092,
+          "n_sessions": 38,
+          "negative_is_better": true
+        }
+      },
+      "pooled_log_loss": {
+        "device": 0.513830653145595,
+        "linear_device": 0.5138332391496179,
+        "linear_matched_exponential": 0.5138925250773291,
+        "matched_exponential": 0.5138820093896184,
+        "no_trace": 0.5139850703923168,
+        "outcome_rl": 0.43942718794392494,
+        "plain_dlight": 0.5138786774850874,
+        "previous_choice": 0.5139850824137655,
+        "shifted_device": 0.5140169816388138,
+        "shuffled_device": 0.5139850156303539
+      },
+      "verdict": "Conditional Go"
+    }
+  },
+  "source_revision": "a042311d67409e1336c283ea275a63bb8c6adb43-dirty",
+  "summary": {
+    "configuration": {
+      "choice_model": "P(right)=sigmoid(bias+kappa*previous_action+w_right-w_left)",
+      "device": {
+        "V": 0.9,
+        "area_matching_horizon_s": 120.0,
+        "beta": 1.0,
+        "gate_model": "physical_headroom_v1",
+        "k": 3,
+        "kernel_normalization": "none",
+        "solver_dt_s": 0.005,
+        "tau_leak_s": 10.0
+      },
+      "eligibility_event": "center_out",
+      "eligibility_pulse_s": 0.3,
+      "first_trial_scored": false,
+      "integration": "trapezoidal",
+      "linear_sensitivity": {
+        "gate_model": "linear_erlang_v1",
+        "matched_exponential_recomputed_independently": true
+      },
+      "matched_exponential": "post-peak decay matched to the frozen device kernel and rescaled to equal finite-horizon area",
+      "model_specifications": {
+        "linear_erlang_v1": {
+          "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+          "default_beta_leak": 1.0,
+          "default_cascade_depth": 3,
+          "default_voltage_v": 0.9,
+          "equation_family": "linear_erlang_cascade",
+          "model_id": "linear_erlang_v1",
+          "primary": false,
+          "schema_version": 1,
+          "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+          "tau_r_law": {
+            "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+            "expression": "145*exp(-2.9*abs(V))",
+            "field_coefficient_per_v": 2.9,
+            "prefactor_s": 145.0,
+            "source": "global Au transient fit; kww_final.json",
+            "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+          },
+          "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+        },
+        "physical_headroom_v1": {
+          "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+          "default_beta_leak": 1.0,
+          "default_cascade_depth": 3,
+          "default_voltage_v": 0.9,
+          "equation_family": "nonlinear_normalized_headroom_cascade",
+          "model_id": "physical_headroom_v1",
+          "primary": true,
+          "schema_version": 1,
+          "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+          "tau_r_law": {
+            "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+            "expression": "145*exp(-2.9*abs(V))",
+            "field_coefficient_per_v": 2.9,
+            "prefactor_s": 145.0,
+            "source": "global Au transient fit; kww_final.json",
+            "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+          },
+          "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+        }
+      },
+      "optimizer": {
+        "bias_bounds": [
+          -5.0,
+          5.0
+        ],
+        "continuous_log_eta_bounds": [
+          -8.0,
+          3.0
+        ],
+        "kappa_bounds": [
+          -5.0,
+          5.0
+        ],
+        "method": "bounded_deterministic_multistart_L-BFGS-B",
+        "n_starts": 8,
+        "outcome_logit_eta_bounds": [
+          -8.0,
+          8.0
+        ],
+        "seed": 0
+      },
+      "outcome_debase": "subtract interpolated dLight at outcome from the complete center-out through outcome+1s segment",
+      "outcome_window_s": 1.0,
+      "prediction_timing": "before current action teacher forcing and outcome",
+      "predictive_linkage_manifest": {
+        "available": true,
+        "path": "data/results/reference/predictive_linkage_manifest.json",
+        "sha256": "3c11f2648bb46a36b8b8ddeb8824ceb54c79558a254731025b1ae4bb8d3f7447",
+        "used_for_computation": false
+      },
+      "session_bootstrap_resamples": 10000,
+      "shift_control": "half-session circular shift of the complete continuous dLight trace",
+      "shuffle_control": "deterministic within-session permutation of intact complete waveform-segment overlaps",
+      "weights_reset": "per_session"
+    },
+    "device_minus_shuffled_bootstrap": {
+      "ci95": [
+        -0.0002397094754974811,
+        -2.9137958577967954e-05
+      ],
+      "comparison": "device_minus_shuffled_device",
+      "mean": -0.00012960531210742086,
+      "n_sessions": 46,
+      "negative_is_better": true
+    },
+    "interpretation": "Action-contingent logged replay is feasible. The physical device improves slightly over shuffled and shifted signals, but its paired intervals versus plain dLight, its matched exponential, and the linear device include zero. Biological learning and device-kernel superiority are therefore not established.",
+    "method_provenance": {
+      "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+      "dataset": "DANDI:001340@0.250221.0527",
+      "established_basis": [
+        "fiber-photometry artifact regression",
+        "airPLS baseline estimation",
+        "logged behavioral replay"
+      ],
+      "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+      "source_method_doi": "10.1371/journal.pcbi.1013226",
+      "status": "adapted",
+      "verdict": "Conditional Go"
+    },
+    "n_mice": 5,
+    "n_scored_trials": 38974,
+    "n_sessions": 46,
+    "n_trials": 39020,
+    "per_mouse_log_loss": {
+      "device": {
+        "BSD011": 0.4843766018059734,
+        "BSD015": 0.5157269346889862,
+        "BSD016": 0.4251033978013236,
+        "BSD017": 0.6194849138913037,
+        "BSD019": 0.4984384572520772
+      },
+      "linear_device": {
+        "BSD011": 0.4843727084934281,
+        "BSD015": 0.5157226383780348,
+        "BSD016": 0.42510696357885985,
+        "BSD017": 0.6194847572572916,
+        "BSD019": 0.49844976953457987
+      },
+      "linear_matched_exponential": {
+        "BSD011": 0.4844304527213805,
+        "BSD015": 0.5157667914079634,
+        "BSD016": 0.425151079051888,
+        "BSD017": 0.6196184299883217,
+        "BSD019": 0.49844389705263054
+      },
+      "matched_exponential": {
+        "BSD011": 0.48442310312784603,
+        "BSD015": 0.5157585302874229,
+        "BSD016": 0.42514637612674067,
+        "BSD017": 0.6196021399866809,
+        "BSD019": 0.49844012088403905
+      },
+      "no_trace": {
+        "BSD011": 0.4844974259280447,
+        "BSD015": 0.515853734592013,
+        "BSD016": 0.42514330295715963,
+        "BSD017": 0.6198284064431915,
+        "BSD019": 0.498460964205686
+      },
+      "outcome_rl": {
+        "BSD011": 0.4086461027969971,
+        "BSD015": 0.44137944879787283,
+        "BSD016": 0.35701646651063534,
+        "BSD017": 0.5304836745781238,
+        "BSD019": 0.4319367114926411
+      },
+      "plain_dlight": {
+        "BSD011": 0.48442016522771314,
+        "BSD015": 0.5157559732487661,
+        "BSD016": 0.4251435039229161,
+        "BSD017": 0.6195960874771622,
+        "BSD019": 0.49843876314338753
+      },
+      "previous_choice": {
+        "BSD011": 0.48449742211313096,
+        "BSD015": 0.5158537413741855,
+        "BSD016": 0.4251439833713704,
+        "BSD017": 0.6198284927086576,
+        "BSD019": 0.4984609671173926
+      },
+      "shifted_device": {
+        "BSD011": 0.484485270632759,
+        "BSD015": 0.5158478693794789,
+        "BSD016": 0.42542542996132526,
+        "BSD017": 0.6198392426073834,
+        "BSD019": 0.49845329860627463
+      },
+      "shuffled_device": {
+        "BSD011": 0.48449727705184426,
+        "BSD015": 0.5158537839605235,
+        "BSD016": 0.42514353736657673,
+        "BSD017": 0.6198292469956408,
+        "BSD019": 0.49846136180291384
+      }
+    },
+    "physical_device_paired_comparisons": {
+      "linear_device": {
+        "ci95": [
+          -8.233068884040925e-06,
+          8.097839159073049e-06
+        ],
+        "comparison": "device_minus_linear_device",
+        "mean": -2.26343058134346e-07,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "linear_matched_exponential": {
+        "ci95": [
+          -0.00010850615958408967,
+          7.999075493702699e-10
+        ],
+        "comparison": "device_minus_linear_matched_exponential",
+        "mean": -5.336732631555049e-05,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "matched_exponential": {
+        "ci95": [
+          -9.577182612297105e-05,
+          2.952016339952663e-06
+        ],
+        "comparison": "device_minus_matched_exponential",
+        "mean": -4.525526054857917e-05,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "no_trace": {
+        "ci95": [
+          -0.000242640897593729,
+          -2.8117674008128422e-05
+        ],
+        "comparison": "device_minus_no_trace",
+        "mean": -0.00012940602690811442,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "outcome_rl": {
+        "ci95": [
+          0.07184381668226768,
+          0.07844910683170361
+        ],
+        "comparison": "device_minus_outcome_rl",
+        "mean": 0.07507082500231897,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "plain_dlight": {
+        "ci95": [
+          -9.192495229841583e-05,
+          3.360754797772081e-06
+        ],
+        "comparison": "device_minus_plain_dlight",
+        "mean": -4.218422729818094e-05,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "previous_choice": {
+        "ci95": [
+          -0.00024025892221545448,
+          -2.7195980856400333e-05
+        ],
+        "comparison": "device_minus_previous_choice",
+        "mean": -0.00012951052746900622,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "shifted_device": {
+        "ci95": [
+          -0.00028938621784681067,
+          -5.218652026991926e-05
+        ],
+        "comparison": "device_minus_shifted_device",
+        "mean": -0.0001625530904538848,
+        "n_sessions": 46,
+        "negative_is_better": true
+      },
+      "shuffled_device": {
+        "ci95": [
+          -0.0002397094754974811,
+          -2.9137958577967954e-05
+        ],
+        "comparison": "device_minus_shuffled_device",
+        "mean": -0.00012960531210742086,
+        "n_sessions": 46,
+        "negative_is_better": true
+      }
+    },
+    "pooled_log_loss": {
+      "device": 0.5095177924099255,
+      "linear_device": 0.509519301313994,
+      "linear_matched_exponential": 0.5095703845848691,
+      "matched_exponential": 0.5095625218624531,
+      "no_trace": 0.509643757992079,
+      "outcome_rl": 0.43504661242027554,
+      "plain_dlight": 0.5095594992845837,
+      "previous_choice": 0.5096438716009567,
+      "shifted_device": 0.5096800171768711,
+      "shuffled_device": 0.509644013175545
+    },
+    "quality_filtered_sensitivity": {
+      "configuration": {
+        "choice_model": "P(right)=sigmoid(bias+kappa*previous_action+w_right-w_left)",
+        "device": {
+          "V": 0.9,
+          "area_matching_horizon_s": 120.0,
+          "beta": 1.0,
+          "gate_model": "physical_headroom_v1",
+          "k": 3,
+          "kernel_normalization": "none",
+          "solver_dt_s": 0.005,
+          "tau_leak_s": 10.0
+        },
+        "eligibility_event": "center_out",
+        "eligibility_pulse_s": 0.3,
+        "first_trial_scored": false,
+        "integration": "trapezoidal",
+        "linear_sensitivity": {
+          "gate_model": "linear_erlang_v1",
+          "matched_exponential_recomputed_independently": true
+        },
+        "matched_exponential": "post-peak decay matched to the frozen device kernel and rescaled to equal finite-horizon area",
+        "model_specifications": {
+          "linear_erlang_v1": {
+            "claim_limit": "Erlang-exact computational sensitivity. It is not the nonlinear headroom equation and does not identify microscopic stages.",
+            "default_beta_leak": 1.0,
+            "default_cascade_depth": 3,
+            "default_voltage_v": 0.9,
+            "equation_family": "linear_erlang_cascade",
+            "model_id": "linear_erlang_v1",
+            "primary": false,
+            "schema_version": 1,
+            "spec_digest_sha256": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b",
+            "tau_r_law": {
+              "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+              "expression": "145*exp(-2.9*abs(V))",
+              "field_coefficient_per_v": 2.9,
+              "prefactor_s": 145.0,
+              "source": "global Au transient fit; kww_final.json",
+              "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+            },
+            "upstream_transfer": "V_max*drive for stage 1; raw v_previous thereafter"
+          },
+          "physical_headroom_v1": {
+            "claim_limit": "Equation-matching computational device model. Its effective cascade depth is a representation parameter, not an identified microscopic trap count.",
+            "default_beta_leak": 1.0,
+            "default_cascade_depth": 3,
+            "default_voltage_v": 0.9,
+            "equation_family": "nonlinear_normalized_headroom_cascade",
+            "model_id": "physical_headroom_v1",
+            "primary": true,
+            "schema_version": 1,
+            "spec_digest_sha256": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040",
+            "tau_r_law": {
+              "digest_sha256": "c9dd1e2e3e9e8e78ba1c02cf7a36967835fa11feac40ecaeba0e5d643ab7a9f6",
+              "expression": "145*exp(-2.9*abs(V))",
+              "field_coefficient_per_v": 2.9,
+              "prefactor_s": 145.0,
+              "source": "global Au transient fit; kww_final.json",
+              "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724"
+            },
+            "upstream_transfer": "drive for stage 1; v_previous/V_max thereafter"
+          }
+        },
+        "optimizer": {
+          "bias_bounds": [
+            -5.0,
+            5.0
+          ],
+          "continuous_log_eta_bounds": [
+            -8.0,
+            3.0
+          ],
+          "kappa_bounds": [
+            -5.0,
+            5.0
+          ],
+          "method": "bounded_deterministic_multistart_L-BFGS-B",
+          "n_starts": 8,
+          "outcome_logit_eta_bounds": [
+            -8.0,
+            8.0
+          ],
+          "seed": 0
+        },
+        "outcome_debase": "subtract interpolated dLight at outcome from the complete center-out through outcome+1s segment",
+        "outcome_window_s": 1.0,
+        "prediction_timing": "before current action teacher forcing and outcome",
+        "predictive_linkage_manifest": {
+          "available": true,
+          "path": "data/results/reference/predictive_linkage_manifest.json",
+          "sha256": "3c11f2648bb46a36b8b8ddeb8824ceb54c79558a254731025b1ae4bb8d3f7447",
+          "used_for_computation": false
+        },
+        "session_bootstrap_resamples": 10000,
+        "shift_control": "half-session circular shift of the complete continuous dLight trace",
+        "shuffle_control": "deterministic within-session permutation of intact complete waveform-segment overlaps",
+        "weights_reset": "per_session"
+      },
+      "device_minus_shuffled_bootstrap": {
+        "ci95": [
+          -0.00029653277700663087,
+          -4.0234776598050375e-05
+        ],
+        "comparison": "device_minus_shuffled_device",
+        "mean": -0.00016295192507869092,
+        "n_sessions": 38,
+        "negative_is_better": true
+      },
+      "interpretation": "Action-contingent logged replay is feasible. The physical device improves slightly over shuffled and shifted signals, but its paired intervals versus plain dLight, its matched exponential, and the linear device include zero. Biological learning and device-kernel superiority are therefore not established.",
+      "method_provenance": {
+        "claim_limit": "The authors' custom preprocessing and QC list were not released. This pipeline establishes feasibility only; it is not evidence of biological learning, a closed-loop agent, or device-kernel superiority.",
+        "dataset": "DANDI:001340@0.250221.0527",
+        "established_basis": [
+          "fiber-photometry artifact regression",
+          "airPLS baseline estimation",
+          "logged behavioral replay"
+        ],
+        "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
+        "source_method_doi": "10.1371/journal.pcbi.1013226",
+        "status": "adapted",
+        "verdict": "Conditional Go"
+      },
+      "n_mice": 5,
+      "n_scored_trials": 33292,
+      "n_sessions": 38,
+      "n_trials": 33330,
+      "per_mouse_log_loss": {
+        "device": {
+          "BSD011": 0.4801531384529763,
+          "BSD015": 0.5156145118214427,
+          "BSD016": 0.4275114205520535,
+          "BSD017": 0.619652588671069,
+          "BSD019": 0.4987146686703464
+        },
+        "linear_device": {
+          "BSD011": 0.48014979867653573,
+          "BSD015": 0.5156090603281356,
+          "BSD016": 0.42751451509982635,
+          "BSD017": 0.6196521547929208,
+          "BSD019": 0.4987276759843912
+        },
+        "linear_matched_exponential": {
+          "BSD011": 0.4802789068707879,
+          "BSD015": 0.5156459080558486,
+          "BSD016": 0.42756689279432813,
+          "BSD017": 0.6198057538812409,
+          "BSD019": 0.49871310040533195
+        },
+        "matched_exponential": {
+          "BSD011": 0.4802592500704171,
+          "BSD015": 0.5156373046560566,
+          "BSD016": 0.4275600878282197,
+          "BSD017": 0.6197854941546261,
+          "BSD019": 0.49870953879268665
+        },
+        "no_trace": {
+          "BSD011": 0.48045496755821754,
+          "BSD015": 0.5157591207110306,
+          "BSD016": 0.4275325806088893,
+          "BSD017": 0.6200133852471005,
+          "BSD019": 0.49874743163402835
+        },
+        "outcome_rl": {
+          "BSD011": 0.40355071384627983,
+          "BSD015": 0.44134848350782613,
+          "BSD016": 0.35855876725378233,
+          "BSD017": 0.5309888757771277,
+          "BSD019": 0.43223231044578386
+        },
+        "plain_dlight": {
+          "BSD011": 0.4802524217628018,
+          "BSD015": 0.5156346863846911,
+          "BSD016": 0.42755738561992457,
+          "BSD017": 0.6197795436678402,
+          "BSD019": 0.49870853441407376
+        },
+        "previous_choice": {
+          "BSD011": 0.48045496371527013,
+          "BSD015": 0.515759112244531,
+          "BSD016": 0.4275325665872148,
+          "BSD017": 0.6200134703194793,
+          "BSD019": 0.4987474278150403
+        },
+        "shifted_device": {
+          "BSD011": 0.48045581993864334,
+          "BSD015": 0.5157562817530934,
+          "BSD016": 0.4277054442975614,
+          "BSD017": 0.6200308555735691,
+          "BSD019": 0.49874715173181733
+        },
+        "shuffled_device": {
+          "BSD011": 0.4804547990810042,
+          "BSD015": 0.5157593161059648,
+          "BSD016": 0.42753267778684195,
+          "BSD017": 0.6200123978887067,
+          "BSD019": 0.4987478144491124
+        }
+      },
+      "physical_device_paired_comparisons": {
+        "linear_device": {
+          "ci95": [
+            -1.0164465218647821e-05,
+            8.166964692283898e-06
+          ],
+          "comparison": "device_minus_linear_device",
+          "mean": -1.3591677284909374e-06,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "linear_matched_exponential": {
+          "ci95": [
+            -0.00012912539763345075,
+            -1.4424663578759382e-06
+          ],
+          "comparison": "device_minus_linear_matched_exponential",
+          "mean": -6.536749535569983e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "matched_exponential": {
+          "ci95": [
+            -0.00011386514370196989,
+            3.5431606016451837e-06
+          ],
+          "comparison": "device_minus_matched_exponential",
+          "mean": -5.42894802881891e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "no_trace": {
+          "ci95": [
+            -0.00029761371649795874,
+            -3.874710539846079e-05
+          ],
+          "comparison": "device_minus_no_trace",
+          "mean": -0.00016302921761826718,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "outcome_rl": {
+          "ci95": [
+            0.07141811552520777,
+            0.07856514989361903
+          ],
+          "comparison": "device_minus_outcome_rl",
+          "mean": 0.07492493375391822,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "plain_dlight": {
+          "ci95": [
+            -0.00010666835798130546,
+            6.402608423526049e-06
+          ],
+          "comparison": "device_minus_plain_dlight",
+          "mean": -5.077120879470145e-05,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "previous_choice": {
+          "ci95": [
+            -0.00029547022901690883,
+            -4.055608929926484e-05
+          ],
+          "comparison": "device_minus_previous_choice",
+          "mean": -0.0001630413962265031,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "shifted_device": {
+          "ci95": [
+            -0.00032596240844186367,
+            -7.039428499346053e-05
+          ],
+          "comparison": "device_minus_shifted_device",
+          "mean": -0.00019370339288591362,
+          "n_sessions": 38,
+          "negative_is_better": true
+        },
+        "shuffled_device": {
+          "ci95": [
+            -0.00029653277700663087,
+            -4.0234776598050375e-05
+          ],
+          "comparison": "device_minus_shuffled_device",
+          "mean": -0.00016295192507869092,
+          "n_sessions": 38,
+          "negative_is_better": true
+        }
+      },
+      "pooled_log_loss": {
+        "device": 0.513830653145595,
+        "linear_device": 0.5138332391496179,
+        "linear_matched_exponential": 0.5138925250773291,
+        "matched_exponential": 0.5138820093896184,
+        "no_trace": 0.5139850703923168,
+        "outcome_rl": 0.43942718794392494,
+        "plain_dlight": 0.5138786774850874,
+        "previous_choice": 0.5139850824137655,
+        "shifted_device": 0.5140169816388138,
+        "shuffled_device": 0.5139850156303539
+      },
+      "verdict": "Conditional Go"
+    },
+    "verdict": "Conditional Go"
+  }
+}

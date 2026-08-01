@@ -20,7 +20,24 @@ class InlinePool:
 def test_predictive_linkage_notebook_contract() -> None:
     notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     assert notebook["nbformat"] == 4
-    assert all(not cell.get("outputs") for cell in notebook["cells"] if cell["cell_type"] == "code")
+    assert notebook["metadata"]["mrl_trace_execution"] == {
+        "embedded_outputs": True,
+        "external_data": False,
+        "profile": "reduced",
+    }
+    code_cells = [cell for cell in notebook["cells"] if cell["cell_type"] == "code"]
+    assert code_cells
+    assert all(cell.get("execution_count") is not None for cell in code_cells)
+    assert any(cell.get("outputs") for cell in code_cells)
+    assert not [
+        output
+        for cell in code_cells
+        for output in cell.get("outputs", ())
+        if output.get("output_type") == "error"
+    ]
+    assert "'profile': 'reduced'" in json.dumps(
+        [cell.get("outputs", ()) for cell in code_cells]
+    )
     source = "\n".join("".join(cell["source"]) for cell in notebook["cells"])
     for control in (
         "MRL_RUN_PROFILE", "MRL_WORKERS", "MRL_SAVE_RESULTS", "MRL_OUTPUT_DIR",

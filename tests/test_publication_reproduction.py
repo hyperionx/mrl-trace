@@ -42,6 +42,17 @@ def _source(path: Path, *, code_only: bool = False) -> str:
     return "\n".join("".join(cell.get("source", ())) for cell in cells)
 
 
+def _tex_macros(path: Path) -> dict[str, str]:
+    """Read scalar generated macros used for cross-repository number checks."""
+    return dict(
+        re.findall(
+            r"^\\newcommand\{\\([A-Za-z]+)\}\{(.*)\}$",
+            path.read_text(encoding="utf-8"),
+            flags=re.MULTILINE,
+        )
+    )
+
+
 def _literal_assignment(path: Path, name: str):
     """Return a literal notebook-level assignment such as the OWNED registry."""
     found = []
@@ -74,6 +85,30 @@ def test_all_reproduction_notebooks_parse_and_every_code_cell_compiles() -> None
                     f"{path.name}:cell-{index}",
                     "exec",
                 )
+
+
+def test_committed_notebooks_embed_successful_reduced_outputs() -> None:
+    for path in REPRODUCTION_NOTEBOOKS:
+        notebook = _notebook(path)
+        assert notebook["metadata"]["mrl_trace_execution"] == {
+            "embedded_outputs": True,
+            "external_data": False,
+            "profile": "reduced",
+        }, path.name
+        code_cells = [
+            cell for cell in notebook["cells"]
+            if cell["cell_type"] == "code"
+        ]
+        assert code_cells, path.name
+        assert all(
+            cell.get("execution_count") is not None for cell in code_cells
+        ), path.name
+        assert not [
+            output
+            for cell in code_cells
+            for output in cell.get("outputs", ())
+            if output.get("output_type") == "error"
+        ], path.name
 
 
 def test_topic_notebooks_embed_common_controls_and_compact_unique_registries() -> None:
@@ -275,4 +310,76 @@ def test_companion_manuscript_uses_artifact_macros_and_shared_model_ids() -> Non
     assert "linear\\_erlang\\_v1" in source or "linear Erlang" in source
     assert "fig_sequential_fair.png" in source
     assert "fig_interval_fair.png" in source
-    assert "Conditional Go" in source
+    assert "Conditional" + " Go" in source
+    assert "coddington2023mesolimbic" in source
+    assert "jeong2022mesolimbic" in source
+    assert "fig_coddington_causal.png" in source
+    assert "fig_jeong_directional.png" in source
+
+
+def test_companion_dissertation_uses_current_artifacts_and_withdraws_stale_claims() -> None:
+    dissertation = ROOT.parent / "phd-dissertation"
+    chapter = dissertation / "Chapter7" / "chapter7.tex"
+    if not chapter.is_file():
+        pytest.skip("companion dissertation checkout is not present")
+
+    source_files = tuple(
+        dissertation / name
+        for name in (
+            "Abstract/abstract.tex", "Impact/impact.tex", "Chapter1/chapter1.tex",
+            "Chapter5/chapter5.tex", "Chapter6/chapter6.tex",
+            "Chapter7/chapter7.tex", "Chapter8/chapter8.tex",
+        )
+    )
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
+    lowered = combined.lower()
+    for stale in (
+        "eeg_reward_capstone", "reward_pools",
+        "over-credits the near-reward distractor",
+        "three microscopic stages",
+    ):
+        assert stale not in lowered
+
+    assert "physical\\_headroom\\_v1" not in combined
+    assert "linear\\_erlang\\_v1" not in combined
+    assert "Conditional" + " Go" in combined
+    assert "positive causal" in lowered
+    assert "directionally consistent" in lowered
+    assert "fig_codesign.png" in combined
+    assert "fig_sequential_fair.png" in combined
+    assert "fig_shallow_dms_fair.png" in combined
+    assert "fig_dopamine_replay.png" in combined
+    assert "fig_coddington_causal.png" in combined
+    assert "fig_jeong_directional.png" in combined
+
+    chapter7 = (dissertation / "Chapter7" / "chapter7.tex").read_text(
+        encoding="utf-8"
+    )
+    macro_names = (
+        "benchmark_macros.tex",
+        "primitive_macros.tex",
+        "coddington_macros.tex",
+        "jeong_macros.tex",
+    )
+    assert all(not (dissertation / "Chapter7" / name).exists() for name in macro_names)
+    assert all(name not in chapter7 for name in macro_names)
+
+    benchmark = _tex_macros(ROOT / "data/results/reference/benchmark_macros.tex")
+    primitive = _tex_macros(ROOT / "data/results/reference/primitive_macros.tex")
+    coddington = _tex_macros(ROOT / "data/results/reference/coddington_macros.tex")
+    jeong = _tex_macros(ROOT / "data/results/reference/jeong_macros.tex")
+    assert (
+        f"The nonlinear physical primary reaches AULC "
+        f"{benchmark['SequentialDeviceAULC']}."
+    ) in chapter7
+    assert (
+        f"full KWW refits give $\\beta_{{fill}}={primitive['BetaFillBootstrapMedian']}$ "
+        f"[{primitive['BetaFillBootstrapLo']}, {primitive['BetaFillBootstrapHi']}]"
+    ) in chapter7
+    assert (
+        f"groups separate by {coddington['CoddingtonContrastHz']}\\,Hz"
+    ) in chapter7
+    assert (
+        f"reproduced across {jeong['JeongSubjectCount']} mice and "
+        f"{jeong['JeongSessionCount']} conditioning sessions"
+    ) in chapter7

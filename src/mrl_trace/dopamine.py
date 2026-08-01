@@ -30,6 +30,7 @@ from scipy.stats import rankdata
 __all__ = [
     "DANDISET_ID",
     "DANDISET_VERSION",
+    "DANDI001340_VERDICT",
     "DANDI001340_METHOD_PROVENANCE",
     "AssetRecord",
     "LoggedSession",
@@ -44,6 +45,7 @@ __all__ = [
 
 DANDISET_ID = "001340"
 DANDISET_VERSION = "0.250221.0527"
+DANDI001340_VERDICT = "Conditional Go"
 CACHE_SCHEMA_VERSION = 1
 PRIMARY_DETREND_WINDOW_S = 60.0
 SENSITIVITY_WINDOWS_S = (30.0, 120.0)
@@ -55,8 +57,13 @@ EXPECTED_BEHAVIOR_ONLY = 21
 EXPECTED_TRUNCATED = frozenset({("BSD016", "p118"), ("BSD016", "p119")})
 EXPECTED_SUBSTANTIVE = 46
 EXPECTED_ALIGNED_TRIALS = 39_020
-EXPECTED_QUALITY_SESSIONS = 37
-EXPECTED_QUALITY_TRIALS = 32_373
+EXPECTED_QUALITY_SESSIONS = 38
+EXPECTED_QUALITY_TRIALS = 33_330
+HISTORICAL_UNVERIFIED_QUALITY_TARGET = {
+    "n_sessions": 37,
+    "n_trials": 32_373,
+    "status": "not_reproduced_by_pinned_external_rerun_2026-08-01",
+}
 
 DANDI001340_METHOD_PROVENANCE = {
     "status": "adapted",
@@ -77,7 +84,7 @@ DANDI001340_METHOD_PROVENANCE = {
         "pipeline establishes feasibility only; it is not evidence of biological "
         "learning, a closed-loop agent, or device-kernel superiority."
     ),
-    "verdict": "Conditional Go",
+    "verdict": DANDI001340_VERDICT,
 }
 
 
@@ -806,13 +813,13 @@ def _plot_triage(
                   label=f"stochastic omission (n={omission_n:,})")
     ax_trace.axhline(0, color="0.7", lw=0.8)
     ax_trace.set(xlabel="time from outcome (s)", ylabel="outcome-debased dLight (z)",
-                 title="(a) continuous outcome response")
+                 title="continuous outcome response")
     ax_trace.legend(frameon=False, fontsize=8)
     ax_trace.spines[["top", "right"]].set_visible(False)
     ax_qc.bar(range(3), counts, color=("#3aa07a", "#9aa6b2", "#c0392b"))
     ax_qc.set_xticks(range(3), ("substantive", "behavior-only", "truncated"))
     ax_qc.tick_params(axis="x", rotation=25)
-    ax_qc.set(ylabel="sessions", title="(b) explicit session disposition")
+    ax_qc.set(ylabel="sessions", title="explicit session disposition")
     ax_qc.spines[["top", "right"]].set_visible(False)
     fig.suptitle("DANDI 001340 triage - independent preprocessing")
     fig.tight_layout()
@@ -904,8 +911,11 @@ def prepare_dandi001340(
         sessions: list[LoggedSession] = []
         overlap_labels: list[np.ndarray] = []
         labeled_device_overlaps: list[np.ndarray] = []
+        labeled_linear_overlaps: list[np.ndarray] = []
         all_device_overlaps: list[np.ndarray] = []
         all_exponential_overlaps: list[np.ndarray] = []
+        all_linear_overlaps: list[np.ndarray] = []
+        all_linear_exponential_overlaps: list[np.ndarray] = []
         grid = np.linspace(0.0, OUTCOME_WINDOW_S, 101)
         reward_sum = np.zeros_like(grid)
         omission_sum = np.zeros_like(grid)
@@ -937,20 +947,34 @@ def prepare_dandi001340(
                 exponential_overlap = trial_modulators(
                     session, "matched_exponential"
                 )
+                linear_overlap = trial_modulators(session, "linear_device")
+                linear_exponential_overlap = trial_modulators(
+                    session, "linear_matched_exponential"
+                )
                 overlap_labels.append(diagnostic_labels[diagnostic])
                 labeled_device_overlaps.append(device_overlap[diagnostic])
+                labeled_linear_overlaps.append(linear_overlap[diagnostic])
                 all_device_overlaps.append(device_overlap)
                 all_exponential_overlaps.append(exponential_overlap)
+                all_linear_overlaps.append(linear_overlap)
+                all_linear_exponential_overlaps.append(
+                    linear_exponential_overlap
+                )
 
         labels_all = np.concatenate(overlap_labels)
         device_labeled = np.concatenate(labeled_device_overlaps)
+        linear_labeled = np.concatenate(labeled_linear_overlaps)
         device_all = np.concatenate(all_device_overlaps)
         exponential_all = np.concatenate(all_exponential_overlaps)
+        linear_all = np.concatenate(all_linear_overlaps)
+        linear_exponential_all = np.concatenate(
+            all_linear_exponential_overlaps
+        )
         quality_sessions = [
             session for session in sessions if session.quality_pass
         ]
         report = {
-            "verdict": "Conditional Go",
+            "verdict": DANDI001340_VERDICT,
             "dataset": f"DANDI:{DANDISET_ID}@{DANDISET_VERSION}",
             "detrend_window_s": window,
             "n_assets": len(rows),
@@ -978,6 +1002,15 @@ def prepare_dandi001340(
             ),
             "device_exponential_overlap_correlation": float(np.corrcoef(
                 device_all, exponential_all
+            )[0, 1]),
+            "linear_device_overlap_reward_omission_auc": _auc(
+                labels_all == 1, linear_labeled
+            ),
+            "linear_device_exponential_overlap_correlation": float(np.corrcoef(
+                linear_all, linear_exponential_all
+            )[0, 1]),
+            "physical_linear_overlap_correlation": float(np.corrcoef(
+                device_all, linear_all
             )[0, 1]),
             "method_provenance": DANDI001340_METHOD_PROVENANCE,
         }
@@ -1041,6 +1074,14 @@ def prepare_dandi001340(
             "quality_bootstrap_ci": 0.95,
             "quality_rule": "reward_minus_stochastic_omission_ci_wholly_positive",
         },
+        "historical_unverified_quality_target":
+            HISTORICAL_UNVERIFIED_QUALITY_TARGET,
+        "quality_target_resolution": (
+            "The pinned external rerun selected 38 sessions and 33,330 aligned "
+            "trials at every declared detrending window. The earlier 37-session/"
+            "32,373-trial target was not reproduced and is not forced by a "
+            "post-hoc session exclusion."
+        ),
         "claim": (
             "Feasibility of logged action-contingent replay only; no positive "
             "biological-learning or device-superiority result."

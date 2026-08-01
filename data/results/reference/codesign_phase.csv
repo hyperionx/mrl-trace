@@ -1,0 +1,281 @@
+model_id,cascade_depth,voltage_v,tau_leak_s,retention_id,retention_source,tau_r_s,preferred_lag_s
+physical_headroom_v1,2,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,0.9500000000000001
+physical_headroom_v1,2,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,1.25
+physical_headroom_v1,2,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,1.5
+physical_headroom_v1,2,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,1.7000000000000002
+physical_headroom_v1,2,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,4.4
+physical_headroom_v1,2,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,9.25
+physical_headroom_v1,2,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,10.05
+physical_headroom_v1,2,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,0.9500000000000001
+physical_headroom_v1,2,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,1.25
+physical_headroom_v1,2,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,1.5
+physical_headroom_v1,2,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,1.7000000000000002
+physical_headroom_v1,2,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,4.4
+physical_headroom_v1,2,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,9.200000000000001
+physical_headroom_v1,2,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,10.0
+physical_headroom_v1,2,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,0.9500000000000001
+physical_headroom_v1,2,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,1.25
+physical_headroom_v1,2,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,1.5
+physical_headroom_v1,2,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,1.7000000000000002
+physical_headroom_v1,2,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,4.3500000000000005
+physical_headroom_v1,2,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,9.0
+physical_headroom_v1,2,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,9.75
+physical_headroom_v1,2,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,0.9500000000000001
+physical_headroom_v1,2,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,1.25
+physical_headroom_v1,2,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,1.4500000000000002
+physical_headroom_v1,2,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,1.7000000000000002
+physical_headroom_v1,2,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,4.2
+physical_headroom_v1,2,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,8.450000000000001
+physical_headroom_v1,2,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,9.15
+physical_headroom_v1,2,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,0.9
+physical_headroom_v1,2,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,1.2000000000000002
+physical_headroom_v1,2,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,1.4500000000000002
+physical_headroom_v1,2,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,1.6500000000000001
+physical_headroom_v1,2,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,3.85
+physical_headroom_v1,2,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,7.15
+physical_headroom_v1,2,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,7.6000000000000005
+physical_headroom_v1,3,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,1.8
+physical_headroom_v1,3,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,2.45
+physical_headroom_v1,3,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,2.9000000000000004
+physical_headroom_v1,3,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,3.35
+physical_headroom_v1,3,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,8.700000000000001
+physical_headroom_v1,3,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,18.2
+physical_headroom_v1,3,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,19.75
+physical_headroom_v1,3,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,1.8
+physical_headroom_v1,3,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,2.45
+physical_headroom_v1,3,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,2.9000000000000004
+physical_headroom_v1,3,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,3.35
+physical_headroom_v1,3,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,8.65
+physical_headroom_v1,3,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,17.85
+physical_headroom_v1,3,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,19.3
+physical_headroom_v1,3,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,1.8
+physical_headroom_v1,3,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,2.4000000000000004
+physical_headroom_v1,3,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,2.85
+physical_headroom_v1,3,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,3.3000000000000003
+physical_headroom_v1,3,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,8.35
+physical_headroom_v1,3,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,15.9
+physical_headroom_v1,3,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,16.900000000000002
+physical_headroom_v1,3,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,1.75
+physical_headroom_v1,3,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,2.4000000000000004
+physical_headroom_v1,3,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,2.8000000000000003
+physical_headroom_v1,3,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,3.2
+physical_headroom_v1,3,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,7.3500000000000005
+physical_headroom_v1,3,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,11.5
+physical_headroom_v1,3,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,11.950000000000001
+physical_headroom_v1,3,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,1.7000000000000002
+physical_headroom_v1,3,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,2.25
+physical_headroom_v1,3,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,2.5500000000000003
+physical_headroom_v1,3,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,2.9000000000000004
+physical_headroom_v1,3,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,5.25
+physical_headroom_v1,3,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,7.1000000000000005
+physical_headroom_v1,3,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,7.300000000000001
+physical_headroom_v1,4,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,2.6500000000000004
+physical_headroom_v1,4,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,3.6
+physical_headroom_v1,4,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,4.25
+physical_headroom_v1,4,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,4.95
+physical_headroom_v1,4,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,12.9
+physical_headroom_v1,4,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,26.150000000000002
+physical_headroom_v1,4,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,28.05
+physical_headroom_v1,4,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,2.6500000000000004
+physical_headroom_v1,4,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,3.6
+physical_headroom_v1,4,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,4.25
+physical_headroom_v1,4,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,4.95
+physical_headroom_v1,4,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,12.75
+physical_headroom_v1,4,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,24.1
+physical_headroom_v1,4,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,25.5
+physical_headroom_v1,4,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,2.6
+physical_headroom_v1,4,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,3.5500000000000003
+physical_headroom_v1,4,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,4.2
+physical_headroom_v1,4,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,4.9
+physical_headroom_v1,4,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,11.350000000000001
+physical_headroom_v1,4,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,17.05
+physical_headroom_v1,4,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,17.650000000000002
+physical_headroom_v1,4,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,2.5500000000000003
+physical_headroom_v1,4,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,3.45
+physical_headroom_v1,4,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,4.0
+physical_headroom_v1,4,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,4.55
+physical_headroom_v1,4,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,8.15
+physical_headroom_v1,4,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,10.700000000000001
+physical_headroom_v1,4,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,11.0
+physical_headroom_v1,4,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,2.35
+physical_headroom_v1,4,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,2.95
+physical_headroom_v1,4,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,3.25
+physical_headroom_v1,4,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,3.5500000000000003
+physical_headroom_v1,4,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,5.25
+physical_headroom_v1,4,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,6.5
+physical_headroom_v1,4,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,6.65
+physical_headroom_v1,5,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,3.5
+physical_headroom_v1,5,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,4.75
+physical_headroom_v1,5,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,5.65
+physical_headroom_v1,5,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,6.550000000000001
+physical_headroom_v1,5,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,17.0
+physical_headroom_v1,5,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,30.55
+physical_headroom_v1,5,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,31.950000000000003
+physical_headroom_v1,5,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,3.5
+physical_headroom_v1,5,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,4.75
+physical_headroom_v1,5,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,5.65
+physical_headroom_v1,5,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,6.550000000000001
+physical_headroom_v1,5,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,16.25
+physical_headroom_v1,5,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,25.5
+physical_headroom_v1,5,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,26.450000000000003
+physical_headroom_v1,5,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,3.45
+physical_headroom_v1,5,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,4.7
+physical_headroom_v1,5,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,5.550000000000001
+physical_headroom_v1,5,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,6.3500000000000005
+physical_headroom_v1,5,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,12.4
+physical_headroom_v1,5,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,16.5
+physical_headroom_v1,5,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,16.95
+physical_headroom_v1,5,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,3.35
+physical_headroom_v1,5,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,4.3500000000000005
+physical_headroom_v1,5,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,4.9
+physical_headroom_v1,5,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,5.4
+physical_headroom_v1,5,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,8.25
+physical_headroom_v1,5,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,10.450000000000001
+physical_headroom_v1,5,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,10.700000000000001
+physical_headroom_v1,5,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,2.8000000000000003
+physical_headroom_v1,5,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,3.3000000000000003
+physical_headroom_v1,5,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,3.6
+physical_headroom_v1,5,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,3.8000000000000003
+physical_headroom_v1,5,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,5.3500000000000005
+physical_headroom_v1,5,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,6.6000000000000005
+physical_headroom_v1,5,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,6.75
+linear_erlang_v1,2,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,0.8500000000000001
+linear_erlang_v1,2,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,1.1
+linear_erlang_v1,2,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,1.25
+linear_erlang_v1,2,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,1.4000000000000001
+linear_erlang_v1,2,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,2.8000000000000003
+linear_erlang_v1,2,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,4.1000000000000005
+linear_erlang_v1,2,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,4.25
+linear_erlang_v1,2,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,0.8500000000000001
+linear_erlang_v1,2,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,1.05
+linear_erlang_v1,2,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,1.2000000000000002
+linear_erlang_v1,2,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,1.35
+linear_erlang_v1,2,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,2.5
+linear_erlang_v1,2,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,3.5
+linear_erlang_v1,2,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,3.6
+linear_erlang_v1,2,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,0.75
+linear_erlang_v1,2,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,0.9500000000000001
+linear_erlang_v1,2,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,1.05
+linear_erlang_v1,2,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,1.1500000000000001
+linear_erlang_v1,2,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,1.85
+linear_erlang_v1,2,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,2.35
+linear_erlang_v1,2,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,2.4000000000000004
+linear_erlang_v1,2,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,0.65
+linear_erlang_v1,2,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,0.8
+linear_erlang_v1,2,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,0.8500000000000001
+linear_erlang_v1,2,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,0.9500000000000001
+linear_erlang_v1,2,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,1.3
+linear_erlang_v1,2,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,1.5
+linear_erlang_v1,2,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,1.55
+linear_erlang_v1,2,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,0.55
+linear_erlang_v1,2,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,0.65
+linear_erlang_v1,2,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,0.65
+linear_erlang_v1,2,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,0.7000000000000001
+linear_erlang_v1,2,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,0.9
+linear_erlang_v1,2,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,0.9500000000000001
+linear_erlang_v1,2,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,0.9500000000000001
+linear_erlang_v1,3,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,1.55
+linear_erlang_v1,3,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,2.0
+linear_erlang_v1,3,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,2.25
+linear_erlang_v1,3,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,2.5
+linear_erlang_v1,3,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,4.6000000000000005
+linear_erlang_v1,3,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,6.3500000000000005
+linear_erlang_v1,3,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,6.550000000000001
+linear_erlang_v1,3,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,1.4500000000000002
+linear_erlang_v1,3,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,1.85
+linear_erlang_v1,3,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,2.1
+linear_erlang_v1,3,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,2.35
+linear_erlang_v1,3,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,4.0
+linear_erlang_v1,3,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,5.25
+linear_erlang_v1,3,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,5.3500000000000005
+linear_erlang_v1,3,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,1.3
+linear_erlang_v1,3,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,1.6
+linear_erlang_v1,3,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,1.75
+linear_erlang_v1,3,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,1.9000000000000001
+linear_erlang_v1,3,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,2.85
+linear_erlang_v1,3,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,3.35
+linear_erlang_v1,3,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,3.4000000000000004
+linear_erlang_v1,3,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,1.05
+linear_erlang_v1,3,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,1.25
+linear_erlang_v1,3,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,1.35
+linear_erlang_v1,3,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,1.4500000000000002
+linear_erlang_v1,3,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,1.9000000000000001
+linear_erlang_v1,3,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,2.1
+linear_erlang_v1,3,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,2.1
+linear_erlang_v1,3,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,0.8500000000000001
+linear_erlang_v1,3,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,0.9
+linear_erlang_v1,3,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,0.9500000000000001
+linear_erlang_v1,3,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,1.0
+linear_erlang_v1,3,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,1.2000000000000002
+linear_erlang_v1,3,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,1.25
+linear_erlang_v1,3,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,1.3
+linear_erlang_v1,4,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,2.15
+linear_erlang_v1,4,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,2.75
+linear_erlang_v1,4,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,3.1
+linear_erlang_v1,4,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,3.45
+linear_erlang_v1,4,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,5.95
+linear_erlang_v1,4,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,7.800000000000001
+linear_erlang_v1,4,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,8.0
+linear_erlang_v1,4,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,2.0500000000000003
+linear_erlang_v1,4,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,2.5500000000000003
+linear_erlang_v1,4,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,2.85
+linear_erlang_v1,4,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,3.1
+linear_erlang_v1,4,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,5.050000000000001
+linear_erlang_v1,4,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,6.300000000000001
+linear_erlang_v1,4,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,6.4
+linear_erlang_v1,4,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,1.7000000000000002
+linear_erlang_v1,4,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,2.0500000000000003
+linear_erlang_v1,4,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,2.25
+linear_erlang_v1,4,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,2.45
+linear_erlang_v1,4,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,3.45
+linear_erlang_v1,4,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,3.95
+linear_erlang_v1,4,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,4.0
+linear_erlang_v1,4,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,1.35
+linear_erlang_v1,4,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,1.55
+linear_erlang_v1,4,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,1.6500000000000001
+linear_erlang_v1,4,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,1.75
+linear_erlang_v1,4,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,2.2
+linear_erlang_v1,4,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,2.4000000000000004
+linear_erlang_v1,4,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,2.4000000000000004
+linear_erlang_v1,4,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,1.0
+linear_erlang_v1,4,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,1.1
+linear_erlang_v1,4,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,1.1500000000000001
+linear_erlang_v1,4,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,1.2000000000000002
+linear_erlang_v1,4,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,1.35
+linear_erlang_v1,4,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,1.4500000000000002
+linear_erlang_v1,4,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,1.4500000000000002
+linear_erlang_v1,5,0.8,0.8448946663770562,held_bias_q10,direct held-bias distribution,14.249669912632424,2.7
+linear_erlang_v1,5,0.8,1.1669372374932345,held_bias_q25,direct held-bias distribution,14.249669912632424,3.4000000000000004
+linear_erlang_v1,5,0.8,1.3896742156393977,held_bias_q50,direct held-bias distribution,14.249669912632424,3.85
+linear_erlang_v1,5,0.8,1.6179662155669912,held_bias_q75,direct held-bias distribution,14.249669912632424,4.25
+linear_erlang_v1,5,0.8,4.312684718514085,near_zero_device_1,supplementary 1-mV read,14.249669912632424,6.95
+linear_erlang_v1,5,0.8,9.1966164265996,near_zero_device_2,supplementary 1-mV read,14.249669912632424,8.8
+linear_erlang_v1,5,0.8,10.0,synthetic_10s,declared synthetic operating point,14.249669912632424,8.950000000000001
+linear_erlang_v1,5,0.9,0.8448946663770562,held_bias_q10,direct held-bias distribution,10.662508845643279,2.5
+linear_erlang_v1,5,0.9,1.1669372374932345,held_bias_q25,direct held-bias distribution,10.662508845643279,3.1
+linear_erlang_v1,5,0.9,1.3896742156393977,held_bias_q50,direct held-bias distribution,10.662508845643279,3.45
+linear_erlang_v1,5,0.9,1.6179662155669912,held_bias_q75,direct held-bias distribution,10.662508845643279,3.8000000000000003
+linear_erlang_v1,5,0.9,4.312684718514085,near_zero_device_1,supplementary 1-mV read,10.662508845643279,5.800000000000001
+linear_erlang_v1,5,0.9,9.1966164265996,near_zero_device_2,supplementary 1-mV read,10.662508845643279,7.050000000000001
+linear_erlang_v1,5,0.9,10.0,synthetic_10s,declared synthetic operating point,10.662508845643279,7.15
+linear_erlang_v1,5,1.1,0.8448946663770562,held_bias_q10,direct held-bias distribution,5.969921286164822,2.1
+linear_erlang_v1,5,1.1,1.1669372374932345,held_bias_q25,direct held-bias distribution,5.969921286164822,2.45
+linear_erlang_v1,5,1.1,1.3896742156393977,held_bias_q50,direct held-bias distribution,5.969921286164822,2.6500000000000004
+linear_erlang_v1,5,1.1,1.6179662155669912,held_bias_q75,direct held-bias distribution,5.969921286164822,2.85
+linear_erlang_v1,5,1.1,4.312684718514085,near_zero_device_1,supplementary 1-mV read,5.969921286164822,3.85
+linear_erlang_v1,5,1.1,9.1966164265996,near_zero_device_2,supplementary 1-mV read,5.969921286164822,4.3500000000000005
+linear_erlang_v1,5,1.1,10.0,synthetic_10s,declared synthetic operating point,5.969921286164822,4.3500000000000005
+linear_erlang_v1,5,1.3,0.8448946663770562,held_bias_q10,direct held-bias distribution,3.3425491766477076,1.6
+linear_erlang_v1,5,1.3,1.1669372374932345,held_bias_q25,direct held-bias distribution,3.3425491766477076,1.8
+linear_erlang_v1,5,1.3,1.3896742156393977,held_bias_q50,direct held-bias distribution,3.3425491766477076,1.9000000000000001
+linear_erlang_v1,5,1.3,1.6179662155669912,held_bias_q75,direct held-bias distribution,3.3425491766477076,2.0
+linear_erlang_v1,5,1.3,4.312684718514085,near_zero_device_1,supplementary 1-mV read,3.3425491766477076,2.4000000000000004
+linear_erlang_v1,5,1.3,9.1966164265996,near_zero_device_2,supplementary 1-mV read,3.3425491766477076,2.6
+linear_erlang_v1,5,1.3,10.0,synthetic_10s,declared synthetic operating point,3.3425491766477076,2.6
+linear_erlang_v1,5,1.5,0.8448946663770562,held_bias_q10,direct held-bias distribution,1.8714878241695816,1.1500000000000001
+linear_erlang_v1,5,1.5,1.1669372374932345,held_bias_q25,direct held-bias distribution,1.8714878241695816,1.25
+linear_erlang_v1,5,1.5,1.3896742156393977,held_bias_q50,direct held-bias distribution,1.8714878241695816,1.3
+linear_erlang_v1,5,1.5,1.6179662155669912,held_bias_q75,direct held-bias distribution,1.8714878241695816,1.3
+linear_erlang_v1,5,1.5,4.312684718514085,near_zero_device_1,supplementary 1-mV read,1.8714878241695816,1.5
+linear_erlang_v1,5,1.5,9.1966164265996,near_zero_device_2,supplementary 1-mV read,1.8714878241695816,1.55
+linear_erlang_v1,5,1.5,10.0,synthetic_10s,declared synthetic operating point,1.8714878241695816,1.55

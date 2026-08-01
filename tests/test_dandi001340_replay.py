@@ -344,13 +344,21 @@ def test_dandi001340_external_reproduction_targets(tmp_path: Path) -> None:
     assert primary["n_truncated_sessions"] == 2
     assert primary["n_substantive_sessions"] == 46
     assert primary["n_aligned_trials"] == 39_020
-    assert primary["n_quality_sessions"] == 37
-    assert primary["n_quality_trials"] == 32_373
+    assert primary["n_quality_sessions"] == 38
+    assert primary["n_quality_trials"] == 33_330
     assert primary["device_overlap_reward_omission_auc"] == pytest.approx(
-        0.731, abs=0.01
+        0.817, abs=0.01
     )
     assert primary["device_exponential_overlap_correlation"] == pytest.approx(
-        0.94, abs=0.01
+        0.872, abs=0.01
+    )
+    assert primary["linear_device_overlap_reward_omission_auc"] == pytest.approx(
+        0.818, abs=0.01
+    )
+    assert primary[
+        "linear_device_exponential_overlap_correlation"
+    ] == pytest.approx(
+        0.912, abs=0.01
     )
 
     sessions = [
@@ -367,23 +375,24 @@ def test_dandi001340_external_reproduction_targets(tmp_path: Path) -> None:
     }
     expected = {
         "previous_choice": 0.5096,
-        "plain_dlight": 0.4976,
-        "device": 0.5048,
-        "shuffled_device": 0.5093,
-        "outcome_rl": 0.3999,
+        "plain_dlight": 0.5096,
+        "device": 0.5095,
+        "linear_device": 0.5095,
+        "shuffled_device": 0.5096,
+        "outcome_rl": 0.4350,
     }
     for condition, target in expected.items():
         assert replay["summary"]["pooled_log_loss"][condition] == pytest.approx(
             target, abs=0.01
         )
     interval = replay["summary"]["device_minus_shuffled_bootstrap"]["ci95"]
-    assert interval[0] == pytest.approx(-0.0132, abs=0.005)
-    assert interval[1] == pytest.approx(0.0071, abs=0.005)
+    assert interval[0] == pytest.approx(-0.000240, abs=0.0001)
+    assert interval[1] == pytest.approx(-0.000027, abs=0.0001)
     for report in manifest["reports"].values():
         assert report["verdict"] == "Conditional Go"
         assert report["n_substantive_sessions"] == 46
         assert report["n_aligned_trials"] == 39_020
-        assert report["n_quality_sessions"] == 37
-        assert report["n_quality_trials"] == 32_373
+        assert report["n_quality_sessions"] == 38
+        assert report["n_quality_trials"] == 33_330
         assert len(report["quality_mice"]) == 5
         assert report["device_overlap_reward_omission_auc"] > 0.5

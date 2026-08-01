@@ -1,0 +1,19 @@
+name: nightly reduced
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  reduced:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -e ".[test,repro]"
+      - run: python -m pytest -m "not external and not publication"
+      - run: python -m mrl_trace.reproduce --profile reduced --output-dir .ci-reduced

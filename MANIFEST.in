@@ -3,7 +3,9 @@ include LICENSE
 include CITATION.cff
 include pyproject.toml
 include .gitignore
+include claims.yaml
 include src/mrl_trace/dandi001340_assets.csv
+include src/mrl_trace/dandi000351_assets.csv
 
 recursive-include experiments *.ipynb *.md
 prune experiments/.executed

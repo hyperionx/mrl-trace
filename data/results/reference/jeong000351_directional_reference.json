@@ -1,0 +1,274 @@
+{
+  "analysis": "jeong000351_figure6_directional_replication",
+  "claim_limits": [
+    "The Dandiset is a pinned snapshot of a mutable draft, not a published DANDI version.",
+    "Genotype and opsin status define groups; this is not a randomized kernel comparison.",
+    "The fixed CS2-to-reward inhibition window tests dopamine-dependent learning, not eligibility-kernel shape.",
+    "The independent reanalysis is described as directional unless the mouse-bootstrap interval is wholly positive."
+  ],
+  "directionally_consistent": true,
+  "inference": {
+    "acquisition_change": {
+      "ci95": [
+        -2.2658333333333336,
+        6.165738095238096
+      ],
+      "estimate_control_minus_inhibited": 2.0414285714285727,
+      "n_resamples": 10000,
+      "probability_positive": 0.8242,
+      "seed": 20260805
+    },
+    "final_session": {
+      "ci95": [
+        -1.601928571428573,
+        5.9709642857142855
+      ],
+      "estimate_control_minus_inhibited": 2.411428571428571,
+      "n_resamples": 10000,
+      "probability_positive": 0.8872,
+      "seed": 20260806
+    },
+    "welch_change_p": 0.41581385872661464,
+    "welch_change_t": 0.8538378656241908,
+    "welch_final_p": 0.28177919728309175,
+    "welch_final_t": 1.1415908870886113
+  },
+  "manifest_digest_sha256": "7e80f825931f5af85ea6310a00a764b4e9895fcc05344b612afcfa781cbd5bca",
+  "protocol": {
+    "analysis_unit": "mouse",
+    "cohort_source": "public analysis/fig6/learnign_curve_sequential.py",
+    "control_subjects": [
+      "HJ-FP-datWT-stGtACR-F1",
+      "HJ-FP-WT-stGtACR-F1",
+      "HJ-FP-WT-stGtACR-F2",
+      "HJ-FP-WT-stGtACR-F3",
+      "HJ-FP-WT-stGtACR-M1",
+      "HJ-FP-WT-stGtACR-M2",
+      "HJ-FP-WT-stGtACR-M3"
+    ],
+    "display_sessions": "first three and last two sessions per source code",
+    "event_codes": {
+      "lick": 5,
+      "paired_cues": 15
+    },
+    "excluded_source_subject": "HJ-FP-datHT-stGtACR-M8",
+    "inhibited_subjects": [
+      "HJ-FP-datHT-stGtACR-M2",
+      "HJ-FP-datHT-stGtACR-M3",
+      "HJ-FP-datHT-stGtACR-M4",
+      "HJ-FP-datHT-stGtACR-M5",
+      "HJ-FP-datHT-stGtACR-M6",
+      "HJ-FP-datHT-stGtACR-M7"
+    ],
+    "outcome": "licks_CS1_to_reward_minus_pre_CS1_3s"
+  },
+  "schema_version": 1,
+  "session_count": 82,
+  "source": {
+    "article_doi": "10.1126/science.abq6740",
+    "dandiset_id": "000351",
+    "dandiset_version": "draft",
+    "manifest_asset_count": 428,
+    "manifest_sha256": "85620450237e634576e33d0427bc1b11415ef8dd649ede813a1723731d6105df",
+    "source_code": "https://github.com/namboodirilab/ANCCR"
+  },
+  "subject_count": 13,
+  "subject_rows": [
+    {
+      "acquisition_change": 4.1,
+      "final_session": 7.76,
+      "first_session": 3.66,
+      "group": "control",
+      "n_sessions": 7,
+      "source_display_sessions": [
+        3.66,
+        8.02,
+        13.36,
+        7.86,
+        7.76
+      ],
+      "subject": "HJ-FP-datWT-stGtACR-F1"
+    },
+    {
+      "acquisition_change": 6.52,
+      "final_session": 8.08,
+      "first_session": 1.56,
+      "group": "control",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        1.56,
+        7.32,
+        11.04,
+        15.96,
+        8.08
+      ],
+      "subject": "HJ-FP-WT-stGtACR-F1"
+    },
+    {
+      "acquisition_change": 0.48,
+      "final_session": 0.76,
+      "first_session": 0.28,
+      "group": "control",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        0.28,
+        0.44,
+        1.62,
+        7.36,
+        0.76
+      ],
+      "subject": "HJ-FP-WT-stGtACR-F2"
+    },
+    {
+      "acquisition_change": 4.7,
+      "final_session": 5.88,
+      "first_session": 1.18,
+      "group": "control",
+      "n_sessions": 6,
+      "source_display_sessions": [
+        1.18,
+        5.62,
+        6.56,
+        5.54,
+        5.88
+      ],
+      "subject": "HJ-FP-WT-stGtACR-F3"
+    },
+    {
+      "acquisition_change": 8.52,
+      "final_session": 9.06,
+      "first_session": 0.54,
+      "group": "control",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        0.54,
+        1.58,
+        7.24,
+        5.64,
+        9.06
+      ],
+      "subject": "HJ-FP-WT-stGtACR-M1"
+    },
+    {
+      "acquisition_change": 8.24,
+      "final_session": 8.06,
+      "first_session": -0.18,
+      "group": "control",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        -0.18,
+        2.3469387755102042,
+        4.84,
+        1.44,
+        8.06
+      ],
+      "subject": "HJ-FP-WT-stGtACR-M2"
+    },
+    {
+      "acquisition_change": 10.92,
+      "final_session": 11.16,
+      "first_session": 0.24,
+      "group": "control",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        0.24,
+        1.58,
+        5.6,
+        2.96,
+        11.16
+      ],
+      "subject": "HJ-FP-WT-stGtACR-M3"
+    },
+    {
+      "acquisition_change": 10.819999999999999,
+      "final_session": 10.78,
+      "first_session": -0.04,
+      "group": "inhibited",
+      "n_sessions": 5,
+      "source_display_sessions": [
+        -0.04,
+        1.96,
+        1.52,
+        5.26,
+        10.78
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M2"
+    },
+    {
+      "acquisition_change": 1.48,
+      "final_session": 1.32,
+      "first_session": -0.16,
+      "group": "inhibited",
+      "n_sessions": 6,
+      "source_display_sessions": [
+        -0.16,
+        0.6428571428571429,
+        1.3,
+        3.04,
+        1.32
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M3"
+    },
+    {
+      "acquisition_change": 8.9,
+      "final_session": 9.14,
+      "first_session": 0.24,
+      "group": "inhibited",
+      "n_sessions": 6,
+      "source_display_sessions": [
+        0.24,
+        0.96,
+        1.6,
+        7.64,
+        9.14
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M4"
+    },
+    {
+      "acquisition_change": 3.86,
+      "final_session": 4.04,
+      "first_session": 0.18,
+      "group": "inhibited",
+      "n_sessions": 8,
+      "source_display_sessions": [
+        0.18,
+        0.62,
+        0.76,
+        5.82,
+        4.04
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M5"
+    },
+    {
+      "acquisition_change": 2.3800000000000003,
+      "final_session": 3.24,
+      "first_session": 0.86,
+      "group": "inhibited",
+      "n_sessions": 7,
+      "source_display_sessions": [
+        0.86,
+        1.38,
+        3.0,
+        8.18,
+        3.24
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M6"
+    },
+    {
+      "acquisition_change": -2.42,
+      "final_session": 0.52,
+      "first_session": 2.94,
+      "group": "inhibited",
+      "n_sessions": 12,
+      "source_display_sessions": [
+        2.94,
+        3.68,
+        1.26,
+        6.3,
+        0.52
+      ],
+      "subject": "HJ-FP-datHT-stGtACR-M7"
+    }
+  ],
+  "verdict": "directionally_consistent_secondary_causal_replication"
+}

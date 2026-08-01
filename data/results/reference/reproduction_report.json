@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "falsification": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\falsification_predictions.json",
+    "identifiability": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\identifiability_reference.json",
+    "kernel_theory": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\kernel_theory_reference.json",
+    "reference": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\primitive_evidence_reference.json",
+    "timing": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\timing_benchmark_reference.json"
+  },
+  "dandi": {
+    "note": "DANDI raw preparation/replay remains explicit and opt-in",
+    "requested": false
+  },
+  "figures": {
+    "kernel_identifiability": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\fig_kernel_identifiability.png",
+    "timing_falsification": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\fig_timing_falsification.png"
+  },
+  "output_dir": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference",
+  "primitive_manifest_digest_sha256": "e33840ec6aabcd459e1a79c6d9f1636f4ecd025c0840ccf4cb0426a483f59e74",
+  "profile": "publication",
+  "publication_preflight": {
+    "gold_traces": 24,
+    "ito_additional_workbooks_excluded": 0,
+    "ito_evidence": "verified_raw_91_plus_2_near_zero_workbooks",
+    "ito_primary_acquisition_dates": [
+      "01-15-2025",
+      "01-16-2025"
+    ],
+    "ito_primary_workbooks": 91,
+    "ito_supplemental_near_zero_workbooks": 2
+  },
+  "smoke_identities": {
+    "linear_finite_pulse_peak_s": 2.35794471813606,
+    "linear_impulse_peak_s": 2.3529411764705883,
+    "sampled_numerical_peak_s": 2.36
+  },
+  "tex_macros": "C:\\Users\\User\\git\\mrl-trace\\data\\results\\reference\\primitive_macros.tex"
+}

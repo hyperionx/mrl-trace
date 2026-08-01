@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "description": "Machine-checked manuscript claim ledger. JSON is used as a dependency-free YAML subset.",
+  "claims": [
+    {
+      "claim_id": "kernel.linear_impulse_peak_law",
+      "manuscript_anchor": "t^*=\\frac{k-1}{\\alpha+1/\\tau_{\\rm leak}}",
+      "artifact": "data/results/reference/kernel_theory_reference.json",
+      "json_pointer": "/equations/linear_impulse_peak",
+      "expected": "(k-1)/lambda",
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "analytic deterministic",
+      "model_id": "linear_erlang_v1",
+      "model_spec_digest": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b"
+    },
+    {
+      "claim_id": "identifiability.best_candidate",
+      "manuscript_anchor": "Linear Erlang $k=3$",
+      "artifact": "data/results/reference/identifiability_reference.json",
+      "json_pointer": "/selection/best_candidate",
+      "expected": "linear_k3",
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "six grouped leave-one-bias-out folds",
+      "model_id": "linear_erlang_v1",
+      "model_spec_digest": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b"
+    },
+    {
+      "claim_id": "identifiability.depth_not_identified",
+      "manuscript_anchor": "does not uniquely identify",
+      "artifact": "data/results/reference/identifiability_reference.json",
+      "json_pointer": "/selection/cascade_depth_identified",
+      "expected": false,
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "2000 repeat-stratified frozen-fold prediction rescores",
+      "model_id": "linear_erlang_v1",
+      "model_spec_digest": "1d11f1f9a0cd0c4f22872799d0c3ed3da05212e84cec9ba01b3a5e6cfe3fe68b"
+    },
+    {
+      "claim_id": "identifiability.beta_compressed",
+      "manuscript_anchor": "compressed rise",
+      "artifact": "data/results/reference/identifiability_reference.json",
+      "json_pointer": "/kww_parameter_bootstrap/compressed_rise_resolved",
+      "expected": true,
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "2000 repeat-stratified full KWW parameter refits, seed 20260802"
+    },
+    {
+      "claim_id": "timing.interval_physical_vs_exponential_unresolved",
+      "manuscript_anchor": "interval-attribution comparison was unresolved",
+      "artifact": "data/results/reference/timing_benchmark_reference.json",
+      "json_pointer": "/paired_bootstrap/by_matching_and_task/pilot_rms/four_event_interval_attribution/post_peak_decay_matched_exponential/verdict",
+      "expected": "unresolved",
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "pilot 3200/3201; evaluation 9200/9201; 10000 paired block resamples",
+      "model_id": "physical_headroom_v1",
+      "model_spec_digest": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040"
+    },
+    {
+      "claim_id": "timing.scalar_order_limit",
+      "manuscript_anchor": "scalar temporal-order",
+      "artifact": "data/results/reference/timing_benchmark_reference.json",
+      "json_pointer": "/paired_bootstrap/by_matching_and_task/pilot_rms/two_cue_temporal_order/linear_erlang_v1/verdict",
+      "expected": "comparator_advantage",
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "pilot 3201; evaluation 9201; 10000 paired block resamples",
+      "model_id": "physical_headroom_v1",
+      "model_spec_digest": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040"
+    },
+    {
+      "claim_id": "falsification.predictions_untested",
+      "manuscript_anchor": "untested frozen predictions",
+      "artifact": "data/results/reference/falsification_predictions.json",
+      "json_pointer": "/status",
+      "expected": "untested_prediction",
+      "producer": "python -m mrl_trace.reproduce --profile publication",
+      "seed_protocol": "400 deterministic draws from the 2000 KWW refits, seed 20260804",
+      "model_id": "physical_headroom_v1",
+      "model_spec_digest": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040"
+    },
+    {
+      "claim_id": "coddington.positive_causal_learning",
+      "manuscript_anchor": "positive causal evidence",
+      "artifact": "data/results/reference/coddington_causal_reference.json",
+      "json_pointer": "/verdict",
+      "expected": "positive_action_contingent_causal_learning",
+      "producer": "CODDINGTON_DATA=/path/to/seshMerge.mat external causal-learning analysis",
+      "seed_protocol": "source-style block model; mouse bootstrap 10000, seed 20260801"
+    },
+    {
+      "claim_id": "coddington.contingency_f",
+      "manuscript_anchor": "CoddingtonFValue",
+      "artifact": "data/results/reference/coddington_causal_reference.json",
+      "json_pointer": "/source_style_inference/f_value",
+      "expected": 12.0305507595,
+      "tolerance": 1e-9,
+      "producer": "CODDINGTON_DATA=/path/to/seshMerge.mat external causal-learning analysis",
+      "seed_protocol": "deterministic source-style contingency-by-block model"
+    },
+    {
+      "claim_id": "jeong.directional_replication",
+      "manuscript_anchor": "directionally consistent secondary replication",
+      "artifact": "data/results/reference/jeong000351_directional_reference.json",
+      "json_pointer": "/directionally_consistent",
+      "expected": true,
+      "producer": "external DANDI 000351 range-read analysis from pinned 428-asset manifest",
+      "seed_protocol": "mouse bootstrap 10000; acquisition seed 20260805; final seed 20260806"
+    },
+    {
+      "claim_id": "dandi.conditional_go",
+      "manuscript_anchor": "Conditional Go",
+      "artifact": "data/results/reference/dandi001340_replay_manifest.json",
+      "json_pointer": "/summary/verdict",
+      "expected": "Conditional Go",
+      "producer": "opt-in DANDI 001340 raw preparation and LOSO replay",
+      "seed_protocol": "session bootstrap 10000; leave-one-mouse-out fitting"
+    },
+    {
+      "claim_id": "sequential.exponential_unresolved_verdict",
+      "manuscript_anchor": "physical primary does not lead",
+      "artifact": "data/results/reference/sequential_reference.json",
+      "json_pointer": "/verdicts/exponential",
+      "expected": "unresolved",
+      "producer": "python -m mrl_trace.publication_artifacts --full",
+      "seed_protocol": "pilot 1000-1019; evaluation 2000-2019; 10000 paired resamples",
+      "model_id": "physical_headroom_v1",
+      "model_spec_digest": "abf826d5452cb16b12e64949dacd763366bedcf5d65a78ea02aad7a13c4c0040"
+    }
+  ]
+}
