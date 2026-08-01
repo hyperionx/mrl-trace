@@ -389,7 +389,9 @@ def test_dandi001340_external_reproduction_targets(tmp_path: Path) -> None:
     assert interval[0] == pytest.approx(-0.000240, abs=0.0001)
     assert interval[1] == pytest.approx(-0.000027, abs=0.0001)
     for report in manifest["reports"].values():
-        assert report["verdict"] == "Conditional Go"
+        assert report["verdict"] == (
+            "Action-contingent replay supported; kernel discrimination unresolved"
+        )
         assert report["n_substantive_sessions"] == 46
         assert report["n_aligned_trials"] == 39_020
         assert report["n_quality_sessions"] == 38

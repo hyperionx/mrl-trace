@@ -106,11 +106,11 @@
       "seed_protocol": "mouse bootstrap 10000; acquisition seed 20260805; final seed 20260806"
     },
     {
-      "claim_id": "dandi.conditional_go",
-      "manuscript_anchor": "Conditional Go",
+      "claim_id": "dandi.logged_replay_interpretation",
+      "manuscript_anchor": "Closely correlated physical, linear and exponential overlaps",
       "artifact": "data/results/reference/dandi001340_replay_manifest.json",
       "json_pointer": "/summary/verdict",
-      "expected": "Conditional Go",
+      "expected": "Action-contingent replay supported; kernel discrimination unresolved",
       "producer": "opt-in DANDI 001340 raw preparation and LOSO replay",
       "seed_protocol": "session bootstrap 10000; leave-one-mouse-out fitting"
     },

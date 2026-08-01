@@ -33,8 +33,8 @@ external output directory and fails closed if result or figure saving is disable
 
 Notebook 04 never downloads DANDI data by default. Enabling its external stage also
 requires explicit raw/cache/output directories. Its DANDI 001340 result is a
-**Conditional Go**: intact continuous dLight improves on shuffled waveforms in a
-leakage-safe replay, while closely matched kernel shapes remain unresolved. The
+leakage-safe replay in which intact continuous dLight improves on shuffled
+waveforms, while closely matched kernel shapes remain unresolved. The
 separate Coddington and Jeong analyses ground causal dopamine learning and its
 inhibitory direction; they do not select a device kernel.
 

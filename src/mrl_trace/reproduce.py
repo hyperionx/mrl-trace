@@ -53,7 +53,7 @@ def _validate_dandi_reference() -> dict:
     text = json.dumps(summary)
     if DANDI001340_VERDICT not in text:
         raise RuntimeError(
-            "DANDI reference does not retain the Conditional Go verdict"
+            "DANDI reference does not retain the declared replay interpretation"
         )
     return {"path": str(reference), "validated": True}
 

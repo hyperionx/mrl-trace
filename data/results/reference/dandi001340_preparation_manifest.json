@@ -43,7 +43,7 @@
         "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
         "source_method_doi": "10.1371/journal.pcbi.1013226",
         "status": "adapted",
-        "verdict": "Conditional Go"
+        "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
       },
       "mice": [
         "BSD011",
@@ -68,7 +68,7 @@
         "BSD017",
         "BSD019"
       ],
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     },
     "30": {
       "dataset": "DANDI:001340@0.250221.0527",
@@ -88,7 +88,7 @@
         "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
         "source_method_doi": "10.1371/journal.pcbi.1013226",
         "status": "adapted",
-        "verdict": "Conditional Go"
+        "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
       },
       "mice": [
         "BSD011",
@@ -113,7 +113,7 @@
         "BSD017",
         "BSD019"
       ],
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     },
     "60": {
       "dataset": "DANDI:001340@0.250221.0527",
@@ -133,7 +133,7 @@
         "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
         "source_method_doi": "10.1371/journal.pcbi.1013226",
         "status": "adapted",
-        "verdict": "Conditional Go"
+        "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
       },
       "mice": [
         "BSD011",
@@ -158,7 +158,7 @@
         "BSD017",
         "BSD019"
       ],
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     }
   },
   "schema_version": 1,

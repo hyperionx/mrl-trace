@@ -310,7 +310,7 @@ def test_companion_manuscript_uses_artifact_macros_and_shared_model_ids() -> Non
     assert "linear\\_erlang\\_v1" in source or "linear Erlang" in source
     assert "fig_sequential_fair.png" in source
     assert "fig_interval_fair.png" in source
-    assert "Conditional" + " Go" in source
+    assert "remaining reservation concerns device-kernel identification" in source
     assert "coddington2023mesolimbic" in source
     assert "jeong2022mesolimbic" in source
     assert "fig_coddington_causal.png" in source
@@ -342,7 +342,7 @@ def test_companion_dissertation_uses_current_artifacts_and_withdraws_stale_claim
 
     assert "physical\\_headroom\\_v1" not in combined
     assert "linear\\_erlang\\_v1" not in combined
-    assert "Conditional" + " Go" in combined
+    assert "remaining question is kernel identification" in combined
     assert "positive causal" in lowered
     assert "directionally consistent" in lowered
     assert "fig_codesign.png" in combined

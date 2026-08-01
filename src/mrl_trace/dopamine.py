@@ -45,7 +45,9 @@ __all__ = [
 
 DANDISET_ID = "001340"
 DANDISET_VERSION = "0.250221.0527"
-DANDI001340_VERDICT = "Conditional Go"
+DANDI001340_VERDICT = (
+    "Action-contingent replay supported; kernel discrimination unresolved"
+)
 CACHE_SCHEMA_VERSION = 1
 PRIMARY_DETREND_WINDOW_S = 60.0
 SENSITIVITY_WINDOWS_S = (30.0, 120.0)

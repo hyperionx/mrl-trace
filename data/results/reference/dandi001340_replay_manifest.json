@@ -278,7 +278,7 @@
   },
   "preparation_manifest": {
     "path": "dandi001340_preparation_manifest.json",
-    "sha256": "a3b95aa913f4f5c397ebcdd4340068ad777369d89ebef36a7a9edb5f44d992c4"
+    "sha256": "8cf25c1961aa6f29e753b094288be1a99ac0757d0e4527597bf8d155264cbba1"
   },
   "quality_filtered_sensitivity": {
     "parameters_by_training_fold": {
@@ -674,7 +674,7 @@
         "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
         "source_method_doi": "10.1371/journal.pcbi.1013226",
         "status": "adapted",
-        "verdict": "Conditional Go"
+        "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
       },
       "n_mice": 5,
       "n_scored_trials": 33292,
@@ -856,7 +856,7 @@
         "shifted_device": 0.5140169816388138,
         "shuffled_device": 0.5139850156303539
       },
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     }
   },
   "source_revision": "a042311d67409e1336c283ea275a63bb8c6adb43-dirty",
@@ -981,7 +981,7 @@
       "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
       "source_method_doi": "10.1371/journal.pcbi.1013226",
       "status": "adapted",
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     },
     "n_mice": 5,
     "n_scored_trials": 38974,
@@ -1284,7 +1284,7 @@
         "repository_adaptation": "A seconds-parameterized airPLS approximation and Huber IRLS reference regression reconstruct a continuous dLight signal from the released 470/415-nm channels. Recorded choices are replayed sequentially.",
         "source_method_doi": "10.1371/journal.pcbi.1013226",
         "status": "adapted",
-        "verdict": "Conditional Go"
+        "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
       },
       "n_mice": 5,
       "n_scored_trials": 33292,
@@ -1466,8 +1466,8 @@
         "shifted_device": 0.5140169816388138,
         "shuffled_device": 0.5139850156303539
       },
-      "verdict": "Conditional Go"
+      "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
     },
-    "verdict": "Conditional Go"
+    "verdict": "Action-contingent replay supported; kernel discrimination unresolved"
   }
 }

@@ -109,8 +109,8 @@ policy-learning result; a pinned 428-asset Jeong/DANDI 000351 analysis recovers 
 reported inhibition direction across 13 mice and 82 conditioning sessions. DANDI
 001340 then supplies a leakage-safe, action-contingent waveform bridge: the intact
 physical dLight replay improves held-out likelihood over shuffled waveforms. Its
-**Conditional Go** verdict reserves discrimination among the closely matched
-physical, linear, and exponential kernels. The evidence hierarchy and public-data
+action-contingent replay result leaves discrimination among the closely matched
+physical, linear, and exponential kernels unresolved. The evidence hierarchy and public-data
 contracts are encoded in `claims.yaml`, the tracked reference artifacts, and the
 publication-contract tests.
 
