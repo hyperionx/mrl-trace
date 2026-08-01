@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
+import mrl_trace.timing_benchmarks as timing_benchmarks
 
 from mrl_trace.falsification import build_falsification_predictions
 from mrl_trace.kernel_theory import (
@@ -55,6 +57,22 @@ def test_primitive_tex_macros_escape_candidate_names(tmp_path: Path) -> None:
     }
     output = write_primitive_tex_macros(result, tmp_path / "macros.tex")
     assert "{physical\\_k3}" in output.read_text(encoding="utf-8")
+
+
+def test_timing_readouts_retain_finite_l_bfgs_stall(monkeypatch) -> None:
+    stalled = SimpleNamespace(
+        success=False,
+        x=np.asarray([2.0, -0.25]),
+        fun=0.25,
+        message="ABNORMAL",
+    )
+    monkeypatch.setattr(timing_benchmarks, "minimize", lambda *args, **kwargs: stalled)
+    order = timing_benchmarks._fit_order_readout(
+        np.asarray([[2.0, 1.0], [1.0, 2.0], [3.0, 1.0], [1.0, 3.0]]),
+        np.asarray([1, 0, 1, 0]),
+    )
+    assert np.isfinite(order["temperature"])
+    assert order["intercept"] == -0.25
 
 
 def test_linear_impulse_peak_and_two_crossover_limits() -> None:

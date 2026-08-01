@@ -207,7 +207,14 @@ def _fit_interval_readout(values, target) -> dict:
     result = minimize(objective, np.asarray([1.0]), method="L-BFGS-B",
                       bounds=[(-1e6, 1e6)],
                       options={"ftol": 1e-15, "gtol": 1e-10, "maxiter": 1000})
-    if not result.success:
+    finite = (
+        np.isfinite(float(result.fun))
+        and np.all(np.isfinite(np.asarray(result.x, dtype=float)))
+    )
+    # Recent SciPy L-BFGS-B releases can return ABNORMAL after a line-search
+    # round-off stall even though the bounded convex fit is finite.  Preserve
+    # that candidate; only a non-finite result makes the readout unusable.
+    if not finite:
         raise RuntimeError(f"interval readout fit failed: {result.message}")
     return {"temperature": float(result.x[0] / numerical_scale), "intercept": 0.0,
             "pilot_log_loss": float(result.fun)}
@@ -228,7 +235,11 @@ def _fit_order_readout(values, target) -> dict:
     result = minimize(objective, np.asarray([1.0, 0.0]), method="L-BFGS-B",
                       bounds=[(-1e6, 1e6), (-20.0, 20.0)],
                       options={"ftol": 1e-15, "gtol": 1e-10, "maxiter": 1000})
-    if not result.success:
+    finite = (
+        np.isfinite(float(result.fun))
+        and np.all(np.isfinite(np.asarray(result.x, dtype=float)))
+    )
+    if not finite:
         raise RuntimeError(f"order readout fit failed: {result.message}")
     return {"temperature": float(result.x[0] / numerical_scale),
             "intercept": float(result.x[1]),
