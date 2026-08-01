@@ -208,3 +208,4 @@ experiments/generated_figures/
 
 # Deterministic CLI outputs are regenerated under profile-specific directories.
 /reproduction/
+/.ci-smoke/

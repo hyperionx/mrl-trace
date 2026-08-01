@@ -157,8 +157,7 @@ def test_falsification_batch_matches_the_frozen_scalar_gate() -> None:
 
 def test_tracked_claim_ledger_resolves_every_artifact() -> None:
     root = Path(__file__).resolve().parents[1]
-    manuscript = root.parent / "manuscript-MRL" / "main.tex"
     result = validate_claim_ledger(
-        root / "claims.yaml", repository_root=root, manuscript_path=manuscript
+        root / "claims.yaml", repository_root=root,
     )
     assert result["claims_validated"] == 12

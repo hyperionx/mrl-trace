@@ -123,8 +123,10 @@ def test_model_specification_identity_and_manifest_are_deterministic() -> None:
     assert device_model_spec(PRIMARY_MODEL_ID)["default_voltage_v"] == 0.9
     assert len(physical["tau_r_law"]["source_sha256"]) == 64
     source = Path(__file__).resolve().parents[1] / "data/device_model/kww_final.json"
+    source_text = source.read_text(encoding="utf-8").replace("\r\n", "\n")
+    canonical_source = source_text.replace("\r", "\n").replace("\n", "\r\n")
     assert physical["tau_r_law"]["source_sha256"] == hashlib.sha256(
-        source.read_bytes()
+        canonical_source.encode("utf-8")
     ).hexdigest()
     selection = select_supported_state_space({
         "kww": 1.0, "physical_k3": 1.04, "physical_k4": 1.06,

@@ -21,6 +21,8 @@ _TAU_R_LAW = {
     "prefactor_s": 145.0,
     "field_coefficient_per_v": 2.9,
     "source": "global Au transient fit; kww_final.json",
+    # Historical artifacts hash the JSON after canonical CRLF normalization;
+    # tests reproduce that convention so Git checkout EOL settings cannot drift it.
     "source_sha256": "c261d052b796a31c7278010315c71e8572268755e8bcd8a527018d00bc552724",
 }
 

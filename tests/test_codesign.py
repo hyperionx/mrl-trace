@@ -2,8 +2,35 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
+
+
+def test_learned_basis_accepts_finite_nonconverged_candidate(monkeypatch) -> None:
+    from mrl_trace import codesign
+
+    def finite_line_search_failure(objective, start, **_kwargs):
+        parameters = np.asarray(start, dtype=float)
+        return SimpleNamespace(
+            success=False,
+            fun=float(objective(parameters)),
+            x=parameters,
+        )
+
+    monkeypatch.setattr(codesign, "minimize", finite_line_search_failure)
+    fitted = codesign.fit_learned_temporal_basis(
+        {
+            "lags_s": np.asarray([
+                [0.5, 1.0, 2.0, 4.0],
+                [0.75, 1.5, 3.0, 6.0],
+            ]),
+            "causal_index": np.asarray([0, 2]),
+        },
+        multistarts=1,
+    )
+    assert np.isfinite(fitted["pilot_objective"])
+    assert np.all(np.isfinite(fitted["parameters"]))
 
 
 def test_preferred_lag_exposes_distinct_physical_and_linear_priors() -> None:
