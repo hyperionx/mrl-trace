@@ -16,13 +16,45 @@ from mrl_trace.kernel_theory import (
 )
 from mrl_trace.model_specs import LINEAR_MODEL_ID, PRIMARY_MODEL_ID
 from mrl_trace.predictive_linkage import bootstrap_held_out_support
+from mrl_trace.primitive_evidence import write_primitive_tex_macros
 from mrl_trace.timing_benchmarks import (
+    ABSTRACT_GAMMA_ID,
     MATCHING_REGIMES,
+    MATCHED_EXPONENTIAL_ID,
     frozen_kernel_bank,
     matching_scales,
     run_matched_timing_benchmark,
 )
 from mrl_trace.claim_ledger import validate_claim_ledger
+
+
+def test_primitive_tex_macros_escape_candidate_names(tmp_path: Path) -> None:
+    rms = {
+        kernel: {"log_loss": 0.5, "top1_accuracy": 0.75}
+        for kernel in (
+            PRIMARY_MODEL_ID,
+            LINEAR_MODEL_ID,
+            ABSTRACT_GAMMA_ID,
+            MATCHED_EXPONENTIAL_ID,
+        )
+    }
+    result = {
+        "timing_benchmark": {"summary": {"pilot_rms": rms}},
+        "identifiability": {
+            "selection": {"best_candidate": "physical_k3"},
+            "grouped_lobo": {"mean_nrmse": {"physical_k3": 0.1234}},
+            "kww_parameter_bootstrap": {
+                "parameters": {
+                    "beta_fill": {
+                        "median": 1.95,
+                        "bootstrap_95ci": [1.8, 2.1],
+                    }
+                }
+            },
+        },
+    }
+    output = write_primitive_tex_macros(result, tmp_path / "macros.tex")
+    assert "{physical\\_k3}" in output.read_text(encoding="utf-8")
 
 
 def test_linear_impulse_peak_and_two_crossover_limits() -> None:

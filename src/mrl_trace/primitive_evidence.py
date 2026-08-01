@@ -267,9 +267,10 @@ def write_primitive_tex_macros(result: dict, path) -> Path:
     identifiability = result.get("identifiability")
     if identifiability is not None:
         selection = identifiability["selection"]
+        best_candidate_tex = selection["best_candidate"].replace("_", "\\_")
         lines.append(
             f"\\newcommand{{\\IdentifiabilityBestCandidate}}"
-            f"{{{selection['best_candidate'].replace('_', r'\_')}}}"
+            f"{{{best_candidate_tex}}}"
         )
         best_score = identifiability["grouped_lobo"]["mean_nrmse"][
             selection["best_candidate"]
